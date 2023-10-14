@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:remote_control_ui/pages/home_page.dart';
 
 void main() {
   runApp(const MainApp());
@@ -9,13 +10,9 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false, //remove the debug banner
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
-    );
+    return MaterialApp(
+        debugShowCheckedModeBanner: false, //remove the debug banner
+        theme: ThemeData(fontFamily: 'YoungSerif'),
+        home: const homePage());
   }
 }
