@@ -24,7 +24,7 @@ class homePage extends StatelessWidget {
         ],
       ),
       drawer: Drawer(
-        backgroundColor: Color(0xff0C1222),
+        backgroundColor: Color(0xff545454),
         child: ListView(
           padding: const EdgeInsets.all(0),
           children: <Widget>[
@@ -65,7 +65,7 @@ AppBar bar() {
 DrawerHeader drawer_header() {
   return DrawerHeader(
     decoration: BoxDecoration(
-        color: Color(0xffEEEEEE), borderRadius: BorderRadius.circular(10)),
+        color: Color(0xff333333), borderRadius: BorderRadius.circular(10)),
     //Container just acts as a filler so that Drawer Header has a child
     //if not, Drawer header not valid
     child: Container(
