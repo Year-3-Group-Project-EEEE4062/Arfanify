@@ -24,7 +24,7 @@ class homePage extends StatelessWidget {
         ],
       ),
       drawer: Drawer(
-        backgroundColor: Colors.grey,
+        backgroundColor: Color(0xff0C1222),
         child: ListView(
           padding: const EdgeInsets.all(0),
           children: <Widget>[
@@ -37,35 +37,35 @@ class homePage extends StatelessWidget {
       ),
     );
   }
+}
 
-  AppBar bar() {
-    return AppBar(
-      //adjust the size of the app bar
-      toolbarHeight: 50,
-      //styling of the text in the app bar
-      title: const Text(
-        'Home',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 20,
-          fontWeight: FontWeight.w300,
-        ),
+AppBar bar() {
+  return AppBar(
+    //adjust the size of the app bar
+    toolbarHeight: 50,
+    //styling of the text in the app bar
+    title: const Text(
+      'Home',
+      style: TextStyle(
+        color: Colors.white,
+        fontSize: 20,
+        fontWeight: FontWeight.w300,
       ),
-      //alignment of the text in the app bar
-      centerTitle: true,
-      //set background colour of AppBar
-      backgroundColor: Colors.grey,
-      //adjust the bottom shape of the appbar
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(5))),
-    );
-  }
+    ),
+    //alignment of the text in the app bar
+    centerTitle: true,
+    //set background colour of AppBar
+    backgroundColor: Colors.black,
+    //adjust the bottom shape of the appbar
+    shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(5))),
+  );
 }
 
 DrawerHeader drawer_header() {
   return DrawerHeader(
     decoration: BoxDecoration(
-        color: Colors.grey, borderRadius: BorderRadius.circular(10)),
+        color: Color(0xffEEEEEE), borderRadius: BorderRadius.circular(10)),
     //Container just acts as a filler so that Drawer Header has a child
     //if not, Drawer header not valid
     child: Container(

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 class remote_control_page extends StatelessWidget {
@@ -9,11 +11,81 @@ class remote_control_page extends StatelessWidget {
       backgroundColor: Colors.black,
       appBar: bar(),
       body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [Container()],
+        children: [
+          forward_button(),
+          backwards_button(),
+          right_button(),
+          left_button(),
+        ],
       ),
     );
   }
+}
+
+SizedBox forward_button() {
+  return SizedBox(
+    height: 70,
+    width: 50,
+    child: FloatingActionButton(
+      backgroundColor: Colors.grey,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: const Icon(
+        Icons.arrow_upward_outlined,
+        size: 40,
+      ),
+      onPressed: () {},
+    ),
+  );
+}
+
+SizedBox backwards_button() {
+  return SizedBox(
+    height: 70,
+    width: 50,
+    child: FloatingActionButton(
+      backgroundColor: Colors.grey,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: const Icon(
+        Icons.arrow_downward_outlined,
+        size: 40,
+      ),
+      onPressed: () {},
+    ),
+  );
+}
+
+SizedBox right_button() {
+  return SizedBox(
+    height: 50,
+    width: 70,
+    child: FloatingActionButton(
+      backgroundColor: Colors.grey,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: const Icon(
+        Icons.arrow_forward_outlined,
+        size: 40,
+      ),
+      onPressed: () {},
+    ),
+  );
+}
+
+SizedBox left_button() {
+  return SizedBox(
+    height: 50,
+    width: 70,
+    child: FloatingActionButton(
+      backgroundColor: Colors.grey,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: const Icon(
+        Icons.arrow_back_outlined,
+        size: 40,
+      ),
+      onPressed: () {},
+    ),
+  );
 }
 
 AppBar bar() {
@@ -32,9 +104,6 @@ AppBar bar() {
     //alignment of the text in the app bar
     centerTitle: true,
     //set background colour of AppBar
-    backgroundColor: Colors.blueGrey,
-    //adjust the bottom shape of the appbar
-    shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(5))),
+    backgroundColor: Colors.black,
   );
 }
