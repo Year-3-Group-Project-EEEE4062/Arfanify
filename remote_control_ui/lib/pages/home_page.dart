@@ -29,8 +29,11 @@ class homePage extends StatelessWidget {
           padding: const EdgeInsets.all(0),
           children: <Widget>[
             drawer_header(),
+            SizedBox(height: 5),
             remote_control_drawer(context),
+            SizedBox(height: 5),
             autonomous_drawer(),
+            SizedBox(height: 5),
             cloud_backup_drawer()
           ],
         ),
@@ -98,7 +101,7 @@ class homePage extends StatelessWidget {
   }
 
   ListTile autonomous_drawer() {
-    return const ListTile(
+    return ListTile(
       leading: Icon(
         Icons.map_outlined,
         color: Colors.white,
@@ -114,7 +117,7 @@ class homePage extends StatelessWidget {
   }
 
   ListTile cloud_backup_drawer() {
-    return const ListTile(
+    return ListTile(
       leading: Icon(
         Icons.cloud_done,
         color: Colors.white,
