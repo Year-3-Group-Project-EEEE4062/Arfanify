@@ -81,7 +81,6 @@ class _remoteControlState extends State<remoteControlPage> {
         min: 0.0,
         max: 6.0,
         divisions: 3,
-        label: _getMode(),
         onChanged: (value) {
           setState(() {
             _mode = value;
@@ -122,20 +121,6 @@ class _remoteControlState extends State<remoteControlPage> {
       ModeColor = Colors.orange;
     }
     return ModeColor;
-  }
-
-  String _getMode() {
-    String label = '';
-    if (_mode == 0.0) {
-      label = 'Stop';
-    } else if (_mode == 2.0) {
-      label = 'Low';
-    } else if (_mode == 4.0) {
-      label = 'Medium';
-    } else if (_mode == 6.0) {
-      label = 'High';
-    }
-    return label;
   }
 
   //////////////////////////////////////////////////////////////////////////////
