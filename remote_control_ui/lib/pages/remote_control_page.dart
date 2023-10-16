@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_xlider/flutter_xlider.dart';
 
 class remoteControlPage extends StatefulWidget {
   @override
@@ -18,7 +19,7 @@ class _remoteControlState extends State<remoteControlPage> {
         //mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          modeSetter(),
+          //modeSetter(),
           controlPad(),
         ],
       ),
@@ -26,37 +27,6 @@ class _remoteControlState extends State<remoteControlPage> {
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  Slider modeSetter() {
-    return Slider(
-      value: _mode,
-      min: 0.0,
-      max: 6.0,
-      divisions: 3,
-      activeColor: const Color(0xff545454),
-      thumbColor: const Color(0xff3a4c5a),
-      inactiveColor: Colors.white,
-      label: _getMode(_mode),
-      onChanged: (value) {
-        setState(() {
-          _mode = value;
-        });
-      },
-    );
-  }
-
-  String _getMode(double _mode) {
-    String label = '';
-    if (_mode == 0.0) {
-      label = 'Stop';
-    } else if (_mode == 2.0) {
-      label = 'Low';
-    } else if (_mode == 4.0) {
-      label = 'Medium';
-    } else if (_mode == 6.0) {
-      label = 'High';
-    }
-    return label;
-  }
 
   Container controlPad() {
     return Container(
