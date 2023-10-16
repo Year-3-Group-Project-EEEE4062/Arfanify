@@ -28,11 +28,38 @@ class _remoteControlState extends State<remoteControlPage> {
         mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          modeSetter(),
+          modeGauge(),
           modeBar(),
+          modeSetter(),
           const SizedBox(height: 40), //just empty space
           controlPad(),
-          const SizedBox(height: 70) //just empty space
+          const SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  SizedBox modeGauge() {
+    return SizedBox(
+      //color: Colors.amber,
+      height: 250,
+      child: SfRadialGauge(
+        axes: <RadialAxis>[
+          RadialAxis(
+            showLabels: false,
+            minimum: -1,
+            maximum: 7,
+            ranges: <GaugeRange>[
+              GaugeRange(startValue: -1, endValue: 1, color: Colors.red),
+              GaugeRange(startValue: 1, endValue: 3, color: Colors.green),
+              GaugeRange(startValue: 3, endValue: 5, color: Colors.yellow),
+              GaugeRange(startValue: 5, endValue: 7, color: Colors.orange),
+            ],
+            pointers: <GaugePointer>[
+              NeedlePointer(value: _mode, needleColor: Colors.white),
+            ],
+          )
         ],
       ),
     );
@@ -160,6 +187,7 @@ class _remoteControlState extends State<remoteControlPage> {
       height: 100,
       width: 80,
       child: FloatingActionButton(
+        heroTag: null,
         backgroundColor: const Color(0xff545454),
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
@@ -181,6 +209,7 @@ class _remoteControlState extends State<remoteControlPage> {
       height: 100,
       width: 80,
       child: FloatingActionButton(
+        heroTag: null,
         backgroundColor: const Color(0xff545454),
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
@@ -202,6 +231,7 @@ class _remoteControlState extends State<remoteControlPage> {
       height: 80,
       width: 100,
       child: FloatingActionButton(
+        heroTag: null,
         backgroundColor: const Color(0xff545454),
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
@@ -223,6 +253,7 @@ class _remoteControlState extends State<remoteControlPage> {
       height: 80,
       width: 100,
       child: FloatingActionButton(
+        heroTag: null,
         backgroundColor: const Color(0xff545454),
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
