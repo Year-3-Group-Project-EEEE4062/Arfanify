@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:remote_control_ui/pages/home_page.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MainApp());
 }
 
@@ -12,7 +13,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
         debugShowCheckedModeBanner: false, //remove the debug banner
-        theme: ThemeData(fontFamily: 'YoungSerif'),
+        theme: ThemeData(fontFamily: 'TiltNeon'),
         home: const homePage());
   }
 }

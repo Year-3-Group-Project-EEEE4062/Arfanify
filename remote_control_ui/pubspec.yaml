@@ -9,7 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_xlider: ^3.5.0
+  syncfusion_flutter_gauges: ^23.1.40
 
 dev_dependencies:
   flutter_test:
@@ -23,3 +23,6 @@ flutter:
     - family: YoungSerif
       fonts:
         - asset: lib\fonts\YoungSerif-Regular.ttf
+    - family: TiltNeon
+      fonts:
+        - asset: lib\fonts\TiltNeon-Regular.ttf

@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_xlider/flutter_xlider.dart';
+import 'package:syncfusion_flutter_gauges/gauges.dart';
 
 class remoteControlPage extends StatefulWidget {
   @override
@@ -9,6 +9,15 @@ class remoteControlPage extends StatefulWidget {
 
 class _remoteControlState extends State<remoteControlPage> {
   double _mode = 0;
+  String _status = 'Stop';
+  Color _statusColor = Colors.amber;
+
+  @override
+  //when remote control page closed, it will dispose of the variables
+  void dispose() {
+    // Clean up any resources here.
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,23 +25,117 @@ class _remoteControlState extends State<remoteControlPage> {
       backgroundColor: Colors.black,
       appBar: bar(),
       body: Column(
-        //mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          //modeSetter(),
+          modeSetter(),
+          modeBar(),
+          const SizedBox(height: 40), //just empty space
           controlPad(),
+          const SizedBox(height: 70) //just empty space
         ],
       ),
     );
   }
 
   //////////////////////////////////////////////////////////////////////////////
+  SliderTheme modeSetter() {
+    return SliderTheme(
+      data: const SliderThemeData(
+        thumbColor: Colors.white,
+        thumbShape: RoundSliderThumbShape(enabledThumbRadius: 20),
+        activeTrackColor: Color(0xff545454),
+        inactiveTrackColor: Colors.grey,
+        inactiveTickMarkColor: Colors.white,
+        trackHeight: 20,
+      ),
+      child: Slider(
+        value: _mode,
+        min: 0.0,
+        max: 6.0,
+        divisions: 3,
+        label: _getMode(),
+        onChanged: (value) {
+          setState(() {
+            _mode = value;
+            _status = _changeMode();
+            _statusColor = _changeModeColor();
+            if (kDebugMode) {
+              debugPrint("$_mode , $_status , $_statusColor");
+            }
+          });
+        },
+      ),
+    );
+  }
 
+  String _changeMode() {
+    String label = '';
+    if (_mode == 0.0) {
+      label = 'Stop';
+    } else if (_mode == 2.0) {
+      label = 'Low';
+    } else if (_mode == 4.0) {
+      label = 'Medium';
+    } else if (_mode == 6.0) {
+      label = 'High';
+    }
+    return label;
+  }
+
+  Color _changeModeColor() {
+    Color ModeColor = Colors.amber;
+    if (_mode == 0.0) {
+      ModeColor = Colors.red;
+    } else if (_mode == 2.0) {
+      ModeColor = Colors.green;
+    } else if (_mode == 4.0) {
+      ModeColor = Colors.yellow;
+    } else if (_mode == 6.0) {
+      ModeColor = Colors.orange;
+    }
+    return ModeColor;
+  }
+
+  String _getMode() {
+    String label = '';
+    if (_mode == 0.0) {
+      label = 'Stop';
+    } else if (_mode == 2.0) {
+      label = 'Low';
+    } else if (_mode == 4.0) {
+      label = 'Medium';
+    } else if (_mode == 6.0) {
+      label = 'High';
+    }
+    return label;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  Row modeBar() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Text(
+          'Motion: ',
+          style: TextStyle(
+              fontSize: 25, fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          _status,
+          style: TextStyle(fontSize: 25, color: _statusColor),
+        ),
+      ],
+    );
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
   Container controlPad() {
     return Container(
       color: Colors.black,
-      height: 190,
-      width: 190,
+      height: null,
+      width: null,
       child: Column(
         children: [
           forward_button(),
@@ -41,7 +144,7 @@ class _remoteControlState extends State<remoteControlPage> {
             children: [
               left_button(),
               const SizedBox(
-                width: 50,
+                width: 80,
               ),
               right_button(),
             ],
@@ -54,11 +157,11 @@ class _remoteControlState extends State<remoteControlPage> {
 
   SizedBox forward_button() {
     return SizedBox(
-      height: 70,
-      width: 50,
+      height: 100,
+      width: 80,
       child: FloatingActionButton(
         backgroundColor: const Color(0xff545454),
-        foregroundColor: Colors.black,
+        foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         child: const Icon(
           Icons.arrow_upward_outlined,
@@ -75,11 +178,11 @@ class _remoteControlState extends State<remoteControlPage> {
 
   SizedBox backwards_button() {
     return SizedBox(
-      height: 70,
-      width: 50,
+      height: 100,
+      width: 80,
       child: FloatingActionButton(
         backgroundColor: const Color(0xff545454),
-        foregroundColor: Colors.black,
+        foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         child: const Icon(
           Icons.arrow_downward_outlined,
@@ -96,11 +199,11 @@ class _remoteControlState extends State<remoteControlPage> {
 
   SizedBox right_button() {
     return SizedBox(
-      height: 50,
-      width: 70,
+      height: 80,
+      width: 100,
       child: FloatingActionButton(
         backgroundColor: const Color(0xff545454),
-        foregroundColor: Colors.black,
+        foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         child: const Icon(
           Icons.arrow_forward_outlined,
@@ -117,11 +220,11 @@ class _remoteControlState extends State<remoteControlPage> {
 
   SizedBox left_button() {
     return SizedBox(
-      height: 50,
-      width: 70,
+      height: 80,
+      width: 100,
       child: FloatingActionButton(
         backgroundColor: const Color(0xff545454),
-        foregroundColor: Colors.black,
+        foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         child: const Icon(
           Icons.arrow_back_outlined,
@@ -136,6 +239,7 @@ class _remoteControlState extends State<remoteControlPage> {
     );
   }
 
+  //////////////////////////////////////////////////////////////////////////////
   AppBar bar() {
     return AppBar(
       //adjust the size of the app bar
