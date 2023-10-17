@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:remote_control_ui/pages/main_drawer.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 
 class remoteControlPage extends StatefulWidget {
@@ -36,6 +37,7 @@ class _remoteControlState extends State<remoteControlPage> {
           const SizedBox(height: 40),
         ],
       ),
+      drawer: const MainDrawer(),
     );
   }
 

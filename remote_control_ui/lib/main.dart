@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:remote_control_ui/pages/home_page.dart';
+import 'package:remote_control_ui/pages/remote_control_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,8 +13,13 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        debugShowCheckedModeBanner: false, //remove the debug banner
-        theme: ThemeData(fontFamily: 'TiltNeon'),
-        home: const homePage());
+      debugShowCheckedModeBanner: false, //remove the debug banner
+      theme: ThemeData(fontFamily: 'TiltNeon'),
+      //home: const HomePage());
+      routes: {
+        '/': (context) => HomePage(),
+        '/remoteControl': (context) => remoteControlPage(),
+      },
+    );
   }
 }
