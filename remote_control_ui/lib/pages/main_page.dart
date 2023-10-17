@@ -3,15 +3,21 @@ import 'package:remote_control_ui/pages/autonomous_page.dart';
 import 'package:remote_control_ui/pages/home_page.dart';
 import 'package:remote_control_ui/pages/remote_control_page.dart';
 
-class MainDrawer extends StatefulWidget {
+class MainPage extends StatefulWidget {
+  const MainPage({super.key});
+
   @override
-  State<MainDrawer> createState() => _MainDrawerState();
+  State<MainPage> createState() => _MainPageState();
 }
 
-class _MainDrawerState extends State<MainDrawer> {
+class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
-  //final _category = ['home', 'remoteControl', 'autonomous', 'cloudBackup'];
-  final _category = [HomePage(), remoteControlPage(), AutonomousPage()];
+  final _category = [
+    HomePage(),
+    remoteControlPage(),
+    AutonomousPage(),
+    AutonomousPage()
+  ];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -21,6 +27,16 @@ class _MainDrawerState extends State<MainDrawer> {
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: bar(context),
+      drawer: DrawerPage(context),
+      body: _category[_selectedIndex],
+    );
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  Drawer DrawerPage(BuildContext context) {
     return Drawer(
       backgroundColor: const Color(0xff545454),
       child: ListView(
@@ -53,23 +69,6 @@ class _MainDrawerState extends State<MainDrawer> {
     );
   }
 
-  void checkIndex(int newIndex) {
-    debugPrint('$newIndex , $_selectedIndex');
-    if (_selectedIndex != newIndex) {
-      //only change to new page when the index changes
-      _onItemTapped(newIndex);
-      Navigator.pop(context);
-      //Navigator.pushReplacementNamed(context, '/${_category[_selectedIndex]}');
-      Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (BuildContext context) => _category[_selectedIndex]));
-    } else {
-      Navigator.pop(context);
-    }
-    //else do nothing
-  }
-
   ListTile home_page_drawer(BuildContext context) {
     return ListTile(
       leading: const Icon(
@@ -84,7 +83,8 @@ class _MainDrawerState extends State<MainDrawer> {
         ),
       ),
       onTap: () {
-        checkIndex(0);
+        _onItemTapped(0);
+        Navigator.pop(context);
       },
     );
   }
@@ -104,7 +104,8 @@ class _MainDrawerState extends State<MainDrawer> {
         ),
       ),
       onTap: () {
-        checkIndex(1);
+        _onItemTapped(1);
+        Navigator.pop(context);
       },
     );
   }
@@ -124,7 +125,8 @@ class _MainDrawerState extends State<MainDrawer> {
       ),
       selected: _selectedIndex == 2,
       onTap: () {
-        checkIndex(2);
+        _onItemTapped(2);
+        Navigator.pop(context);
       },
     );
   }
@@ -144,8 +146,36 @@ class _MainDrawerState extends State<MainDrawer> {
       ),
       selected: _selectedIndex == 3,
       onTap: () {
-        checkIndex(3);
+        _onItemTapped(3);
+        Navigator.pop(context);
       },
+    );
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  AppBar bar(BuildContext context) {
+    return AppBar(
+      //adjust the size of the app bar
+      toolbarHeight: 50,
+      //styling of the text in the app bar
+      title: const Text(
+        'BoNav',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 25,
+          fontWeight: FontWeight.w300,
+          height: 2.3,
+        ),
+      ),
+      //resize the hamburger icon
+      iconTheme: const IconThemeData(size: 45, color: Colors.white),
+      //alignment of the text in the app bar
+      centerTitle: true,
+      //set background colour of AppBar
+      backgroundColor: Colors.black,
+      //adjust the bottom shape of the appbar
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(5))),
     );
   }
 }
