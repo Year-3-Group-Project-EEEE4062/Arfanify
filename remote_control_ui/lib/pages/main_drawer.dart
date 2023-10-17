@@ -92,8 +92,6 @@ class _MainDrawerState extends State<MainDrawer> {
         _onItemTapped(1);
         Navigator.pop(context);
         Navigator.pushNamed(context, '/${_category[_selectedIndex]}');
-        //Navigator.push(context,
-        //    MaterialPageRoute(builder: (context) => remoteControlPage()));
       },
     );
   }
@@ -115,8 +113,7 @@ class _MainDrawerState extends State<MainDrawer> {
       onTap: () {
         _onItemTapped(2);
         Navigator.pop(context);
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => remoteControlPage()));
+        Navigator.pushNamed(context, '/${_category[_selectedIndex]}');
       },
     );
   }
@@ -138,8 +135,8 @@ class _MainDrawerState extends State<MainDrawer> {
       onTap: () {
         _onItemTapped(3);
         Navigator.pop(context);
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => remoteControlPage()));
+        //Navigator.push(context,
+        //    MaterialPageRoute(builder: (context) => remoteControlPage()));
       },
     );
   }
