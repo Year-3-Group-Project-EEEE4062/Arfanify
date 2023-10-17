@@ -37,7 +37,7 @@ class _remoteControlState extends State<remoteControlPage> {
           const SizedBox(height: 40),
         ],
       ),
-      drawer: const MainDrawer(),
+      drawer: MainDrawer(),
     );
   }
 

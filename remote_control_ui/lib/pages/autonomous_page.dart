@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:remote_control_ui/pages/main_drawer.dart';
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+class AutonomousPage extends StatelessWidget {
+  const AutonomousPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +14,7 @@ class HomePage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           Icon(
-            Icons.directions_boat_filled,
+            Icons.map_outlined,
             color: Colors.white,
             size: 200,
           ),
@@ -31,7 +31,7 @@ class HomePage extends StatelessWidget {
       toolbarHeight: 50,
       //styling of the text in the app bar
       title: const Text(
-        'Home',
+        'Autonomous',
         style: TextStyle(
           color: Colors.white,
           fontSize: 25,

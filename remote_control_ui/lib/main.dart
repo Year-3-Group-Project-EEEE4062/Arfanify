@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:remote_control_ui/pages/autonomous_page.dart';
 import 'package:remote_control_ui/pages/home_page.dart';
 import 'package:remote_control_ui/pages/remote_control_page.dart';
 
@@ -15,10 +16,12 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false, //remove the debug banner
       theme: ThemeData(fontFamily: 'TiltNeon'),
-      //home: const HomePage());
+      initialRoute: '/home',
       routes: {
-        '/': (context) => HomePage(),
+        '/home': (context) => const HomePage(),
         '/remoteControl': (context) => remoteControlPage(),
+        '/autonomous': (context) => const AutonomousPage(),
+        '/cloudBackup': (context) => remoteControlPage(),
       },
     );
   }

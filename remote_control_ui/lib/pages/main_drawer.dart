@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:remote_control_ui/pages/autonomous_page.dart';
+import 'package:remote_control_ui/pages/home_page.dart';
 import 'package:remote_control_ui/pages/remote_control_page.dart';
 
 class MainDrawer extends StatefulWidget {
-  const MainDrawer({super.key});
-
   @override
   State<MainDrawer> createState() => _MainDrawerState();
 }
 
 class _MainDrawerState extends State<MainDrawer> {
   int _selectedIndex = 0;
-  final _category = ['', 'remoteControl'];
+  //final _category = ['home', 'remoteControl', 'autonomous', 'cloudBackup'];
+  final _category = [HomePage(), remoteControlPage(), AutonomousPage()];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -52,6 +53,23 @@ class _MainDrawerState extends State<MainDrawer> {
     );
   }
 
+  void checkIndex(int newIndex) {
+    debugPrint('$newIndex , $_selectedIndex');
+    if (_selectedIndex != newIndex) {
+      //only change to new page when the index changes
+      _onItemTapped(newIndex);
+      Navigator.pop(context);
+      //Navigator.pushReplacementNamed(context, '/${_category[_selectedIndex]}');
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (BuildContext context) => _category[_selectedIndex]));
+    } else {
+      Navigator.pop(context);
+    }
+    //else do nothing
+  }
+
   ListTile home_page_drawer(BuildContext context) {
     return ListTile(
       leading: const Icon(
@@ -65,17 +83,15 @@ class _MainDrawerState extends State<MainDrawer> {
           fontSize: 19,
         ),
       ),
-      selected: _selectedIndex == 0,
       onTap: () {
-        _onItemTapped(0);
-        Navigator.pop(context);
-        Navigator.pushNamed(context, '/${_category[_selectedIndex]}');
+        checkIndex(0);
       },
     );
   }
 
   ListTile remote_control_drawer(BuildContext context) {
     return ListTile(
+      selected: _selectedIndex == 1,
       leading: const Icon(
         Icons.settings_remote_sharp,
         color: Colors.white,
@@ -87,11 +103,8 @@ class _MainDrawerState extends State<MainDrawer> {
           fontSize: 19,
         ),
       ),
-      selected: _selectedIndex == 1,
       onTap: () {
-        _onItemTapped(1);
-        Navigator.pop(context);
-        Navigator.pushNamed(context, '/${_category[_selectedIndex]}');
+        checkIndex(1);
       },
     );
   }
@@ -111,9 +124,7 @@ class _MainDrawerState extends State<MainDrawer> {
       ),
       selected: _selectedIndex == 2,
       onTap: () {
-        _onItemTapped(2);
-        Navigator.pop(context);
-        Navigator.pushNamed(context, '/${_category[_selectedIndex]}');
+        checkIndex(2);
       },
     );
   }
@@ -133,10 +144,7 @@ class _MainDrawerState extends State<MainDrawer> {
       ),
       selected: _selectedIndex == 3,
       onTap: () {
-        _onItemTapped(3);
-        Navigator.pop(context);
-        //Navigator.push(context,
-        //    MaterialPageRoute(builder: (context) => remoteControlPage()));
+        checkIndex(3);
       },
     );
   }
