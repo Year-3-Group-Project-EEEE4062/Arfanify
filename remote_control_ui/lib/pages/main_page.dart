@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:remote_control_ui/pages/autonomous_page.dart';
+import 'package:remote_control_ui/pages/cloud_backup_page.dart';
 import 'package:remote_control_ui/pages/home_page.dart';
 import 'package:remote_control_ui/pages/remote_control_page.dart';
 
@@ -16,7 +17,7 @@ class _MainPageState extends State<MainPage> {
     HomePage(),
     remoteControlPage(),
     AutonomousPage(),
-    AutonomousPage()
+    CloudBackupPage()
   ];
 
   void _onItemTapped(int index) {
@@ -38,7 +39,7 @@ class _MainPageState extends State<MainPage> {
   //////////////////////////////////////////////////////////////////////////////
   Drawer DrawerPage(BuildContext context) {
     return Drawer(
-      backgroundColor: const Color(0xff545454),
+      backgroundColor: Color.fromARGB(255, 255, 255, 255),
       child: ListView(
         padding: const EdgeInsets.all(0),
         children: <Widget>[
@@ -71,14 +72,14 @@ class _MainPageState extends State<MainPage> {
 
   ListTile home_page_drawer(BuildContext context) {
     return ListTile(
+      selected: _selectedIndex == 0,
+      selectedColor: Color(0xff29A8AB),
       leading: const Icon(
         Icons.home,
-        color: Colors.white,
       ),
       title: const Text(
         'Home',
         style: TextStyle(
-          color: Colors.white,
           fontSize: 19,
         ),
       ),
@@ -92,14 +93,13 @@ class _MainPageState extends State<MainPage> {
   ListTile remote_control_drawer(BuildContext context) {
     return ListTile(
       selected: _selectedIndex == 1,
+      selectedColor: Color(0xff29A8AB),
       leading: const Icon(
         Icons.settings_remote_sharp,
-        color: Colors.white,
       ),
       title: const Text(
         'Remote Control',
         style: TextStyle(
-          color: Colors.white,
           fontSize: 19,
         ),
       ),
@@ -112,18 +112,17 @@ class _MainPageState extends State<MainPage> {
 
   ListTile autonomous_drawer(BuildContext context) {
     return ListTile(
+      selected: _selectedIndex == 2,
+      selectedColor: Color(0xff29A8AB),
       leading: const Icon(
         Icons.map_outlined,
-        color: Colors.white,
       ),
       title: const Text(
         'Autonomous',
         style: TextStyle(
-          color: Colors.white,
           fontSize: 20,
         ),
       ),
-      selected: _selectedIndex == 2,
       onTap: () {
         _onItemTapped(2);
         Navigator.pop(context);
@@ -133,18 +132,17 @@ class _MainPageState extends State<MainPage> {
 
   ListTile cloud_backup_drawer(BuildContext context) {
     return ListTile(
+      selected: _selectedIndex == 3,
+      selectedColor: Color(0xff29A8AB),
       leading: const Icon(
         Icons.cloud_done,
-        color: Colors.white,
       ),
       title: const Text(
         'Cloud Backup',
         style: TextStyle(
-          color: Colors.white,
           fontSize: 20,
         ),
       ),
-      selected: _selectedIndex == 3,
       onTap: () {
         _onItemTapped(3);
         Navigator.pop(context);
@@ -159,7 +157,7 @@ class _MainPageState extends State<MainPage> {
       toolbarHeight: 50,
       //styling of the text in the app bar
       title: const Text(
-        'BoNav',
+        'ARFANIFY',
         style: TextStyle(
           color: Colors.white,
           fontSize: 25,
