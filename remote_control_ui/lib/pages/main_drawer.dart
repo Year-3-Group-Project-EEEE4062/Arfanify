@@ -21,7 +21,7 @@ class _MainDrawerState extends State<MainDrawer> {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      backgroundColor: Color(0xff545454),
+      backgroundColor: const Color(0xff545454),
       child: ListView(
         padding: const EdgeInsets.all(0),
         children: <Widget>[
@@ -42,7 +42,8 @@ class _MainDrawerState extends State<MainDrawer> {
   DrawerHeader drawer_header() {
     return DrawerHeader(
       decoration: BoxDecoration(
-          color: Color(0xff333333), borderRadius: BorderRadius.circular(10)),
+          color: const Color(0xff333333),
+          borderRadius: BorderRadius.circular(10)),
       //Container just acts as a filler so that Drawer Header has a child
       //if not, Drawer header not valid
       child: Container(
