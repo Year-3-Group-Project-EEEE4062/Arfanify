@@ -46,11 +46,23 @@ class _MainPageState extends State<MainPage> {
   Center HomePage(){
     return Center(
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           arfanifyIcon(),
-          remoteControlButton(),
-          autonomousButton(),
-          cloudBackupButton()
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children:[
+              remoteControlButton(),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children:[
+              autonomousButton(),
+              cloudBackupButton()
+            ],
+          ), 
         ],
       ),
     );
@@ -59,17 +71,17 @@ class _MainPageState extends State<MainPage> {
   Image arfanifyIcon() {
     return const Image(
         image: AssetImage('assets/icons/Arfanify.png'),
-        width: 150,
-        height: 150,
+        width: 200,
+        height: 200,
         color: Colors.white,
       );
   }
-
+  
   Container remoteControlButton(){
     return Container(
       margin: const EdgeInsets.all(10),
-      height: 120,
-      width: 180,
+      height: 100,
+      width: 160,
       
       child: ElevatedButton(
         onPressed: () {
@@ -86,10 +98,10 @@ class _MainPageState extends State<MainPage> {
         child: const Column(
           mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Icon(Icons.settings_remote_sharp, size: 70), // Adjust the size as needed
+              Icon(Icons.settings_remote_sharp, size: 60), // Adjust the size as needed
               Text(
                 'Remote Control',
-                style: TextStyle(fontSize: 20),
+                style: TextStyle(fontSize: 18),
               ),
             ],
         ),
@@ -100,8 +112,8 @@ class _MainPageState extends State<MainPage> {
   Container autonomousButton(){
     return Container(
       margin: const EdgeInsets.all(10),
-      height: 110,
-      width: 180,
+      height: 100,
+      width: 160,
       
       child: ElevatedButton(
         onPressed: () {
@@ -117,10 +129,10 @@ class _MainPageState extends State<MainPage> {
         child: const Column(
           mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Icon(Icons.map_outlined, size: 70), // Adjust the size as needed
+              Icon(Icons.map_outlined, size: 60), // Adjust the size as needed
               Text(
                 'Autonomous',
-                style: TextStyle(fontSize: 20),
+                style: TextStyle(fontSize: 18),
               ),
             ],
         ),
@@ -131,8 +143,8 @@ class _MainPageState extends State<MainPage> {
   Container cloudBackupButton(){
     return Container(
       margin: const EdgeInsets.all(10),
-      height: 110,
-      width: 180,
+      height: 100,
+      width: 160,
       
       child: ElevatedButton(
         onPressed: () {
@@ -148,10 +160,10 @@ class _MainPageState extends State<MainPage> {
         child: const Column(
           mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Icon(Icons.cloud_done, size: 70), // Adjust the size as needed
+              Icon(Icons.cloud_done, size: 60), // Adjust the size as needed
               Text(
                 'Cloud Backup',
-                style: TextStyle(fontSize: 20),
+                style: TextStyle(fontSize: 18),
               ),
             ],
         ),
