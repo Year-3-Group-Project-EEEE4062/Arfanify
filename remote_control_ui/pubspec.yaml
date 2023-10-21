@@ -9,7 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_svg: ^0.22.0
   syncfusion_flutter_gauges: ^23.1.40
+  provider: 6.0.5
 
 dev_dependencies:
   flutter_test:
@@ -26,3 +28,7 @@ flutter:
     - family: TiltNeon
       fonts:
         - asset: lib\fonts\TiltNeon-Regular.ttf
+
+  assets:
+    - assets\icons\Arfanify.png
+    - assets\icons\Arfanify.svg

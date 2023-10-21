@@ -4,6 +4,8 @@ import 'package:remote_control_ui/pages/cloud_backup_page.dart';
 import 'package:remote_control_ui/pages/home_page.dart';
 import 'package:remote_control_ui/pages/remote_control_page.dart';
 
+// HomePage integrated within MainPage
+
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
 
@@ -12,9 +14,10 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  // int opened = 0;
   int _selectedIndex = 0;
   final _category = [
-    HomePage(),
+    MainPage(),
     remoteControlPage(),
     AutonomousPage(),
     CloudBackupPage()
@@ -25,18 +28,152 @@ class _MainPageState extends State<MainPage> {
       _selectedIndex = index;
     });
   }
-
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: bar(context),
       drawer: DrawerPage(context),
-      body: _category[_selectedIndex],
+      body: (_selectedIndex==0)
+      ? HomePage()
+      : _category[_selectedIndex]
+      // body: _category[_selectedIndex]
+    );
+  }
+  
+  //////////////////////////////////////////////////////////////////////////////
+  // HOMEPAGE //
+  Center HomePage(){
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          arfanifyIcon(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children:[
+              remoteControlButton(),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children:[
+              autonomousButton(),
+              cloudBackupButton()
+            ],
+          ), 
+        ],
+      ),
+    );
+  }
+
+  Image arfanifyIcon() {
+    return const Image(
+        image: AssetImage('assets/icons/Arfanify.png'),
+        width: 200,
+        height: 200,
+        color: Colors.white,
+      );
+  }
+  
+  Container remoteControlButton(){
+    return Container(
+      margin: const EdgeInsets.all(10),
+      height: 100,
+      width: 160,
+      
+      child: ElevatedButton(
+        onPressed: () {
+          // MainPage();
+          _onItemTapped(1); // Use the variable within the print statement
+        },
+        style: ElevatedButton.styleFrom (
+          backgroundColor: const Color(0xff545454),
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),  
+        ),
+        child: const Column(
+          mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Icon(Icons.settings_remote_sharp, size: 60), // Adjust the size as needed
+              Text(
+                'Remote Control',
+                style: TextStyle(fontSize: 18),
+              ),
+            ],
+        ),
+      ),
+    );
+  }
+
+  Container autonomousButton(){
+    return Container(
+      margin: const EdgeInsets.all(10),
+      height: 100,
+      width: 160,
+      
+      child: ElevatedButton(
+        onPressed: () {
+          _onItemTapped(2); // Use the variable within the print statement
+        },
+        style: ElevatedButton.styleFrom (
+          backgroundColor: const Color(0xff545454),
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),  
+        ),
+        child: const Column(
+          mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Icon(Icons.map_outlined, size: 60), // Adjust the size as needed
+              Text(
+                'Autonomous',
+                style: TextStyle(fontSize: 18),
+              ),
+            ],
+        ),
+      ),
+    );
+  }
+
+  Container cloudBackupButton(){
+    return Container(
+      margin: const EdgeInsets.all(10),
+      height: 100,
+      width: 160,
+      
+      child: ElevatedButton(
+        onPressed: () {
+          _onItemTapped(3); // Use the variable within the print statement
+        },
+        style: ElevatedButton.styleFrom (
+          backgroundColor: const Color(0xff545454),
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),  
+        ),
+        child: const Column(
+          mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Icon(Icons.cloud_done, size: 60), // Adjust the size as needed
+              Text(
+                'Cloud Backup',
+                style: TextStyle(fontSize: 18),
+              ),
+            ],
+        ),
+      ),
     );
   }
 
   //////////////////////////////////////////////////////////////////////////////
+  // DRAWER //
   Drawer DrawerPage(BuildContext context) {
     return Drawer(
       backgroundColor: Color.fromARGB(255, 255, 255, 255),
@@ -151,6 +288,7 @@ class _MainPageState extends State<MainPage> {
   }
 
   //////////////////////////////////////////////////////////////////////////////
+  // APP BAR //
   AppBar bar(BuildContext context) {
     return AppBar(
       //adjust the size of the app bar
