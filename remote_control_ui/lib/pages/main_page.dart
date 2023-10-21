@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:remote_control_ui/pages/autonomous_page.dart';
 import 'package:remote_control_ui/pages/cloud_backup_page.dart';
+import 'package:remote_control_ui/pages/home_page.dart';
 import 'package:remote_control_ui/pages/remote_control_page.dart';
 
 // HomePage integrated within MainPage
