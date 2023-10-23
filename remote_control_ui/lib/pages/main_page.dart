@@ -4,6 +4,7 @@ import 'package:remote_control_ui/pages/autonomous_page.dart';
 import 'package:remote_control_ui/pages/cloud_backup_page.dart';
 //import 'package:remote_control_ui/pages/home_page.dart';
 import 'package:remote_control_ui/pages/remote_control_page.dart';
+import 'package:remote_control_ui/pages/scan_screen.dart';
 
 // HomePage integrated within MainPage
 
@@ -21,7 +22,8 @@ class _MainPageState extends State<MainPage> {
     const MainPage(),
     remoteControlPage(),
     const AutonomousPage(),
-    const CloudBackupPage()
+    //const CloudBackupPage()
+    const ScanScreen()
   ];
 
   void _onItemTapped(int index) {
@@ -35,7 +37,7 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         backgroundColor: Colors.black,
-        appBar: bar(context),
+        appBar: AppBarBLE(),
         drawer: DrawerPage(context),
         body: (_selectedIndex == 0) ? HomePage() : _category[_selectedIndex]
         // body: _category[_selectedIndex]
@@ -176,7 +178,7 @@ class _MainPageState extends State<MainPage> {
           const SizedBox(height: 5),
           autonomous_drawer(context),
           const SizedBox(height: 5),
-          cloud_backup_drawer(context)
+          cloud_backup_drawer(context),
         ],
       ),
     );
@@ -272,36 +274,6 @@ class _MainPageState extends State<MainPage> {
         _onItemTapped(3);
         Navigator.pop(context);
       },
-    );
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  // APP BAR //
-  AppBar bar(BuildContext context) {
-    return AppBar(
-      //adjust the size of the app bar
-      toolbarHeight: 50,
-      //styling of the text in the app bar
-      title: const Text(
-        'ARFANIFY',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 25,
-          fontWeight: FontWeight.w300,
-          height: 2.3,
-        ),
-      ),
-      //resize the hamburger icon
-      iconTheme: const IconThemeData(size: 45, color: Colors.white),
-      //alignment of the text in the app bar
-      centerTitle: true,
-      //set background colour of AppBar
-      backgroundColor: Colors.black,
-
-      actions: const [BLEDialog()],
-      //adjust the bottom shape of the appbar
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(5))),
     );
   }
 }
