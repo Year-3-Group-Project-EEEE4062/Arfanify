@@ -11,10 +11,11 @@ class BLEDialog extends StatefulWidget {
 }
 
 class _BLEDialogState extends State<BLEDialog> {
-  Set<DeviceIdentifier> seen = {};
+  List<BluetoothDevice> availableDevices = [];
   Color scanButton = const Color(0xff333333);
   bool scanningBLE = false;
   List<BluetoothDevice> devs = FlutterBluePlus.connectedDevices;
+  bool scan = false;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +37,6 @@ class _BLEDialogState extends State<BLEDialog> {
             Icon(
               Icons.circle_sharp,
               size: 20,
-              //color: Color.fromARGB(255, 127, 208, 111),
               color: bleIconStateColor(),
             ), // Adjust the size as needed
             const SizedBox(width: 10), //add spacing between the icon and text
@@ -50,26 +50,90 @@ class _BLEDialogState extends State<BLEDialog> {
     );
   }
 
+  deviceCard(BluetoothDevice device, bool isConnected) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
+      child: ListTile(
+        tileColor: Color.fromARGB(255, 0, 0, 0),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+        title: Text(device.localName),
+        subtitle: Text(device.remoteId.str),
+        trailing: SizedBox(
+          width: 100,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              isConnected
+                  ? InkWell(
+                      onTap: () {
+                        //add something here later
+                      },
+                      child: Icon(Icons.wifi),
+                    )
+                  : const SizedBox(),
+              const SizedBox(
+                width: 10,
+              ),
+              InkWell(
+                onTap: () async {
+                  device.connectionState
+                      .listen((BluetoothConnectionState state) async {
+                    if (state == BluetoothConnectionState.disconnected) {
+                      // typically, start a periodic timer that tries to periodically reconnect.
+                      // Note: you must always re-discover services after disconnection!
+                    }
+                  });
+                  isConnected
+                      ? await device.disconnect()
+                      : await device.connect(autoConnect: true);
+                },
+                child: Icon(
+                    isConnected ? Icons.bluetooth_connected : Icons.bluetooth),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _dialogBuilder(BuildContext context) {
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
+          content: Row(
             children: [
-              Row(
+              Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.circle_sharp,
-                    size: 20,
-                    color: bleIconStateColor(),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.circle_sharp,
+                        size: 20,
+                        color: bleIconStateColor(),
+                      ),
+                      const SizedBox(width: 10),
+                      const Text(
+                        'BLE Devices Nearby',
+                        style: TextStyle(color: Colors.white, fontSize: 20),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 10),
-                  const Text(
-                    'BLE Devices Nearby',
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
+                  scan
+                      ? const CircularProgressIndicator()
+                      : availableDevices.isNotEmpty
+                          ? Expanded(
+                              child: ListView.builder(
+                                itemCount: availableDevices.length,
+                                itemBuilder: (context, index) => deviceCard(
+                                    availableDevices.elementAt(index), false),
+                              ),
+                            )
+                          : const Center(child: Text("No Device Detected")),
                 ],
               ),
             ],
@@ -78,7 +142,15 @@ class _BLEDialogState extends State<BLEDialog> {
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
           actions: <Widget>[
-            scanBLEButton(),
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('Scan Devices'),
+              onPressed: () {
+                checkBLE();
+              },
+            ),
             const SizedBox(height: 10),
             TextButton(
               style: TextButton.styleFrom(
@@ -106,31 +178,6 @@ class _BLEDialogState extends State<BLEDialog> {
     return iconColor;
   }
 
-  Container scanBLEButton() {
-    return Container(
-      margin: const EdgeInsets.all(10),
-      child: IntrinsicWidth(
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            backgroundColor: scanButton,
-            padding: EdgeInsets.zero,
-            foregroundColor: Colors.white,
-          ),
-          onPressed: () {
-            checkBLE();
-          },
-          child: const FittedBox(
-            fit: BoxFit.contain,
-            child: Icon(Icons.radar_sharp, size: 40),
-          ),
-        ),
-      ),
-    );
-  }
-
   void checkBLE() async {
     // handle bluetooth on & off
     // note: for iOS the initial state is typically BluetoothAdapterState.unknown
@@ -153,43 +200,36 @@ class _BLEDialogState extends State<BLEDialog> {
     });
   }
 
-  void startBLEscanning() async {
-    int seconds = 0;
-    FlutterBluePlus.scanResults.listen(
+  void startBLEscanning() {
+    List<BluetoothDevice> devices = [];
+    var subscription = FlutterBluePlus.scanResults.listen(
       (results) {
         for (ScanResult r in results) {
-          if (seen.contains(r.device.remoteId) == false) {
-            debugPrint("Found Something!!");
-            debugPrint(
-                '${r.device.remoteId}: "${r.advertisementData.localName}" found! rssi: ${r.rssi}');
-            seen.add(r.device.remoteId);
+          if (r.device.platformName.isNotEmpty) {
+            if (!devices.contains(r.device)) {
+              devices.add(r.device);
+            }
           }
         }
       },
     );
 
-    //when scanning, button is green in colour to let user know
+    subscription.onDone(() {});
+
+    if (!FlutterBluePlus.isScanningNow) {
+      setState(() {
+        scan = true;
+      });
+      FlutterBluePlus.startScan(
+        timeout: const Duration(seconds: 5),
+      );
+      setState(() {
+        scan = false;
+      });
+    }
+
     setState(() {
-      scanButton = const Color.fromARGB(255, 127, 208, 111);
+      availableDevices = devices;
     });
-    // Start scanning
-    await FlutterBluePlus.startScan();
-
-    //this is to enable scan for 5 seconds
-    Timer.periodic(const Duration(seconds: 1), (timer) async {
-      seconds++;
-
-      //if statement to check if 5 seconds has gone by
-      if (seconds == 5) {
-        timer.cancel(); // cancel the timer
-        // Stop scanning
-        await FlutterBluePlus.stopScan(); //stop the scan
-        setState(() {
-          scanButton = const Color(0xff333333); //change button colour
-        });
-      }
-    });
-
-    if (seen.isNotEmpty) debugPrint("Found Devices!!");
   }
 }
