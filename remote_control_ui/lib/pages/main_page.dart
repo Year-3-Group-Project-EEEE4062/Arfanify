@@ -51,16 +51,9 @@ class _MainPageState extends State<MainPage> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           arfanifyIcon(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              remoteControlButton(),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [autonomousButton(), cloudBackupButton()],
-          ),
+          remoteControlButton(),
+          autonomousButton(),
+          cloudBackupButton(),
         ],
       ),
     );

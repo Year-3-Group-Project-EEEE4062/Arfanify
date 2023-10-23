@@ -103,8 +103,12 @@ class _BLEDialogState extends State<BLEDialog> {
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          content: Row(
+        return Dialog(
+          backgroundColor: const Color(0xff333333),
+          insetPadding: EdgeInsets.zero,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+          child: Row(
             children: [
               Column(
                 mainAxisSize: MainAxisSize.min,
@@ -123,45 +127,34 @@ class _BLEDialogState extends State<BLEDialog> {
                       ),
                     ],
                   ),
-                  scan
-                      ? const CircularProgressIndicator()
-                      : availableDevices.isNotEmpty
-                          ? Expanded(
-                              child: ListView.builder(
-                                itemCount: availableDevices.length,
-                                itemBuilder: (context, index) => deviceCard(
-                                    availableDevices.elementAt(index), false),
-                              ),
-                            )
-                          : const Center(child: Text("No Device Detected")),
+                  Container(height: 200, color: Colors.black),
+                  Row(
+                    children: [
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          textStyle: Theme.of(context).textTheme.labelLarge,
+                        ),
+                        child: const Text('Scan Devices'),
+                        onPressed: () {
+                          checkBLE();
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          textStyle: Theme.of(context).textTheme.labelLarge,
+                        ),
+                        child: const Text('Close'),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ],
+                  )
                 ],
               ),
             ],
           ),
-          backgroundColor: const Color(0xff333333),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
-          actions: <Widget>[
-            TextButton(
-              style: TextButton.styleFrom(
-                textStyle: Theme.of(context).textTheme.labelLarge,
-              ),
-              child: const Text('Scan Devices'),
-              onPressed: () {
-                checkBLE();
-              },
-            ),
-            const SizedBox(height: 10),
-            TextButton(
-              style: TextButton.styleFrom(
-                textStyle: Theme.of(context).textTheme.labelLarge,
-              ),
-              child: const Text('Close'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
         );
       },
     );
