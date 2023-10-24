@@ -4,22 +4,19 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:kumi_popup_window/kumi_popup_window.dart';
 
-//////////////////////////////////////////////////////////////////////////////
-// BLE Status //
-class AppBarBLE extends StatefulWidget implements PreferredSizeWidget {
-  @override
-  Size get preferredSize => Size.fromHeight(AppBar().preferredSize.height);
+class AppBarBLE extends StatefulWidget {
+  const AppBarBLE({super.key});
 
   @override
   State<AppBarBLE> createState() => _AppBarBLEState();
 }
 
 class _AppBarBLEState extends State<AppBarBLE> {
-  List<BluetoothDevice> availableDevices = [];
-  Color scanButton = const Color(0xff333333);
-  bool scanningBLE = false;
-  bool _isConnected = false;
   List<BluetoothDevice> _connectedDevices = [];
+  List<ScanResult> _scanResults = [];
+  bool _isScanning = false;
+  late StreamSubscription<List<ScanResult>> _scanResultsSubscription;
+  late StreamSubscription<bool> _isScanningSubscription;
 
   @override
   void initState() {
@@ -29,43 +26,32 @@ class _AppBarBLEState extends State<AppBarBLE> {
       _connectedDevices = devices;
       setState(() {});
     });
+
+    _scanResultsSubscription = FlutterBluePlus.scanResults.listen((results) {
+      _scanResults = results;
+      setState(() {});
+    });
+
+    _isScanningSubscription = FlutterBluePlus.isScanning.listen((state) {
+      _isScanning = state;
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _scanResultsSubscription.cancel();
+    _isScanningSubscription.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      //adjust the size of the app bar
-      toolbarHeight: 50,
-      //styling of the text in the app bar
-      title: const Text(
-        'ARFANIFY',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 25,
-          fontWeight: FontWeight.w300,
-          height: 2.3,
-        ),
-      ),
-      //resize the hamburger icon
-      iconTheme: const IconThemeData(size: 45, color: Colors.white),
-      //alignment of the text in the app bar
-      centerTitle: true,
-      //set background colour of AppBar
-      backgroundColor: Colors.black,
-
-      actions: [statusBLE()],
-      //adjust the bottom shape of the appbar
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(5))),
-    );
-  }
-
-  Container statusBLE() {
     return Container(
       padding: const EdgeInsets.only(top: 20, right: 10),
       child: OutlinedButton(
         onPressed: () {
-          BLEPopUp();
+          BLEPopUp(context);
         },
         style: OutlinedButton.styleFrom(
           foregroundColor: Colors.white,
@@ -87,7 +73,7 @@ class _AppBarBLEState extends State<AppBarBLE> {
     );
   }
 
-  KumiPopupWindow BLEPopUp() {
+  KumiPopupWindow BLEPopUp(BuildContext context) {
     return showPopupWindow(
       context,
       gravity: KumiPopupGravity.rightTop,
@@ -109,26 +95,127 @@ class _AppBarBLEState extends State<AppBarBLE> {
         return Container(
           key: GlobalKey(),
           padding: const EdgeInsets.all(10),
-          height: 100,
+          height: 500,
           width: 500,
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10), color: Colors.white),
-          child: Row(
+          child: Column(
             children: [
-              Icon(
-                Icons.circle_sharp,
-                size: 20,
-                color: const Color.fromARGB(255, 100, 210, 103),
-              ),
-              const SizedBox(width: 10),
-              const Text(
-                'Connection',
-                style: TextStyle(color: Colors.black, fontSize: 20),
-              ),
+              BLEStatusRow(),
+              MediumFoundRow(),
+              BLEButtonsRow(context),
             ],
           ),
         );
       },
+    );
+  }
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  String getConnectedLength() {
+    int mediumCount = 0;
+
+    if (_scanResults.isNotEmpty) {
+      mediumCount = _scanResults
+          .where((result) => result.device.platformName == 'Medium')
+          .length;
+    }
+
+    return '$mediumCount';
+  }
+
+  Row MediumFoundRow() {
+    return Row(
+      children: [
+        const SizedBox(width: 24),
+        Text(
+          getConnectedLength(), //call to get the amount of system device connected
+          style: const TextStyle(color: Colors.black, fontSize: 20),
+        ),
+        const SizedBox(width: 15),
+        const Text(
+          'Medium Found',
+          style: TextStyle(color: Colors.black, fontSize: 20),
+        )
+      ],
+    );
+  }
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  Future onScanPressed() async {
+    try {
+      await FlutterBluePlus.startScan(timeout: const Duration(seconds: 15));
+    } catch (e) {
+      debugPrint("Start Scan Error $e");
+    }
+    setState(() {}); // force refresh of systemDevices
+  }
+
+  Future onStopPressed() async {
+    try {
+      FlutterBluePlus.stopScan();
+    } catch (e) {
+      debugPrint("Stop Scan Error $e");
+    }
+  }
+
+  Row BLEButtonsRow(BuildContext context) {
+    return Row(
+      children: [
+        const SizedBox(width: 20),
+        TextButton(
+          style: TextButton.styleFrom(
+            textStyle: Theme.of(context).textTheme.labelLarge,
+          ),
+          child: const Text('Refresh'),
+          onPressed: () {
+            setState(() {}); //refreshes the pop up window
+          },
+        ),
+        TextButton(
+          style: TextButton.styleFrom(
+            textStyle: Theme.of(context).textTheme.labelLarge,
+          ),
+          child: const Text('Scan Devices'),
+          onPressed: () {
+            onScanPressed();
+          },
+        ),
+      ],
+    );
+  }
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  Color connectionColor() {
+    Color connectionIcon = const Color.fromARGB(255, 205, 64, 54);
+    bool isMediumConnected =
+        _connectedDevices.any((device) => device.platformName == 'Medium');
+
+    if (isMediumConnected) {
+      connectionIcon = const Color.fromARGB(255, 91, 206, 94);
+    }
+
+    return connectionIcon;
+  }
+
+  Row BLEStatusRow() {
+    return Row(
+      children: [
+        SizedBox(width: 20),
+        Icon(
+          Icons.circle_sharp,
+          size: 20,
+          color: connectionColor(),
+        ),
+        const SizedBox(width: 10),
+        const Text(
+          'Connection',
+          style: TextStyle(color: Colors.black, fontSize: 20),
+        ),
+      ],
     );
   }
 }
