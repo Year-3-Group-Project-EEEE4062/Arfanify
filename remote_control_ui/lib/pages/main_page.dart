@@ -22,8 +22,8 @@ class _MainPageState extends State<MainPage> {
     const MainPage(),
     remoteControlPage(),
     const AutonomousPage(),
-    //const CloudBackupPage()
-    const ScanScreen()
+    const CloudBackupPage()
+    //const ScanScreen()
   ];
 
   void _onItemTapped(int index) {

@@ -95,8 +95,8 @@ class _AppBarBLEState extends State<AppBarBLE> {
         return Container(
           key: GlobalKey(),
           padding: const EdgeInsets.all(10),
-          height: 500,
-          width: 500,
+          height: 300,
+          width: 200,
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10), color: Colors.white),
           child: Column(
@@ -164,21 +164,15 @@ class _AppBarBLEState extends State<AppBarBLE> {
   Row BLEButtonsRow(BuildContext context) {
     return Row(
       children: [
-        const SizedBox(width: 20),
+        const SizedBox(width: 18),
         TextButton(
           style: TextButton.styleFrom(
             textStyle: Theme.of(context).textTheme.labelLarge,
           ),
-          child: const Text('Refresh'),
-          onPressed: () {
-            setState(() {}); //refreshes the pop up window
-          },
-        ),
-        TextButton(
-          style: TextButton.styleFrom(
-            textStyle: Theme.of(context).textTheme.labelLarge,
+          child: const Text(
+            'Refresh',
+            style: TextStyle(fontSize: 20),
           ),
-          child: const Text('Scan Devices'),
           onPressed: () {
             onScanPressed();
           },
@@ -204,7 +198,7 @@ class _AppBarBLEState extends State<AppBarBLE> {
   Row BLEStatusRow() {
     return Row(
       children: [
-        SizedBox(width: 20),
+        const SizedBox(width: 20),
         Icon(
           Icons.circle_sharp,
           size: 20,
