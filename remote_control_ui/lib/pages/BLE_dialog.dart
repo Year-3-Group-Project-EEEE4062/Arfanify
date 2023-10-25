@@ -12,39 +12,14 @@ class AppBarBLE extends StatefulWidget {
 }
 
 class _AppBarBLEState extends State<AppBarBLE> {
-  List<BluetoothDevice> _connectedDevices = [];
-  List<ScanResult> _scanResults = [];
-  bool _isScanning = false;
-  late StreamSubscription<List<ScanResult>> _scanResultsSubscription;
-  late StreamSubscription<bool> _isScanningSubscription;
+  //These values must be able to be updated on the go
+  ValueNotifier<int> counter = ValueNotifier<int>(0);
+  ValueNotifier<Color> connectionColor =
+      ValueNotifier<Color>(const Color.fromARGB(255, 224, 80, 70));
+  ValueNotifier<String> actionMssg = ValueNotifier<String>('Idle');
+  ValueNotifier<bool> showTestButton = ValueNotifier<bool>(false);
 
-  @override
-  void initState() {
-    super.initState();
-
-    FlutterBluePlus.systemDevices.then((devices) {
-      _connectedDevices = devices;
-      setState(() {});
-    });
-
-    _scanResultsSubscription = FlutterBluePlus.scanResults.listen((results) {
-      _scanResults = results;
-      setState(() {});
-    });
-
-    _isScanningSubscription = FlutterBluePlus.isScanning.listen((state) {
-      _isScanning = state;
-      setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    _scanResultsSubscription.cancel();
-    _isScanningSubscription.cancel();
-    super.dispose();
-  }
-
+  //building a widget
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -95,15 +70,26 @@ class _AppBarBLEState extends State<AppBarBLE> {
         return Container(
           key: GlobalKey(),
           padding: const EdgeInsets.all(10),
-          height: 300,
-          width: 200,
+          height: 320,
+          width: 265,
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10), color: Colors.white),
           child: Column(
             children: [
-              BLEStatusRow(),
-              MediumFoundRow(),
-              BLEButtonsRow(context),
+              const SizedBox(height: 10), //add space between each of them
+              BLEStatusRow(context), //show connection status to Medium
+              const SizedBox(height: 10),
+              MediumFoundRow(context), //show how many Medium Found around
+              const SizedBox(height: 10),
+              ContextBox(
+                  context), //show user what is currently happening in BLE
+              const SizedBox(height: 10),
+              BLEScanAndConnectButton(
+                  context), //allow user to Scan and Connect to Medium if necessary
+
+              //allow user to test connection if connected
+              //if not connected ContextBox would alert the user
+              BLETestButton(context),
             ],
           ),
         );
@@ -113,26 +99,53 @@ class _AppBarBLEState extends State<AppBarBLE> {
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  String getConnectedLength() {
-    int mediumCount = 0;
-
-    if (_scanResults.isNotEmpty) {
-      mediumCount = _scanResults
-          .where((result) => result.device.platformName == 'Medium')
-          .length;
+  void checkConnection() {
+    const Color green = Color.fromARGB(255, 128, 232, 80);
+    if (connectionColor.value == green) {
+      //disconnected from Medium
+      connectionColor.value = const Color.fromARGB(255, 224, 80, 70);
+      showTestButton.value = false; //hide test button as Medium disconnected
+    } else {
+      //connected to Medium
+      connectionColor.value = green;
+      showTestButton.value = true; //allow user to test once connected
     }
-
-    return '$mediumCount';
   }
 
-  Row MediumFoundRow() {
+  Row BLEStatusRow(BuildContext context) {
+    return Row(
+      children: [
+        const SizedBox(width: 20),
+        ValueListenableBuilder(
+            valueListenable: connectionColor,
+            builder: (context, value, _) {
+              return Icon(
+                Icons.circle_sharp,
+                size: 20,
+                color: connectionColor.value,
+              );
+            }),
+        const SizedBox(width: 10),
+        const Text(
+          'Connection',
+          style: TextStyle(color: Colors.black, fontSize: 20),
+        ),
+      ],
+    );
+  }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  Row MediumFoundRow(BuildContext context) {
     return Row(
       children: [
         const SizedBox(width: 24),
-        Text(
-          getConnectedLength(), //call to get the amount of system device connected
-          style: const TextStyle(color: Colors.black, fontSize: 20),
-        ),
+        ValueListenableBuilder(
+            valueListenable: counter,
+            builder: (context, value, _) {
+              return Text('${counter.value}',
+                  style: const TextStyle(color: Colors.black, fontSize: 20));
+            }),
         const SizedBox(width: 15),
         const Text(
           'Medium Found',
@@ -142,26 +155,34 @@ class _AppBarBLEState extends State<AppBarBLE> {
     );
   }
 
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  Future onScanPressed() async {
-    try {
-      await FlutterBluePlus.startScan(timeout: const Duration(seconds: 15));
-    } catch (e) {
-      debugPrint("Start Scan Error $e");
-    }
-    setState(() {}); // force refresh of systemDevices
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  Row ContextBox(BuildContext context) {
+    return Row(
+      children: [
+        const SizedBox(width: 24),
+        Container(
+            height: 100,
+            width: 200,
+            decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 197, 196, 196),
+                borderRadius: BorderRadius.circular(10)),
+            child: Center(
+              child: ValueListenableBuilder(
+                  valueListenable: actionMssg,
+                  builder: (context, value, _) {
+                    return Text(actionMssg.value,
+                        style:
+                            const TextStyle(color: Colors.black, fontSize: 20));
+                  }),
+            ))
+      ],
+    );
   }
 
-  Future onStopPressed() async {
-    try {
-      FlutterBluePlus.stopScan();
-    } catch (e) {
-      debugPrint("Stop Scan Error $e");
-    }
-  }
-
-  Row BLEButtonsRow(BuildContext context) {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  Row BLEScanAndConnectButton(BuildContext context) {
     return Row(
       children: [
         const SizedBox(width: 18),
@@ -170,44 +191,34 @@ class _AppBarBLEState extends State<AppBarBLE> {
             textStyle: Theme.of(context).textTheme.labelLarge,
           ),
           child: const Text(
-            'Refresh',
+            'Scan & Connect',
             style: TextStyle(fontSize: 20),
           ),
           onPressed: () {
-            onScanPressed();
+            counter.value += 1;
+            checkConnection();
           },
         ),
       ],
     );
   }
 
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  Color connectionColor() {
-    Color connectionIcon = const Color.fromARGB(255, 205, 64, 54);
-    bool isMediumConnected =
-        _connectedDevices.any((device) => device.platformName == 'Medium');
-
-    if (isMediumConnected) {
-      connectionIcon = const Color.fromARGB(255, 91, 206, 94);
-    }
-
-    return connectionIcon;
-  }
-
-  Row BLEStatusRow() {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //displaying of this button depends on checkConnection()
+  Row BLETestButton(BuildContext context) {
     return Row(
       children: [
-        const SizedBox(width: 20),
-        Icon(
-          Icons.circle_sharp,
-          size: 20,
-          color: connectionColor(),
-        ),
-        const SizedBox(width: 10),
-        const Text(
-          'Connection',
-          style: TextStyle(color: Colors.black, fontSize: 20),
+        const SizedBox(width: 14),
+        TextButton(
+          style: TextButton.styleFrom(
+            textStyle: Theme.of(context).textTheme.labelLarge,
+          ),
+          child: const Text(
+            'Test',
+            style: TextStyle(fontSize: 20),
+          ),
+          onPressed: () {},
         ),
       ],
     );
