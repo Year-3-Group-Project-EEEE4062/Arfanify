@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:remote_control_ui/pages/BLE_dialog.dart';
 import 'package:remote_control_ui/pages/autonomous_page.dart';
 import 'package:remote_control_ui/pages/cloud_backup_page.dart';
-//import 'package:remote_control_ui/pages/home_page.dart';
+import 'package:remote_control_ui/pages/home_page.dart';
 import 'package:remote_control_ui/pages/remote_control_page.dart';
 
 // HomePage integrated within MainPage
@@ -17,19 +17,18 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   ////////////////////////variables
   int _selectedIndex = 0;
-  final _category = [
-    const MainPage(),
-    remoteControlPage(),
-    const AutonomousPage(),
-    const CloudBackupPage()
-    //const ScanScreen()
-  ];
 
-  void _onItemTapped(int index) {
+  _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
   }
+
+  final _categories = [
+    remoteControlPage(),
+    const AutonomousPage(),
+    const CloudBackupPage()
+  ];
 
   ////////////////////////Scaffold
   @override
@@ -38,134 +37,17 @@ class _MainPageState extends State<MainPage> {
         backgroundColor: Colors.black,
         appBar: bar(context),
         drawer: DrawerPage(context),
-        body: (_selectedIndex == 0) ? HomePage() : _category[_selectedIndex]
-        // body: _category[_selectedIndex]
-        );
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  // HOMEPAGE //
-  Center HomePage() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          arfanifyIcon(),
-          remoteControlButton(),
-          autonomousButton(),
-          cloudBackupButton(),
-        ],
-      ),
-    );
-  }
-
-  Image arfanifyIcon() {
-    return const Image(
-      image: AssetImage('assets/icons/Arfanify.png'),
-      width: 200,
-      height: 200,
-      color: Colors.white,
-    );
-  }
-
-  Container remoteControlButton() {
-    return Container(
-      margin: const EdgeInsets.all(10),
-      height: 100,
-      width: 160,
-      child: ElevatedButton(
-        onPressed: () {
-          // MainPage();
-          _onItemTapped(1); // Use the variable within the print statement
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xff333333),
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-        child: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Icon(Icons.settings_remote_sharp,
-                size: 60), // Adjust the size as needed
-            Text(
-              'Remote Control',
-              style: TextStyle(fontSize: 18),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Container autonomousButton() {
-    return Container(
-      margin: const EdgeInsets.all(10),
-      height: 100,
-      width: 160,
-      child: ElevatedButton(
-        onPressed: () {
-          _onItemTapped(2); // Use the variable within the print statement
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xff333333),
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-        child: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Icon(Icons.map_outlined, size: 60), // Adjust the size as needed
-            Text(
-              'Autonomous',
-              style: TextStyle(fontSize: 18),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Container cloudBackupButton() {
-    return Container(
-      margin: const EdgeInsets.all(10),
-      height: 100,
-      width: 160,
-      child: ElevatedButton(
-        onPressed: () {
-          _onItemTapped(3); // Use the variable within the print statement
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xff333333),
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-        child: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Icon(Icons.cloud_done, size: 60), // Adjust the size as needed
-            Text(
-              'Cloud Backup',
-              style: TextStyle(fontSize: 18),
-            ),
-          ],
-        ),
-      ),
-    );
+        body: (_selectedIndex == 0)
+            ? HomePage(function: _onItemTapped)
+            : _categories[_selectedIndex - 1]); //compensate for the index
+    //HomePage(function: _onItemTapped) cannot be placed in a list
   }
 
   //////////////////////////////////////////////////////////////////////////////
   // DRAWER //
   Drawer DrawerPage(BuildContext context) {
     return Drawer(
-      backgroundColor: Color.fromARGB(255, 255, 255, 255),
+      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       child: ListView(
         padding: const EdgeInsets.all(0),
         children: <Widget>[
@@ -199,7 +81,7 @@ class _MainPageState extends State<MainPage> {
   ListTile home_page_drawer(BuildContext context) {
     return ListTile(
       selected: _selectedIndex == 0,
-      selectedColor: Color(0xff29A8AB),
+      selectedColor: const Color(0xff29A8AB),
       leading: const Icon(
         Icons.home,
       ),
@@ -219,7 +101,7 @@ class _MainPageState extends State<MainPage> {
   ListTile remote_control_drawer(BuildContext context) {
     return ListTile(
       selected: _selectedIndex == 1,
-      selectedColor: Color(0xff29A8AB),
+      selectedColor: const Color(0xff29A8AB),
       leading: const Icon(
         Icons.settings_remote_sharp,
       ),
@@ -239,7 +121,7 @@ class _MainPageState extends State<MainPage> {
   ListTile autonomous_drawer(BuildContext context) {
     return ListTile(
       selected: _selectedIndex == 2,
-      selectedColor: Color(0xff29A8AB),
+      selectedColor: const Color(0xff29A8AB),
       leading: const Icon(
         Icons.map_outlined,
       ),
@@ -259,7 +141,7 @@ class _MainPageState extends State<MainPage> {
   ListTile cloud_backup_drawer(BuildContext context) {
     return ListTile(
       selected: _selectedIndex == 3,
-      selectedColor: Color(0xff29A8AB),
+      selectedColor: const Color(0xff29A8AB),
       leading: const Icon(
         Icons.cloud_done,
       ),
