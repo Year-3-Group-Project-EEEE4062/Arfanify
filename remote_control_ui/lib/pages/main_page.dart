@@ -18,17 +18,30 @@ class _MainPageState extends State<MainPage> {
   ////////////////////////variables
   int _selectedIndex = 0;
 
+  //update the selected index based on which page user wants to go to
   _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
   }
 
-  final _categories = [
-    remoteControlPage(),
-    const AutonomousPage(),
-    const CloudBackupPage()
-  ];
+  //return widget based on what user wants
+  Widget goToPage() {
+    if (_selectedIndex == 0) {
+      return HomePage(function: _onItemTapped);
+    } else if (_selectedIndex == 1) {
+      return remoteControlPage();
+    } else if (_selectedIndex == 2) {
+      return const AutonomousPage();
+    } else if (_selectedIndex == 3) {
+      return const CloudBackupPage();
+    } else {
+      //to prevent return of null
+      //if selected Index ever invalid, body is just homePage
+      debugPrint("Selected Index is invalid");
+      return HomePage(function: _onItemTapped);
+    }
+  }
 
   ////////////////////////Scaffold
   @override
@@ -37,10 +50,7 @@ class _MainPageState extends State<MainPage> {
         backgroundColor: Colors.black,
         appBar: bar(context),
         drawer: DrawerPage(context),
-        body: (_selectedIndex == 0)
-            ? HomePage(function: _onItemTapped)
-            : _categories[_selectedIndex - 1]); //compensate for the index
-    //HomePage(function: _onItemTapped) cannot be placed in a list
+        body: goToPage());
   }
 
   //////////////////////////////////////////////////////////////////////////////
