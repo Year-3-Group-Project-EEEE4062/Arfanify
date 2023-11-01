@@ -401,7 +401,7 @@ class _AppBarBLEState extends State<AppBarBLE> {
           onPressed: () async {
             //only do the scanning and connecting if bluetooth ON and working
             if (checkAdapterState()) {
-              await onScanPressed();
+              onScanPressed();
             }
           },
         ),
