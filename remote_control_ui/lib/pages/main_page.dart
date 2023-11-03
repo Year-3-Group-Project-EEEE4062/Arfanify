@@ -78,7 +78,7 @@ class _MainPageState extends State<MainPage> {
   DrawerHeader drawer_header() {
     return DrawerHeader(
       decoration: BoxDecoration(
-          color: const Color(0xff333333),
+          color: const Color(0xff171717),
           borderRadius: BorderRadius.circular(10)),
       //Container just acts as a filler so that Drawer Header has a child
       //if not, Drawer header not valid

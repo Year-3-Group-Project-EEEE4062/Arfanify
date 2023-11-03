@@ -9,6 +9,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _homePageState extends State<HomePage> {
+  Color buttonBackgroundColor = const Color(0xff171717);
+  Color buttonForegroundColor = const Color.fromARGB(255, 234, 228, 228);
+
   void buttonPressed(int index) {
     widget.function(index);
   }
@@ -48,8 +51,8 @@ class _homePageState extends State<HomePage> {
           buttonPressed(1);
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xff333333),
-          foregroundColor: Colors.white,
+          backgroundColor: buttonBackgroundColor,
+          foregroundColor: buttonForegroundColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
@@ -79,8 +82,8 @@ class _homePageState extends State<HomePage> {
           buttonPressed(2); // Use the variable within the print statement
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xff333333),
-          foregroundColor: Colors.white,
+          backgroundColor: buttonBackgroundColor,
+          foregroundColor: buttonForegroundColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
@@ -109,8 +112,8 @@ class _homePageState extends State<HomePage> {
           buttonPressed(3); // Use the variable within the print statement
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xff333333),
-          foregroundColor: Colors.white,
+          backgroundColor: buttonBackgroundColor,
+          foregroundColor: buttonForegroundColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter/material.dart';
@@ -322,13 +323,29 @@ class _AppBarBLEState extends State<AppBarBLE> {
           //set that Medium has been found
           mediumConnected = true;
 
-          //Discover the services of the Medium
-          _services = await mediumDevice.discoverServices();
-
           // Very important!
           //request the maxium transmission unit (MTU) of 512 bytes
           if (Platform.isAndroid) {
             await mediumDevice.requestMtu(512);
+          }
+
+          //Discover the services of the Medium
+          _services = await mediumDevice.discoverServices();
+
+          //Read the characteristic in the 3rd service (the one i defined in Medium)
+          var characteristics = _services[2].characteristics;
+          //access the values stored in the characteristic
+          for (BluetoothCharacteristic c in characteristics) {
+            if (c.properties.read) {
+              //read the characteristic message
+              List<int> value = await c.read();
+
+              //make it human readable instead of list of integers
+              String data = utf8.decode(value);
+
+              //debug printing of what characteristic is read
+              debugPrint(data);
+            }
           }
 
           debugPrint('${_services.length}');
