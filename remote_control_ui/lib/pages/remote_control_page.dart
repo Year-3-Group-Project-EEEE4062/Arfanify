@@ -98,9 +98,9 @@ class _remoteControlState extends State<remoteControlPage> {
     } else if (_mode == 2.0) {
       label = 'Low';
     } else if (_mode == 4.0) {
-      label = 'Medium';
+      label = 'Average';
     } else if (_mode == 6.0) {
-      label = 'High';
+      label = 'Fast';
     }
     return label;
   }
