@@ -33,7 +33,8 @@ class _AppBarBLEState extends State<AppBarBLE> {
   //Might vary for different Mediums
   final List<DeviceIdentifier> mediumId = [
     const DeviceIdentifier('3C:E9:0E:83:A6:3E'),
-    const DeviceIdentifier('0C:B8:15:F2:C9:36')
+    const DeviceIdentifier('0C:B8:15:F2:C9:36'),
+    const DeviceIdentifier('08:D1:F9:99:2A:66')
   ];
 
   //to store the Medium found
@@ -332,7 +333,7 @@ class _AppBarBLEState extends State<AppBarBLE> {
           //Discover the services of the Medium
           _services = await mediumDevice.discoverServices();
 
-          //Read the characteristic in the 3rd service (the one i defined in Medium)
+          //Read the characteristic in the 3rd service (the user defined characteristic)
           var characteristics = _services[2].characteristics;
           //access the values stored in the characteristic
           for (BluetoothCharacteristic c in characteristics) {
