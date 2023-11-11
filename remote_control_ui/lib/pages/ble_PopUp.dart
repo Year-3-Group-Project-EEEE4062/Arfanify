@@ -13,17 +13,23 @@ class AppBarBLE extends StatefulWidget {
 }
 
 class _AppBarBLEState extends State<AppBarBLE> {
-  //These values must be able to be updated on the go
+  //variable used to let user visually see the BLE connection status
   ValueNotifier<Color> connectionColor =
       ValueNotifier<Color>(const Color.fromARGB(255, 224, 80, 70));
-  ValueNotifier<String> actionMssg = ValueNotifier<String>('Idle');
 
+  //variables for the action box to alert users of current happenings in BLE
+  ValueNotifier<String> actionMssg = ValueNotifier<String>('Idle');
+  ValueNotifier<String> timeMssg = ValueNotifier<String>('-');
+
+  //variables used to keep track of the phone's bluetooth state
   BluetoothAdapterState _adapterState = BluetoothAdapterState.unknown;
   late StreamSubscription<BluetoothAdapterState> _adapterStateStateSubscription;
 
-  List<ScanResult> _scanResults = [];
+  //variables to keep track of BLE scan results
+  final List<ScanResult> _scanResults = [];
   late StreamSubscription<List<ScanResult>> _scanResultsSubscription;
 
+  //variable used to check the services available by connected device
   List<BluetoothService> _services = [];
 
   //Medium remote ID for comparison when finding Medium
@@ -46,8 +52,20 @@ class _AppBarBLEState extends State<AppBarBLE> {
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   void resetVariables() {
     _scanResults.clear(); //reset scan as Bluetooth state changes
+    _services.clear(); //reset services as Bluetooth state changes
     mediumFound = false; //reset back to medium not found
     mediumConnected = false;
+  }
+
+  //this function can only be called by main_page.dart
+  //other pages have to go through main_page.dart to call this function to send data to Medium
+  Future<void> sendDataBLE(String dataToBeSent) async {
+    if (mediumConnected) {
+      writeCharacteristics(dataToBeSent);
+    } else {
+      //for debugging purposes
+      debugPrint("Medium Not Connected Yet!!!");
+    }
   }
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -185,7 +203,7 @@ class _AppBarBLEState extends State<AppBarBLE> {
         return Container(
           key: GlobalKey(),
           padding: const EdgeInsets.all(10),
-          height: 350,
+          height: 400,
           width: 265,
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10), color: Colors.white),
@@ -248,30 +266,79 @@ class _AppBarBLEState extends State<AppBarBLE> {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  void timeActionMssg() {
+    DateTime now = DateTime.now();
+    int hour = now.hour;
+    int minute = now.minute;
+
+    // Convert the hour and minute to strings
+    String hourString = hour.toString();
+    String minuteString = minute.toString();
+
+    // Add a leading zero if the minute is less than 10
+    if (minute < 10) {
+      minuteString = '0$minuteString';
+    }
+
+    // Update the time when Action Mssg was called
+    // Concatenate the hour and minute with a colon
+    timeMssg.value = '$hourString:$minuteString';
+  }
+
   void editActionMssg(String newMssg) {
     actionMssg.value = newMssg;
+    timeActionMssg();
   }
 
   Row contextBox(BuildContext context) {
     return Row(textBaseline: TextBaseline.alphabetic, children: [
       const SizedBox(width: 24),
       Container(
-          height: 100,
-          width: 200,
-          decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 197, 196, 196),
-              borderRadius: BorderRadius.circular(10)),
-          child: Center(
-            child: ValueListenableBuilder(
-                valueListenable: actionMssg,
-                builder: (context, value, _) {
-                  return Text(actionMssg.value,
-                      softWrap: true,
-                      textAlign: TextAlign.center,
-                      style:
-                          const TextStyle(color: Colors.black, fontSize: 20));
-                }),
-          ))
+        height: 150,
+        width: 200,
+        decoration: BoxDecoration(
+            color: const Color.fromARGB(255, 33, 33, 33),
+            borderRadius: BorderRadius.circular(10)),
+        child: Column(
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                width: 60,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.circular(10),
+                  //border: Border.all(width: 2, color: Colors.white)
+                ),
+                child: Center(
+                  child: ValueListenableBuilder(
+                      valueListenable: timeMssg,
+                      builder: (context, value, _) {
+                        return Text(timeMssg.value,
+                            softWrap: true,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 20));
+                      }),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Center(
+              child: ValueListenableBuilder(
+                  valueListenable: actionMssg,
+                  builder: (context, value, _) {
+                    return Text(actionMssg.value,
+                        softWrap: true,
+                        textAlign: TextAlign.center,
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 20));
+                  }),
+            )
+          ],
+        ),
+      )
     ]);
   }
 
@@ -321,20 +388,31 @@ class _AppBarBLEState extends State<AppBarBLE> {
   Future<void> readCharacteristics() async {
     //Read the characteristic in the 3rd service (the user defined characteristic)
     var characteristics = _services[2].characteristics;
+    BluetoothCharacteristic c = characteristics[0];
+    String inputData;
+    List<int> value;
 
-    //access the values stored in the characteristic
-    for (BluetoothCharacteristic c in characteristics) {
-      if (c.properties.read || c.properties.write) {
-        //read the characteristic message
-        List<int> value = await c.read();
+    //read the characteristic message
+    value = await c.read();
 
-        //make it human readable instead of list of integers
-        String data = utf8.decode(value);
+    //make it human readable instead of list of integers
+    inputData = utf8.decode(value);
 
-        //debug printing of what characteristic is read
-        debugPrint(data);
-      }
-    }
+    //debug printing of what characteristic is read
+    debugPrint(inputData);
+  }
+
+  Future<void> writeCharacteristics(String command) async {
+    //Take the characteristic in the 3rd service (the user defined characteristic)
+    var characteristics = _services[2].characteristics;
+    BluetoothCharacteristic c = characteristics[0];
+    List<int> sendData;
+
+    //Encode the command as utf8
+    sendData = utf8.encode(command);
+
+    //send the data through BLE to the Medium
+    await c.write(sendData, allowLongWrite: true);
   }
 
   Future<void> connectToMedium() async {
