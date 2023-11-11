@@ -5,8 +5,6 @@ import 'package:remote_control_ui/pages/cloud_backup_page.dart';
 import 'package:remote_control_ui/pages/home_page.dart';
 import 'package:remote_control_ui/pages/remote_control_page.dart';
 
-// HomePage integrated within MainPage
-
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
 
@@ -25,12 +23,16 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
+  _updateMediumBLE(String command) {
+    AppBarBLEState().sendDataBLE(command);
+  }
+
   //return widget based on what user wants
   Widget goToPage() {
     if (_selectedIndex == 0) {
-      return HomePage(function: _onItemTapped);
+      return HomePage(updateScaffoldBody: _onItemTapped);
     } else if (_selectedIndex == 1) {
-      return remoteControlPage();
+      return RemoteControlPage(bLE: _updateMediumBLE);
     } else if (_selectedIndex == 2) {
       return const AutonomousPage();
     } else if (_selectedIndex == 3) {
@@ -39,7 +41,7 @@ class _MainPageState extends State<MainPage> {
       //to prevent return of null
       //if selected Index ever invalid, body is just homePage
       debugPrint("Selected Index is invalid");
-      return HomePage(function: _onItemTapped);
+      return HomePage(updateScaffoldBody: _onItemTapped);
     }
   }
 
@@ -189,7 +191,7 @@ class _MainPageState extends State<MainPage> {
       //set background colour of AppBar
       backgroundColor: Colors.black,
 
-      actions: [AppBarBLE()],
+      actions: const [AppBarBLE()],
       //adjust the bottom shape of the appbar
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(5))),

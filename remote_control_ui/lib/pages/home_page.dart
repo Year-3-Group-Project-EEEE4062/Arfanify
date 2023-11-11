@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
-  final Function(int) function;
-  HomePage({required this.function});
+  final Function(int) updateScaffoldBody;
+  const HomePage({super.key, required this.updateScaffoldBody});
 
   @override
-  _homePageState createState() => _homePageState();
+  HomePageState createState() => HomePageState();
 }
 
-class _homePageState extends State<HomePage> {
+class HomePageState extends State<HomePage> {
   Color buttonBackgroundColor = const Color(0xff171717);
   Color buttonForegroundColor = const Color.fromARGB(255, 234, 228, 228);
 
   void buttonPressed(int index) {
-    widget.function(index);
+    widget.updateScaffoldBody(index);
   }
 
   @override

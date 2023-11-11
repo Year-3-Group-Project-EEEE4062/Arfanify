@@ -5,14 +5,19 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:kumi_popup_window/kumi_popup_window.dart';
 
+//indicator if a medium has been found
+bool mediumFound = false;
+bool mediumConnected = false;
+
 class AppBarBLE extends StatefulWidget {
   const AppBarBLE({super.key});
 
   @override
-  State<AppBarBLE> createState() => _AppBarBLEState();
+  State<AppBarBLE> createState() => AppBarBLEState();
 }
 
-class _AppBarBLEState extends State<AppBarBLE> {
+//a public class so that main_page.dart can call the sendDataBLE function only
+class AppBarBLEState extends State<AppBarBLE> {
   //variable used to let user visually see the BLE connection status
   ValueNotifier<Color> connectionColor =
       ValueNotifier<Color>(const Color.fromARGB(255, 224, 80, 70));
@@ -44,7 +49,6 @@ class _AppBarBLEState extends State<AppBarBLE> {
   late BluetoothDevice mediumDevice;
 
   //indicator if a medium has been found
-  //ValueNotifier<bool> mediumFound = ValueNotifier<bool>(false);
   bool mediumFound = false;
   bool mediumConnected = false;
 
@@ -59,7 +63,8 @@ class _AppBarBLEState extends State<AppBarBLE> {
 
   //this function can only be called by main_page.dart
   //other pages have to go through main_page.dart to call this function to send data to Medium
-  Future<void> sendDataBLE(String dataToBeSent) async {
+  void sendDataBLE(String dataToBeSent) async {
+    debugPrint("$mediumConnected");
     if (mediumConnected) {
       writeCharacteristics(dataToBeSent);
     } else {
@@ -88,7 +93,7 @@ class _AppBarBLEState extends State<AppBarBLE> {
       }
       _scanResults.clear(); //reset scan as Bluetooth state changes
       mediumFound = false; //reset back to medium not found
-      mediumConnected = false;
+      //mediumConnected = false;
       return false;
     }
   }
@@ -351,8 +356,6 @@ class _AppBarBLEState extends State<AppBarBLE> {
       // Connect to the device
       try {
         await mediumDevice.disconnect();
-        editActionMssg("Disconnected from Medium...");
-        resetVariables();
       } catch (e) {
         debugPrint("$e");
         editActionMssg("Unable to disconnect!");
@@ -412,7 +415,11 @@ class _AppBarBLEState extends State<AppBarBLE> {
     sendData = utf8.encode(command);
 
     //send the data through BLE to the Medium
-    await c.write(sendData, allowLongWrite: true);
+    try {
+      await c.write(sendData, allowLongWrite: true);
+    } catch (e) {
+      debugPrint("Does not Work!!!");
+    }
   }
 
   Future<void> connectToMedium() async {
@@ -422,7 +429,6 @@ class _AppBarBLEState extends State<AppBarBLE> {
       // Connect to the device
       try {
         await mediumDevice.connect();
-        editActionMssg("You can do something now..");
       } catch (e) {
         debugPrint('$e');
         editActionMssg("Problem with connecting..");
@@ -434,6 +440,8 @@ class _AppBarBLEState extends State<AppBarBLE> {
         if (state == BluetoothConnectionState.connected) {
           //connected change the icon color to green
           connectionColor.value = const Color.fromARGB(255, 128, 232, 80);
+
+          editActionMssg("Medium Connected..\n Stay Safe!!");
 
           //set that Medium has been found
           mediumConnected = true;
@@ -455,6 +463,8 @@ class _AppBarBLEState extends State<AppBarBLE> {
           //change the connection color to red
           connectionColor.value = const Color.fromARGB(255, 224, 80, 70);
           _services.clear(); //must rediscover services after disconnection
+          editActionMssg("Disconnected from Medium...");
+          resetVariables();
           mediumConnected = false;
           debugPrint("Medium Disconnected!");
         }

@@ -2,15 +2,31 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 
-class remoteControlPage extends StatefulWidget {
+class RemoteControlPage extends StatefulWidget {
+  final Function(String) bLE;
+  const RemoteControlPage({super.key, required this.bLE});
+
   @override
-  _remoteControlState createState() => _remoteControlState();
+  RemoteControlState createState() => RemoteControlState();
 }
 
-class _remoteControlState extends State<remoteControlPage> {
-  double _mode = 0;
+class RemoteControlState extends State<RemoteControlPage> {
+  double _motion = 0;
+  String bLEremoteCommand = "R S  ";
   String _status = 'Stop';
   Color _statusColor = Colors.red;
+
+  //callback to goes back to main_page.dart to send data through BLE
+  void remoteControlSendBLE() {
+    debugPrint("Remote Callback Called");
+    debugPrint(bLEremoteCommand);
+    widget.bLE(bLEremoteCommand);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   //when remote control page closed, it will dispose of the variables
@@ -38,7 +54,6 @@ class _remoteControlState extends State<remoteControlPage> {
   //////////////////////////////////////////////////////////////////////////////
   SizedBox modeGauge() {
     return SizedBox(
-      //color: Colors.amber,
       height: 250,
       child: SfRadialGauge(
         axes: <RadialAxis>[
@@ -53,7 +68,7 @@ class _remoteControlState extends State<remoteControlPage> {
               GaugeRange(startValue: 5, endValue: 7, color: Colors.orange),
             ],
             pointers: <GaugePointer>[
-              NeedlePointer(value: _mode, needleColor: Colors.white),
+              NeedlePointer(value: _motion, needleColor: Colors.white),
             ],
           )
         ],
@@ -73,17 +88,17 @@ class _remoteControlState extends State<remoteControlPage> {
         trackHeight: 20,
       ),
       child: Slider(
-        value: _mode,
+        value: _motion,
         min: 0.0,
         max: 6.0,
         divisions: 3,
         onChanged: (value) {
           setState(() {
-            _mode = value;
+            _motion = value;
             _status = _changeMode();
             _statusColor = _changeModeColor();
             if (kDebugMode) {
-              debugPrint("$_mode , $_status , $_statusColor");
+              debugPrint("$_motion , $_status , $_statusColor");
             }
           });
         },
@@ -93,13 +108,17 @@ class _remoteControlState extends State<remoteControlPage> {
 
   String _changeMode() {
     String label = '';
-    if (_mode == 0.0) {
+    if (_motion == 0.0) {
       label = 'Stop';
-    } else if (_mode == 2.0) {
+      bLEremoteCommand = bLEremoteCommand.replaceRange(2, 2 + 1, 'S');
+      remoteControlSendBLE();
+    } else if (_motion == 2.0) {
       label = 'Low';
-    } else if (_mode == 4.0) {
+      bLEremoteCommand = bLEremoteCommand.replaceRange(2, 2 + 1, 'L');
+      remoteControlSendBLE();
+    } else if (_motion == 4.0) {
       label = 'Average';
-    } else if (_mode == 6.0) {
+    } else if (_motion == 6.0) {
       label = 'Fast';
     }
     return label;
@@ -107,13 +126,13 @@ class _remoteControlState extends State<remoteControlPage> {
 
   Color _changeModeColor() {
     Color ModeColor = Colors.amber;
-    if (_mode == 0.0) {
+    if (_motion == 0.0) {
       ModeColor = Colors.red;
-    } else if (_mode == 2.0) {
+    } else if (_motion == 2.0) {
       ModeColor = Colors.green;
-    } else if (_mode == 4.0) {
+    } else if (_motion == 4.0) {
       ModeColor = Colors.yellow;
-    } else if (_mode == 6.0) {
+    } else if (_motion == 6.0) {
       ModeColor = Colors.orange;
     }
     return ModeColor;
@@ -169,7 +188,7 @@ class _remoteControlState extends State<remoteControlPage> {
       width: 80,
       child: FloatingActionButton(
         heroTag: null,
-        backgroundColor: const Color(0xff545454),
+        backgroundColor: const Color.fromARGB(255, 33, 33, 33),
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         child: const Icon(
@@ -180,6 +199,8 @@ class _remoteControlState extends State<remoteControlPage> {
           if (kDebugMode) {
             debugPrint("Forward button pressed");
           }
+          bLEremoteCommand = bLEremoteCommand.replaceRange(4, 4 + 1, 'F');
+          remoteControlSendBLE();
         },
       ),
     );
@@ -191,7 +212,7 @@ class _remoteControlState extends State<remoteControlPage> {
       width: 80,
       child: FloatingActionButton(
         heroTag: null,
-        backgroundColor: const Color(0xff545454),
+        backgroundColor: const Color.fromARGB(255, 33, 33, 33),
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         child: const Icon(
@@ -213,7 +234,7 @@ class _remoteControlState extends State<remoteControlPage> {
       width: 100,
       child: FloatingActionButton(
         heroTag: null,
-        backgroundColor: const Color(0xff545454),
+        backgroundColor: const Color.fromARGB(255, 33, 33, 33),
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         child: const Icon(
@@ -235,7 +256,7 @@ class _remoteControlState extends State<remoteControlPage> {
       width: 100,
       child: FloatingActionButton(
         heroTag: null,
-        backgroundColor: const Color(0xff545454),
+        backgroundColor: const Color.fromARGB(255, 33, 33, 33),
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         child: const Icon(
