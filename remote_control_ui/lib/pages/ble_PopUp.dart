@@ -24,9 +24,6 @@ class _AppBarBLEState extends State<AppBarBLE> {
   List<ScanResult> _scanResults = [];
   late StreamSubscription<List<ScanResult>> _scanResultsSubscription;
 
-  bool _isScanning = false;
-  late StreamSubscription<bool> _isScanningSubscription;
-
   List<BluetoothService> _services = [];
 
   //Medium remote ID for comparison when finding Medium
@@ -44,6 +41,14 @@ class _AppBarBLEState extends State<AppBarBLE> {
   //ValueNotifier<bool> mediumFound = ValueNotifier<bool>(false);
   bool mediumFound = false;
   bool mediumConnected = false;
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  void resetVariables() {
+    _scanResults.clear(); //reset scan as Bluetooth state changes
+    mediumFound = false; //reset back to medium not found
+    mediumConnected = false;
+  }
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -100,9 +105,6 @@ class _AppBarBLEState extends State<AppBarBLE> {
               //medium detected and add to list
               _scanResults.add(r);
 
-              //show user in context box that medium detected
-              editActionMssg("Medium Detected!");
-
               //assign the device to mediumDevice for later connection
               mediumDevice = r.device;
 
@@ -114,8 +116,6 @@ class _AppBarBLEState extends State<AppBarBLE> {
         setState(() {});
       },
     );
-
-    //Listener for if the BLE scan is on or not
   }
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -253,34 +253,43 @@ class _AppBarBLEState extends State<AppBarBLE> {
   }
 
   Row contextBox(BuildContext context) {
-    return Row(
-      children: [
-        const SizedBox(width: 24),
-        Container(
-            height: 100,
-            width: 200,
-            decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 197, 196, 196),
-                borderRadius: BorderRadius.circular(10)),
-            child: Center(
-              child: ValueListenableBuilder(
-                  valueListenable: actionMssg,
-                  builder: (context, value, _) {
-                    return Text(actionMssg.value,
-                        style:
-                            const TextStyle(color: Colors.black, fontSize: 20));
-                  }),
-            ))
-      ],
-    );
+    return Row(textBaseline: TextBaseline.alphabetic, children: [
+      const SizedBox(width: 24),
+      Container(
+          height: 100,
+          width: 200,
+          decoration: BoxDecoration(
+              color: const Color.fromARGB(255, 197, 196, 196),
+              borderRadius: BorderRadius.circular(10)),
+          child: Center(
+            child: ValueListenableBuilder(
+                valueListenable: actionMssg,
+                builder: (context, value, _) {
+                  return Text(actionMssg.value,
+                      softWrap: true,
+                      textAlign: TextAlign.center,
+                      style:
+                          const TextStyle(color: Colors.black, fontSize: 20));
+                }),
+          ))
+    ]);
   }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Future<void> disconnectToMedium() async {
     if (mediumConnected) {
+      editActionMssg("Attempting disconnection...");
+
       // Connect to the device
-      await mediumDevice.disconnect();
+      try {
+        await mediumDevice.disconnect();
+        editActionMssg("Disconnected from Medium...");
+        resetVariables();
+      } catch (e) {
+        debugPrint("$e");
+        editActionMssg("Unable to disconnect!");
+      }
     }
   }
 
@@ -309,10 +318,37 @@ class _AppBarBLEState extends State<AppBarBLE> {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  Future<void> readCharacteristics() async {
+    //Read the characteristic in the 3rd service (the user defined characteristic)
+    var characteristics = _services[2].characteristics;
+
+    //access the values stored in the characteristic
+    for (BluetoothCharacteristic c in characteristics) {
+      if (c.properties.read || c.properties.write) {
+        //read the characteristic message
+        List<int> value = await c.read();
+
+        //make it human readable instead of list of integers
+        String data = utf8.decode(value);
+
+        //debug printing of what characteristic is read
+        debugPrint(data);
+      }
+    }
+  }
+
   Future<void> connectToMedium() async {
     if (mediumFound && !mediumConnected) {
+      editActionMssg("Attempting \nconnection....");
+
       // Connect to the device
-      await mediumDevice.connect();
+      try {
+        await mediumDevice.connect();
+        editActionMssg("You can do something now..");
+      } catch (e) {
+        debugPrint('$e');
+        editActionMssg("Problem with connecting..");
+      }
 
       // listen for disconnection
       mediumDevice.connectionState
@@ -333,23 +369,7 @@ class _AppBarBLEState extends State<AppBarBLE> {
           //Discover the services of the Medium
           _services = await mediumDevice.discoverServices();
 
-          //Read the characteristic in the 3rd service (the user defined characteristic)
-          var characteristics = _services[2].characteristics;
-          //access the values stored in the characteristic
-          for (BluetoothCharacteristic c in characteristics) {
-            if (c.properties.read) {
-              //read the characteristic message
-              List<int> value = await c.read();
-
-              //make it human readable instead of list of integers
-              String data = utf8.decode(value);
-
-              //debug printing of what characteristic is read
-              debugPrint(data);
-            }
-          }
-
-          debugPrint('${_services.length}');
+          readCharacteristics();
 
           //for debugging purpose to know if Medium connected or not
           debugPrint("Medium Connected!");
@@ -389,12 +409,30 @@ class _AppBarBLEState extends State<AppBarBLE> {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  Future<void> scanningStopCallback() async {
+    await FlutterBluePlus.stopScan();
+
+    if (mediumFound) {
+      //show user in context box that medium detected
+      editActionMssg("Scan Stopped... \nMedium Found!");
+    } else {
+      editActionMssg("Scan Stopped... \nNo Medium Detected!");
+    }
+  }
 
   Future<void> onScanPressed() async {
-    //only do the scanning if the Medium is not found
-    if (!mediumFound) {
+    Duration timeoutt = const Duration(seconds: 1);
+
+    //only do the scanning if the Medium is not connected to app
+    if (!mediumConnected) {
       try {
-        await FlutterBluePlus.startScan(timeout: const Duration(seconds: 1));
+        resetVariables();
+
+        //start scanning
+        await FlutterBluePlus.startScan();
+
+        //initialize timer to stop scanning and alert usert
+        Timer(timeoutt, scanningStopCallback);
       } catch (e) {
         debugPrint('$e');
       }
