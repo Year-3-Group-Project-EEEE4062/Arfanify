@@ -1,25 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/services.dart' show rootBundle;
-
-class AutonomousPage extends StatelessWidget {
-  const AutonomousPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        Icon(
-          Icons.map_outlined,
-          color: Colors.white,
-          size: 200,
-        ),
-      ],
-    );
-  }
-}
 
 class AutonomousPagee extends StatefulWidget {
   const AutonomousPagee({super.key});
@@ -58,11 +41,8 @@ class _AutonomousPagee extends State<AutonomousPagee> {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const SizedBox(
-          height: 20,
-        ),
+        const SizedBox(height: 20),
         Center(
           child: Container(
               height: 500,
@@ -70,13 +50,31 @@ class _AutonomousPagee extends State<AutonomousPagee> {
                   BoxDecoration(borderRadius: BorderRadius.circular(10)),
               child: GoogleMap(
                 mapType: MapType.normal,
-                myLocationButtonEnabled: false,
+                zoomControlsEnabled: false,
+                compassEnabled: true,
                 initialCameraPosition: _intialCamPos,
                 onMapCreated: (GoogleMapController controller) {
                   _mapsController = controller;
                   _mapsController.setMapStyle(_darkMapStyle);
                 },
               )),
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 40,
+          width: 70,
+          child: OutlinedButton(
+            onPressed: () {},
+            style: OutlinedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+              side: const BorderSide(color: Color.fromARGB(255, 255, 255, 255)),
+            ),
+            child: const Icon(
+              Icons.location_searching,
+              color: Color.fromARGB(255, 255, 255, 255),
+            ),
+          ),
         )
       ],
     );
