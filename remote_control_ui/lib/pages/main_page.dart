@@ -34,7 +34,7 @@ class _MainPageState extends State<MainPage> {
     } else if (_selectedIndex == 1) {
       return RemoteControlPage(bLE: _updateMediumBLE);
     } else if (_selectedIndex == 2) {
-      return const AutonomousPage();
+      return const AutonomousPagee();
     } else if (_selectedIndex == 3) {
       return const CloudBackupPage();
     } else {

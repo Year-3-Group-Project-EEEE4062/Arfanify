@@ -9,12 +9,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_svg: ^0.22.0
   syncfusion_flutter_gauges: ^23.1.40
   provider: 6.0.5
   flutter_blue_plus: ^1.20.4
   permission_handler: ^11.0.1
   kumi_popup_window: ^2.0.1
+  flutter_polyline_points: ^2.0.0
+  google_maps_flutter: ^2.5.0
 
 dev_dependencies:
   flutter_test:
@@ -35,3 +36,4 @@ flutter:
   assets:
     - assets\icons\Arfanify.png
     - assets\icons\Arfanify.svg
+    - assets\json\map_style.json
