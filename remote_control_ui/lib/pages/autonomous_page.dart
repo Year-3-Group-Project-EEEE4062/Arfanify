@@ -129,6 +129,7 @@ class _AutonomousPagee extends State<AutonomousPagee> {
       Marker marker = Marker(
         markerId: MarkerId("Waypoint No.${waypointNumber + 1}"),
         position: point,
+        //icon: BitmapDescriptor.fromBytes(iconDataToBytes(Icon(Icons.directions_boat_filled,))),
         infoWindow: InfoWindow(
             title: "Waypoint No.${waypointNumber + 1}",
             snippet: "Lat: ${point.latitude}, Lng: ${point.longitude}"),
@@ -262,6 +263,8 @@ class _AutonomousPagee extends State<AutonomousPagee> {
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   KumiPopupWindow waypointsListViewerPopUp(BuildContext context) {
+    List<Marker> pathWaypointsList = pathWaypoints.toList();
+
     return showPopupWindow(
       context,
       gravity: KumiPopupGravity.center,
@@ -278,17 +281,64 @@ class _AutonomousPagee extends State<AutonomousPagee> {
       duration: const Duration(milliseconds: 200),
       childFun: (pop) {
         return Container(
-          key: GlobalKey(),
-          padding: const EdgeInsets.all(10),
-          height: 350,
-          width: 300,
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10), color: Colors.white),
-          child: const Column(
-            children: [],
-          ),
-        );
+            key: GlobalKey(),
+            padding: const EdgeInsets.all(10),
+            height: 350,
+            width: 300,
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10), color: Colors.white),
+            child: Column(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.black,
+                  ),
+                  padding: const EdgeInsets.all(10),
+                  child: const Text(
+                    "Waypoints Checker",
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  height: 250,
+                  decoration:
+                      BoxDecoration(borderRadius: BorderRadius.circular(10)),
+                  child: (pathWaypointsList.isNotEmpty)
+                      ? waypointListBuilder(pathWaypointsList)
+                      : const Center(
+                          child: Text("No waypoints set!",
+                              style:
+                                  TextStyle(fontSize: 20, color: Colors.grey)),
+                        ),
+                ),
+              ],
+            ));
       },
+    );
+  }
+
+  Expanded waypointListBuilder(List<Marker> pathWaypointsList) {
+    return Expanded(
+      child: ListView.builder(
+        itemCount: pathWaypointsList.length,
+        itemBuilder: (BuildContext context, int index) {
+          Marker marker = pathWaypointsList[index];
+          return Card(
+            color: const Color(0xff29A8AB),
+            child: ListTile(
+              leading: Icon(marker.icon as IconData?),
+              title: Text("Waypoint No.${index + 1}"),
+              subtitle: Text(
+                  "Latitude: ${marker.position.latitude}\nLongitude: ${marker.position.longitude}"),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -341,8 +391,24 @@ class _AutonomousPagee extends State<AutonomousPagee> {
           width: 300,
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10), color: Colors.white),
-          child: const Column(
-            children: [],
+          child: Column(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.black,
+                ),
+                padding: const EdgeInsets.all(10),
+                child: const Text(
+                  "Parameter Settings",
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
           ),
         );
       },
@@ -398,8 +464,24 @@ class _AutonomousPagee extends State<AutonomousPagee> {
           width: 300,
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10), color: Colors.white),
-          child: const Column(
-            children: [],
+          child: Column(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.black,
+                ),
+                padding: const EdgeInsets.all(10),
+                child: const Text(
+                  "Summary",
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
           ),
         );
       },
