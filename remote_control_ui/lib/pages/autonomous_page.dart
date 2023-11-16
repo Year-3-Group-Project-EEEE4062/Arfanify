@@ -304,6 +304,13 @@ class _AutonomousPagee extends State<AutonomousPagee> {
                   ),
                 ),
                 const SizedBox(height: 10),
+                SizedBox(
+                  child: Text(
+                    "Number of waypoints: ${pathWaypointsList.length}",
+                    style: const TextStyle(fontSize: 15, color: Colors.grey),
+                  ),
+                ),
+                const SizedBox(height: 5),
                 Container(
                   height: 250,
                   decoration:
@@ -357,6 +364,8 @@ class _AutonomousPagee extends State<AutonomousPagee> {
             shadowColor: Colors.black,
             color: const Color(0xff171717),
             child: ListTile(
+              contentPadding:
+                  const EdgeInsets.only(top: 5, bottom: 5, left: 15, right: 15),
               title: Text(
                 "Waypoint No.${index + 1}",
                 style: const TextStyle(
