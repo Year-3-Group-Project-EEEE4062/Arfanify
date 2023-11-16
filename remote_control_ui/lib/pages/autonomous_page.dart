@@ -67,7 +67,7 @@ class _AutonomousPagee extends State<AutonomousPagee> {
         Container(
           decoration: BoxDecoration(
             color: const Color(0xff171717),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -93,9 +93,9 @@ class _AutonomousPagee extends State<AutonomousPagee> {
               const SizedBox(width: 10), //layout spacing
               Container(
                 height: 140,
-                width: 5,
+                width: 3,
                 decoration: BoxDecoration(
-                    color: const Color.fromARGB(255, 255, 255, 255),
+                    color: const Color.fromARGB(255, 121, 121, 121),
                     borderRadius: BorderRadius.circular(20)),
               ),
               const SizedBox(width: 10), //layout spacing
@@ -312,7 +312,7 @@ class _AutonomousPagee extends State<AutonomousPagee> {
                       ? Flex(
                           direction: Axis.vertical,
                           children: [
-                            waypointListBuilder(pathWaypointsList),
+                            waypointListBuilder(pathWaypointsList, context),
                           ],
                         )
                       : const Center(
@@ -327,25 +327,54 @@ class _AutonomousPagee extends State<AutonomousPagee> {
     );
   }
 
-  Expanded waypointListBuilder(List<Marker> pathWaypointsList) {
+  Future<void> locateMarker(LatLng markerLocation) async {
+    // create a new camera position with respect to the user's location
+    CameraPosition cameraPosition = CameraPosition(
+      target: LatLng(markerLocation.latitude, markerLocation.longitude),
+      zoom: 20,
+    );
+
+    //use future to get the object of the _mapsController to change its properties
+    final GoogleMapController controller = await _mapsController.future;
+
+    //animate the map panning to the user's current location
+    controller.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+    setState(() {});
+  }
+
+  Expanded waypointListBuilder(
+      List<Marker> pathWaypointsList, BuildContext context) {
     return Expanded(
       child: ListView.builder(
         itemCount: pathWaypointsList.length,
         itemBuilder: (BuildContext context, int index) {
           Marker marker = pathWaypointsList[index];
           return Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
             elevation: 10,
             shadowColor: Colors.black,
-            color: const Color(0xff29A8AB),
+            color: const Color(0xff171717),
             child: ListTile(
-              title: Text("Waypoint No.${index + 1}"),
+              title: Text(
+                "Waypoint No.${index + 1}",
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, color: Colors.red),
+              ),
               subtitle: Text(
-                  "Latitude:\n${marker.position.latitude}\nLongitude:\n${marker.position.longitude}"),
+                "Latitude:\n${marker.position.latitude}\n\nLongitude:\n${marker.position.longitude}",
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, color: Colors.white),
+              ),
               trailing: SizedBox(
                 height: 60,
                 width: 60,
                 child: OutlinedButton(
-                  onPressed: () {}, //do something here
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    await locateMarker(marker.position);
+                  }, //do something here
                   style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
@@ -355,7 +384,7 @@ class _AutonomousPagee extends State<AutonomousPagee> {
                   child: const Center(
                     child: Icon(
                       Icons.location_searching,
-                      color: Colors.black,
+                      color: Colors.white,
                     ),
                   ),
                 ),
