@@ -207,7 +207,7 @@ class _AutonomousPagee extends State<AutonomousPagee> {
           side: const BorderSide(color: Color.fromARGB(255, 255, 255, 255)),
         ),
         child: const Icon(
-          Icons.location_searching,
+          Icons.my_location,
           color: Colors.blue,
         ),
       ),
@@ -309,7 +309,12 @@ class _AutonomousPagee extends State<AutonomousPagee> {
                   decoration:
                       BoxDecoration(borderRadius: BorderRadius.circular(10)),
                   child: (pathWaypointsList.isNotEmpty)
-                      ? waypointListBuilder(pathWaypointsList)
+                      ? Flex(
+                          direction: Axis.vertical,
+                          children: [
+                            waypointListBuilder(pathWaypointsList),
+                          ],
+                        )
                       : const Center(
                           child: Text("No waypoints set!",
                               style:
@@ -329,12 +334,32 @@ class _AutonomousPagee extends State<AutonomousPagee> {
         itemBuilder: (BuildContext context, int index) {
           Marker marker = pathWaypointsList[index];
           return Card(
+            elevation: 10,
+            shadowColor: Colors.black,
             color: const Color(0xff29A8AB),
             child: ListTile(
-              leading: Icon(marker.icon as IconData?),
               title: Text("Waypoint No.${index + 1}"),
               subtitle: Text(
-                  "Latitude: ${marker.position.latitude}\nLongitude: ${marker.position.longitude}"),
+                  "Latitude:\n${marker.position.latitude}\nLongitude:\n${marker.position.longitude}"),
+              trailing: SizedBox(
+                height: 60,
+                width: 60,
+                child: OutlinedButton(
+                  onPressed: () {}, //do something here
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    side: const BorderSide(
+                        color: Color.fromARGB(255, 255, 255, 255)),
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.location_searching,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ),
             ),
           );
         },
