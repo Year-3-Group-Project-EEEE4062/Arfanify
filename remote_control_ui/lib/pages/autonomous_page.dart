@@ -168,8 +168,17 @@ class _AutonomousPagee extends State<AutonomousPagee> {
         //use future to get the object of the _mapsController to change its properties
         final GoogleMapController settingMapStyle =
             await _mapsController.future;
+
         //use the object to set the Map's theme
         settingMapStyle.setMapStyle(_darkMapStyle);
+
+        //set the map to user current location
+        getUserCurrentLocation().then((value) async {
+          debugPrint(
+              "User Current Location: ${value.latitude} , ${value.longitude}");
+          newCameraPosition(value);
+          _addMarkerToMap(LatLng(value.latitude, value.longitude));
+        });
       },
     );
   }
@@ -187,6 +196,21 @@ class _AutonomousPagee extends State<AutonomousPagee> {
     return await Geolocator.getCurrentPosition();
   }
 
+  Future<void> newCameraPosition(Position value) async {
+    // create a new camera position with respect to the user's location
+    CameraPosition cameraPosition = CameraPosition(
+      target: LatLng(value.latitude, value.longitude),
+      zoom: 18,
+    );
+
+    //use future to get the object of the _mapsController to change its properties
+    final GoogleMapController controller = await _mapsController.future;
+
+    //animate the map panning to the user's current location
+    controller.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+    setState(() {});
+  }
+
   SizedBox getUserLocation() {
     return SizedBox(
       height: 40,
@@ -196,20 +220,7 @@ class _AutonomousPagee extends State<AutonomousPagee> {
           getUserCurrentLocation().then((value) async {
             debugPrint(
                 "User Current Location: ${value.latitude} , ${value.longitude}");
-
-            // create a new camera position with respect to the user's location
-            CameraPosition cameraPosition = CameraPosition(
-              target: LatLng(value.latitude, value.longitude),
-              zoom: 18,
-            );
-
-            //use future to get the object of the _mapsController to change its properties
-            final GoogleMapController controller = await _mapsController.future;
-
-            //animate the map panning to the user's current location
-            controller
-                .animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
-            setState(() {});
+            newCameraPosition(value);
           });
         },
         style: OutlinedButton.styleFrom(
@@ -236,8 +247,10 @@ class _AutonomousPagee extends State<AutonomousPagee> {
           setState(() {
             if (pathWaypoints.isNotEmpty) {
               pathWaypoints.clear();
-              pathPolylines.clear();
-              changePolylineButtonColor();
+              if (pathPolylines.isNotEmpty) {
+                pathPolylines.clear();
+                changePolylineButtonColor();
+              }
             }
           });
         },
@@ -277,10 +290,11 @@ class _AutonomousPagee extends State<AutonomousPagee> {
   }
 
   void changePolylineButtonColor() {
+    debugPrint("isPolylinesON: $isPolylinesON");
     if (!isPolylinesON) {
       polylineButtonColor.value = const Color.fromARGB(255, 96, 214, 99);
       isPolylinesON = true;
-    } else {
+    } else if (isPolylinesON) {
       polylineButtonColor.value = const Color(0xff171717);
       isPolylinesON = false;
     }
