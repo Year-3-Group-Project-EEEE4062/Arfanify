@@ -19,6 +19,10 @@ class _AutonomousPagee extends State<AutonomousPagee> {
   final Completer<GoogleMapController> _mapsController = Completer();
   late String _darkMapStyle;
   Set<Marker> pathWaypoints = {};
+  Set<Polyline> pathPolylines = {};
+  ValueNotifier<Color> polylineButtonColor =
+      ValueNotifier<Color>(const Color(0xff171717));
+  bool isPolylinesON = false;
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -138,6 +142,12 @@ class _AutonomousPagee extends State<AutonomousPagee> {
       setState(() {
         debugPrint("Waypoint No.${waypointNumber + 1}");
         pathWaypoints.add(marker);
+
+        //everytime a new marker dropped polylines reset and turned off
+        if (pathPolylines.isNotEmpty) {
+          pathPolylines.clear();
+          changePolylineButtonColor();
+        }
       });
     });
   }
@@ -149,6 +159,7 @@ class _AutonomousPagee extends State<AutonomousPagee> {
       compassEnabled: true,
       initialCameraPosition: _intialCamPos,
       markers: pathWaypoints,
+      polylines: pathPolylines,
       onLongPress: _addMarkerToMap,
       onMapCreated: (GoogleMapController controller) async {
         //assigning the controller
@@ -223,7 +234,11 @@ class _AutonomousPagee extends State<AutonomousPagee> {
       child: OutlinedButton(
         onPressed: () {
           setState(() {
-            if (pathWaypoints.isNotEmpty) pathWaypoints.clear();
+            if (pathWaypoints.isNotEmpty) {
+              pathWaypoints.clear();
+              pathPolylines.clear();
+              changePolylineButtonColor();
+            }
           });
         },
         style: OutlinedButton.styleFrom(
@@ -241,21 +256,73 @@ class _AutonomousPagee extends State<AutonomousPagee> {
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  _setPolylinesUsingMarkers() {
+    //generate a list of LatLng based on the set markers by user
+    List<LatLng> markerPositions =
+        pathWaypoints.map((marker) => marker.position).toList();
+
+    //generate the polylines
+    Polyline polyline = Polyline(
+      polylineId: const PolylineId('polyline'),
+      points: markerPositions,
+      width: 2,
+      color: const Color.fromARGB(255, 96, 214, 99),
+    );
+
+    //refresh widget
+    setState(() {
+      debugPrint("Polylines generated!");
+      pathPolylines.add(polyline);
+    });
+  }
+
+  void changePolylineButtonColor() {
+    if (!isPolylinesON) {
+      polylineButtonColor.value = const Color.fromARGB(255, 96, 214, 99);
+      isPolylinesON = true;
+    } else {
+      polylineButtonColor.value = const Color(0xff171717);
+      isPolylinesON = false;
+    }
+  }
+
   SizedBox generatePolyline() {
     return SizedBox(
       height: 40,
       width: 70,
-      child: OutlinedButton(
-        onPressed: () {},
-        style: OutlinedButton.styleFrom(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          side: const BorderSide(color: Color.fromARGB(255, 255, 255, 255)),
-        ),
-        child: const Icon(
-          Icons.polyline,
-          color: Colors.yellow,
-        ),
+      child: ValueListenableBuilder(
+        valueListenable: polylineButtonColor,
+        builder: (context, value, _) {
+          return OutlinedButton(
+            onPressed: () {
+              //only generate polylines if there are at least 2 markers on the map
+              if (pathWaypoints.length >= 2 && !isPolylinesON) {
+                debugPrint("Generating Polylines");
+
+                //generate the polylines
+                _setPolylinesUsingMarkers();
+
+                //alert user of polyline change of state
+                changePolylineButtonColor();
+              } else if (isPolylinesON) {
+                setState(() {
+                  changePolylineButtonColor();
+                  pathPolylines.clear();
+                });
+              }
+            },
+            style: OutlinedButton.styleFrom(
+              backgroundColor: polylineButtonColor.value,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+              side: const BorderSide(color: Color.fromARGB(255, 255, 255, 255)),
+            ),
+            child: const Icon(
+              Icons.polyline,
+              color: Colors.yellow,
+            ),
+          );
+        },
       ),
     );
   }
