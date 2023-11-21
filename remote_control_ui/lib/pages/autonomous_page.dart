@@ -13,21 +13,40 @@ class AutonomousPagee extends StatefulWidget {
 }
 
 class _AutonomousPagee extends State<AutonomousPagee> {
-  static const _intialCamPos =
-      CameraPosition(target: LatLng(3.2085263, 101.7792612), zoom: 0);
-
+  Position? currentUserLatLng;
   final Completer<GoogleMapController> _mapsController = Completer();
   late String _darkMapStyle;
+
+  int maxMarkerToMarkerDistance = 100; //max 10 meters
+  int maxMarkerToUserDistance = 1000; //1km
   Set<Marker> pathWaypoints = {};
+  BitmapDescriptor userIcon = BitmapDescriptor.defaultMarker;
+  BitmapDescriptor waypointsIcon = BitmapDescriptor.defaultMarker;
+
   Set<Polyline> pathPolylines = {};
   ValueNotifier<Color> polylineButtonColor =
       ValueNotifier<Color>(const Color(0xff171717));
   bool isPolylinesON = false;
 
+  ValueNotifier<double> speedParameter = ValueNotifier<double>(0);
+  ValueNotifier<String> statusMssgSpeedParameter = ValueNotifier<String>('Low');
+  ValueNotifier<Color> statusColorSpeedParameter =
+      ValueNotifier<Color>(Colors.green);
+
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Future _loadMapStyles() async {
     _darkMapStyle = await rootBundle.loadString('assets/json/map_style.json');
+  }
+
+  Future<Position> getUserCurrentLocation() async {
+    await Geolocator.requestPermission()
+        .then((value) {})
+        .onError((error, stackTrace) async {
+      await Geolocator.requestPermission();
+      debugPrint("ERROR: $error");
+    });
+    return await Geolocator.getCurrentPosition();
   }
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -36,6 +55,13 @@ class _AutonomousPagee extends State<AutonomousPagee> {
   void initState() {
     super.initState();
     _loadMapStyles(); //load the dark mode map json file design
+    //set the map to user current location
+    getUserCurrentLocation().then((value) async {
+      debugPrint(
+          "User Current Location: ${value.latitude} , ${value.longitude}");
+      currentUserLatLng = value;
+      setState(() {}); //refresh the map with user location
+    });
   }
 
   @override
@@ -62,7 +88,14 @@ class _AutonomousPagee extends State<AutonomousPagee> {
               children: [
                 const SizedBox(height: 20),
                 Expanded(
-                  child: theMap(),
+                  child: currentUserLatLng == null
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 5,
+                          ),
+                        )
+                      : theMap(),
                 ),
                 const SizedBox(height: 20),
               ],
@@ -124,7 +157,7 @@ class _AutonomousPagee extends State<AutonomousPagee> {
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  _addMarkerToMap(LatLng point) {
+  void addMarkerToMap(LatLng point) {
     //get how many markers have been dropped so far
     int waypointNumber = pathWaypoints.length;
 
@@ -137,6 +170,7 @@ class _AutonomousPagee extends State<AutonomousPagee> {
         infoWindow: InfoWindow(
             title: "Waypoint No.${waypointNumber + 1}",
             snippet: "Lat: ${point.latitude}, Lng: ${point.longitude}"),
+        icon: waypointsIcon,
       );
       // Add the marker to the set and update the state
       setState(() {
@@ -152,16 +186,70 @@ class _AutonomousPagee extends State<AutonomousPagee> {
     });
   }
 
+  void checkMarkerToUser(LatLng point) {
+    if (currentUserLatLng != null) {
+      //first marker can only be dropped about 1 km from user current location
+      //this is based on Medium's max comms range (1.1km)
+      //get the distance between user and the supposed first marker
+      double distance = Geolocator.distanceBetween(
+        currentUserLatLng!.latitude,
+        currentUserLatLng!.longitude,
+        point.latitude,
+        point.longitude,
+      );
+
+      //check the distance between the user and that supposed marker
+      //make sure the distance is less than or equals to 1 km
+      if (distance <= maxMarkerToUserDistance) {
+        //add that user marker to map
+        addMarkerToMap(point);
+      } else {
+        debugPrint("Marker dropped further than 1 km of user current location");
+      }
+    } else {
+      debugPrint("Unable to obtain user current location!!");
+    }
+  }
+
+  void checkMarkerToMarker(LatLng point) {
+    //get the latest marker or the last marker
+    Marker lastMarker = pathWaypoints.last;
+
+    //get the distance between user and the supposed first marker
+    double distance = Geolocator.distanceBetween(
+      lastMarker.position.latitude,
+      lastMarker.position.longitude,
+      point.latitude,
+      point.longitude,
+    );
+
+    //check the distance between the user and that supposed marker
+    //make sure the distance is less than or equals to 1 km
+    if (distance <= maxMarkerToMarkerDistance) {
+      //add that user marker to map
+      addMarkerToMap(point);
+    } else {
+      debugPrint("Marker dropped further than 10 m than previous marker");
+    }
+  }
+
   GoogleMap theMap() {
     return GoogleMap(
       mapType: MapType.normal,
       zoomControlsEnabled: false,
       compassEnabled: true,
-      initialCameraPosition: _intialCamPos,
+      initialCameraPosition: CameraPosition(
+          target:
+              //add a nullcheck for each lattitude and longitude
+              LatLng(currentUserLatLng!.latitude, currentUserLatLng!.longitude),
+          zoom: 18),
       markers: pathWaypoints,
       polylines: pathPolylines,
-      onLongPress: _addMarkerToMap,
+      onLongPress:
+          pathWaypoints.isEmpty ? checkMarkerToUser : checkMarkerToMarker,
       onMapCreated: (GoogleMapController controller) async {
+        debugPrint("Map initialized!");
+
         //assigning the controller
         _mapsController.complete(controller);
 
@@ -171,14 +259,6 @@ class _AutonomousPagee extends State<AutonomousPagee> {
 
         //use the object to set the Map's theme
         settingMapStyle.setMapStyle(_darkMapStyle);
-
-        //set the map to user current location
-        getUserCurrentLocation().then((value) async {
-          debugPrint(
-              "User Current Location: ${value.latitude} , ${value.longitude}");
-          newCameraPosition(value);
-          _addMarkerToMap(LatLng(value.latitude, value.longitude));
-        });
       },
     );
   }
@@ -186,16 +266,6 @@ class _AutonomousPagee extends State<AutonomousPagee> {
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // created method for getting user current location
-  Future<Position> getUserCurrentLocation() async {
-    await Geolocator.requestPermission()
-        .then((value) {})
-        .onError((error, stackTrace) async {
-      await Geolocator.requestPermission();
-      debugPrint("ERROR: $error");
-    });
-    return await Geolocator.getCurrentPosition();
-  }
-
   Future<void> newCameraPosition(Position value) async {
     // create a new camera position with respect to the user's location
     CameraPosition cameraPosition = CameraPosition(
@@ -552,10 +622,98 @@ class _AutonomousPagee extends State<AutonomousPagee> {
                 ),
               ),
               const SizedBox(height: 10),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.black,
+                ),
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  children: [
+                    speedStatusRow(),
+                    speedSetter(),
+                  ],
+                ),
+              ),
             ],
           ),
         );
       },
+    );
+  }
+
+  ValueListenableBuilder<Color> speedStatusRow() {
+    return ValueListenableBuilder(
+      valueListenable: statusColorSpeedParameter,
+      builder: (context, value1, _) {
+        return ValueListenableBuilder(
+          valueListenable: statusMssgSpeedParameter,
+          builder: (context, value2, _) {
+            return Row(
+              children: [
+                const Text(
+                  "Speed: ",
+                  style: TextStyle(color: Colors.white),
+                ),
+                Text(
+                  statusMssgSpeedParameter.value,
+                  style: TextStyle(color: statusColorSpeedParameter.value),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String _changeMode() {
+    String label = '';
+    if (speedParameter.value == 0.0) {
+      label = 'Low';
+    } else if (speedParameter.value == 2.0) {
+      label = 'Average';
+    } else if (speedParameter.value == 4.0) {
+      label = 'Fast';
+    }
+    return label;
+  }
+
+  Color _changeModeColor() {
+    Color modeColor = Colors.green;
+    if (speedParameter.value == 0.0) {
+      modeColor = Colors.green;
+    } else if (speedParameter.value == 2.0) {
+      modeColor = Colors.yellow;
+    } else if (speedParameter.value == 4.0) {
+      modeColor = Colors.orange;
+    }
+    return modeColor;
+  }
+
+  SliderTheme speedSetter() {
+    return SliderTheme(
+      data: const SliderThemeData(
+        thumbColor: Colors.white,
+        thumbShape: RoundSliderThumbShape(enabledThumbRadius: 20),
+        activeTrackColor: Color(0xff545454),
+        inactiveTrackColor: Colors.grey,
+        inactiveTickMarkColor: Colors.white,
+        trackHeight: 20,
+      ),
+      child: Slider(
+        value: speedParameter.value,
+        min: 0.0,
+        max: 4.0,
+        divisions: 2,
+        onChanged: (value) {
+          setState(() {
+            speedParameter.value = value;
+            statusMssgSpeedParameter.value = _changeMode();
+            statusColorSpeedParameter.value = _changeModeColor();
+          });
+        },
+      ),
     );
   }
 
