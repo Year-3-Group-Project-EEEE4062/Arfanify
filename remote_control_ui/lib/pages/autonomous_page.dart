@@ -17,7 +17,7 @@ class _AutonomousPagee extends State<AutonomousPagee> {
   final Completer<GoogleMapController> _mapsController = Completer();
   late String _darkMapStyle;
 
-  int maxMarkerToMarkerDistance = 100; //max 10 meters
+  int maxMarkerToMarkerDistance = 100; //max 100 meters
   int maxMarkerToUserDistance = 1000; //1km
   Set<Marker> pathWaypoints = {};
   BitmapDescriptor userIcon = BitmapDescriptor.defaultMarker;
@@ -207,7 +207,8 @@ class _AutonomousPagee extends State<AutonomousPagee> {
         //add that user marker to map
         addMarkerToMap(point);
       } else {
-        debugPrint("Marker dropped further than 1 km of user current location");
+        debugPrint(
+            "Marker dropped further than $maxMarkerToUserDistance meters of user current location");
       }
     } else {
       debugPrint("Unable to obtain user current location!!");
@@ -232,7 +233,8 @@ class _AutonomousPagee extends State<AutonomousPagee> {
       //add that user marker to map
       addMarkerToMap(point);
     } else {
-      debugPrint("Marker dropped further than 10 m than previous marker");
+      debugPrint(
+          "Marker dropped further than $maxMarkerToMarkerDistance m than previous marker");
     }
   }
 
@@ -317,6 +319,8 @@ class _AutonomousPagee extends State<AutonomousPagee> {
     List<LatLng> markerPositions =
         pathWaypoints.map((marker) => marker.position).toList();
 
+    debugPrint("$markerPositions");
+
     //generate the polylines
     Polyline polyline = Polyline(
       polylineId: const PolylineId('polyline'),
@@ -329,6 +333,7 @@ class _AutonomousPagee extends State<AutonomousPagee> {
     setState(() {
       debugPrint("Polylines generated!");
       pathPolylines.add(polyline);
+      debugPrint("$pathPolylines");
     });
   }
 

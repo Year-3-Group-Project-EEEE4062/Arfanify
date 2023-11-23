@@ -51,33 +51,33 @@ class _MainPageState extends State<MainPage> {
     return Scaffold(
         backgroundColor: Colors.black,
         appBar: bar(context),
-        drawer: DrawerPage(context),
+        drawer: drawerPage(context),
         body: goToPage());
   }
 
   //////////////////////////////////////////////////////////////////////////////
   // DRAWER //
-  Drawer DrawerPage(BuildContext context) {
+  Drawer drawerPage(BuildContext context) {
     return Drawer(
       backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       child: ListView(
         padding: const EdgeInsets.all(0),
         children: <Widget>[
-          drawer_header(),
+          drawerHeader(),
           const SizedBox(height: 5),
-          home_page_drawer(context),
+          homePageDrawer(context),
           const SizedBox(height: 5),
-          remote_control_drawer(context),
+          remoteControlDrawer(context),
           const SizedBox(height: 5),
-          autonomous_drawer(context),
+          autonomousDrawer(context),
           const SizedBox(height: 5),
-          cloud_backup_drawer(context),
+          cloudBackupDrawer(context),
         ],
       ),
     );
   }
 
-  DrawerHeader drawer_header() {
+  DrawerHeader drawerHeader() {
     return DrawerHeader(
       decoration: BoxDecoration(
           color: const Color(0xff171717),
@@ -90,7 +90,7 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  ListTile home_page_drawer(BuildContext context) {
+  ListTile homePageDrawer(BuildContext context) {
     return ListTile(
       selected: _selectedIndex == 0,
       selectedColor: const Color(0xff29A8AB),
@@ -110,7 +110,7 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  ListTile remote_control_drawer(BuildContext context) {
+  ListTile remoteControlDrawer(BuildContext context) {
     return ListTile(
       selected: _selectedIndex == 1,
       selectedColor: const Color(0xff29A8AB),
@@ -130,7 +130,7 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  ListTile autonomous_drawer(BuildContext context) {
+  ListTile autonomousDrawer(BuildContext context) {
     return ListTile(
       selected: _selectedIndex == 2,
       selectedColor: const Color(0xff29A8AB),
@@ -150,7 +150,7 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  ListTile cloud_backup_drawer(BuildContext context) {
+  ListTile cloudBackupDrawer(BuildContext context) {
     return ListTile(
       selected: _selectedIndex == 3,
       selectedColor: const Color(0xff29A8AB),

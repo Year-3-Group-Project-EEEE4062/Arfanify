@@ -37,7 +37,7 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false, //remove the debug banner
       theme: ThemeData(fontFamily: 'TiltNeon'),
-      home: const MainPage(),
+      home: const SafeArea(child: MainPage()),
     );
   }
 }
