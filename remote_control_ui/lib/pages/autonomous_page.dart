@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'dart:math';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:kumi_popup_window/kumi_popup_window.dart';
@@ -35,6 +36,8 @@ class _AutonomousPagee extends State<AutonomousPagee> {
   double frequencyParameter = 0;
   String statusMssgFrequencyParameter = 'every 10 m';
   Color statusColorFrequencyParameter = Colors.orange;
+
+  double? totalEstimatedDistance;
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -868,11 +871,80 @@ class _AutonomousPagee extends State<AutonomousPagee> {
                 ),
               ),
               const SizedBox(height: 10),
+              //only show summary if user has more than 2 waypoints on the map
+              (pathWaypoints.length >= 2)
+                  ? summaryContent()
+                  : const SizedBox(
+                      height: 250,
+                      child: Center(
+                        child: Text("Must have at least\ntwo waypoints set!",
+                            style: TextStyle(fontSize: 20, color: Colors.grey)),
+                      )),
             ],
           ),
         );
       },
     );
+  }
+
+  Container summaryContent() {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: Colors.black,
+      ),
+      padding: const EdgeInsets.all(10),
+      child: Row(
+        children: [
+          const Text(
+            "Estimated Total Distance: ",
+            style: TextStyle(
+              fontSize: 15,
+              color: Colors.white,
+            ),
+          ),
+          Text(
+            "${totalEstimatedDistance!.toStringAsFixed(2)} m",
+            style: const TextStyle(
+              fontSize: 15,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  double calculateDistance() {
+    List<Marker> pathWaypointsList = pathWaypoints.toList();
+
+    double totalDistance = 0;
+    for (int i = 0; i < pathWaypointsList.length; i++) {
+      if (i < pathWaypointsList.length - 1) {
+        // skip the last index
+        totalDistance += getStraightLineDistance(
+            pathWaypointsList[i + 1].position.latitude,
+            pathWaypointsList[i + 1].position.longitude,
+            pathWaypointsList[i].position.latitude,
+            pathWaypointsList[i].position.longitude);
+      }
+    }
+    return totalDistance;
+  }
+
+  double getStraightLineDistance(lat1, lon1, lat2, lon2) {
+    var R = 6371; // Radius of the earth in km
+    var dLat = deg2rad(lat2 - lat1);
+    var dLon = deg2rad(lon2 - lon1);
+    var a = sin(dLat / 2) * sin(dLat / 2) +
+        cos(deg2rad(lat1)) * cos(deg2rad(lat2)) * sin(dLon / 2) * sin(dLon / 2);
+    var c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    var d = R * c; // Distance in km
+    return d * 1000; //in m
+  }
+
+  dynamic deg2rad(deg) {
+    return deg * (pi / 180);
   }
 
   SizedBox summaryViewerButton() {
@@ -881,6 +953,10 @@ class _AutonomousPagee extends State<AutonomousPagee> {
       width: 70,
       child: OutlinedButton(
           onPressed: () {
+            //only calculate the estimated total distance if there are at least two waypoints
+            if (pathWaypoints.length >= 2) {
+              totalEstimatedDistance = calculateDistance();
+            }
             summaryViewerPopUp(context);
           },
           style: OutlinedButton.styleFrom(
