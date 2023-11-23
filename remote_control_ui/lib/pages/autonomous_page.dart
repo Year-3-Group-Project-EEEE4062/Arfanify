@@ -28,10 +28,13 @@ class _AutonomousPagee extends State<AutonomousPagee> {
       ValueNotifier<Color>(const Color(0xff171717));
   bool isPolylinesON = false;
 
-  ValueNotifier<double> speedParameter = ValueNotifier<double>(0);
-  ValueNotifier<String> statusMssgSpeedParameter = ValueNotifier<String>('Low');
-  ValueNotifier<Color> statusColorSpeedParameter =
-      ValueNotifier<Color>(Colors.green);
+  double speedParameter = 0;
+  String statusMssgSpeedParameter = 'Low';
+  Color statusColorSpeedParameter = Colors.green;
+
+  double frequencyParameter = 0;
+  String statusMssgFrequencyParameter = 'every 10 m';
+  Color statusColorFrequencyParameter = Colors.orange;
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -290,6 +293,7 @@ class _AutonomousPagee extends State<AutonomousPagee> {
           getUserCurrentLocation().then((value) async {
             debugPrint(
                 "User Current Location: ${value.latitude} , ${value.longitude}");
+            currentUserLatLng = value; //update user current location
             newCameraPosition(value);
           });
         },
@@ -301,37 +305,6 @@ class _AutonomousPagee extends State<AutonomousPagee> {
         child: const Icon(
           Icons.my_location,
           color: Colors.blue,
-        ),
-      ),
-    );
-  }
-
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  SizedBox removeAllMarkers() {
-    return SizedBox(
-      height: 40,
-      width: 70,
-      child: OutlinedButton(
-        onPressed: () {
-          setState(() {
-            if (pathWaypoints.isNotEmpty) {
-              pathWaypoints.clear();
-              if (pathPolylines.isNotEmpty) {
-                pathPolylines.clear();
-                changePolylineButtonColor();
-              }
-            }
-          });
-        },
-        style: OutlinedButton.styleFrom(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          side: const BorderSide(color: Color.fromARGB(255, 255, 255, 255)),
-        ),
-        child: const Icon(
-          Icons.location_off,
-          color: Colors.red,
         ),
       ),
     );
@@ -407,6 +380,37 @@ class _AutonomousPagee extends State<AutonomousPagee> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  SizedBox removeAllMarkers() {
+    return SizedBox(
+      height: 40,
+      width: 70,
+      child: OutlinedButton(
+        onPressed: () {
+          setState(() {
+            if (pathWaypoints.isNotEmpty) {
+              pathWaypoints.clear();
+              if (pathPolylines.isNotEmpty) {
+                pathPolylines.clear();
+                changePolylineButtonColor();
+              }
+            }
+          });
+        },
+        style: OutlinedButton.styleFrom(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          side: const BorderSide(color: Color.fromARGB(255, 255, 255, 255)),
+        ),
+        child: const Icon(
+          Icons.location_off,
+          color: Colors.red,
+        ),
       ),
     );
   }
@@ -622,19 +626,9 @@ class _AutonomousPagee extends State<AutonomousPagee> {
                 ),
               ),
               const SizedBox(height: 10),
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: Colors.black,
-                ),
-                padding: const EdgeInsets.all(10),
-                child: Column(
-                  children: [
-                    speedStatusRow(),
-                    speedSetter(),
-                  ],
-                ),
-              ),
+              speedSection(),
+              const SizedBox(height: 10),
+              frequencySection(),
             ],
           ),
         );
@@ -642,38 +636,122 @@ class _AutonomousPagee extends State<AutonomousPagee> {
     );
   }
 
-  ValueListenableBuilder<Color> speedStatusRow() {
-    return ValueListenableBuilder(
-      valueListenable: statusColorSpeedParameter,
-      builder: (context, value1, _) {
-        return ValueListenableBuilder(
-          valueListenable: statusMssgSpeedParameter,
-          builder: (context, value2, _) {
-            return Row(
-              children: [
-                const Text(
-                  "Speed: ",
-                  style: TextStyle(color: Colors.white),
-                ),
-                Text(
-                  statusMssgSpeedParameter.value,
-                  style: TextStyle(color: statusColorSpeedParameter.value),
-                ),
-              ],
-            );
-          },
-        );
-      },
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  Container frequencySection() {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: Colors.black,
+      ),
+      padding: const EdgeInsets.all(10),
+      child: StatefulBuilder(
+        builder: (BuildContext context, StateSetter setState) {
+          return Column(
+            children: [
+              frequencyStatusRow(context, setState),
+              frequencySetter(context, setState),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Row frequencyStatusRow(BuildContext context, StateSetter setState) {
+    return Row(
+      children: [
+        const Text(
+          "Frequency: ",
+          style: TextStyle(color: Colors.white),
+        ),
+        Text(
+          statusMssgFrequencyParameter,
+          style: TextStyle(color: statusColorFrequencyParameter),
+        ),
+      ],
+    );
+  }
+
+  String _changeFrequency() {
+    String label = '';
+    if (frequencyParameter == 0.0) {
+      label = 'every 10 m';
+    } else if (frequencyParameter == 2.0) {
+      label = 'every 20 m';
+    } else if (frequencyParameter == 4.0) {
+      label = 'every 30 m';
+    }
+    return label;
+  }
+
+  SliderTheme frequencySetter(BuildContext context, StateSetter setState) {
+    return SliderTheme(
+      data: const SliderThemeData(
+        thumbColor: Colors.white,
+        thumbShape: RoundSliderThumbShape(enabledThumbRadius: 10),
+        activeTrackColor: Color(0xff545454),
+        inactiveTrackColor: Colors.grey,
+        inactiveTickMarkColor: Colors.white,
+        trackHeight: 10,
+      ),
+      child: Slider(
+        value: frequencyParameter,
+        min: 0.0,
+        max: 4.0,
+        divisions: 2,
+        onChanged: (value) {
+          setState(() {
+            frequencyParameter = value;
+            statusMssgFrequencyParameter = _changeFrequency();
+          });
+        },
+      ),
+    );
+  }
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  Container speedSection() {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: Colors.black,
+      ),
+      padding: const EdgeInsets.all(10),
+      child: StatefulBuilder(
+        builder: (BuildContext context, StateSetter setState) {
+          return Column(
+            children: [
+              speedStatusRow(context, setState),
+              speedSetter(context, setState),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Row speedStatusRow(BuildContext context, StateSetter setState) {
+    return Row(
+      children: [
+        const Text(
+          "Speed: ",
+          style: TextStyle(color: Colors.white),
+        ),
+        Text(
+          statusMssgSpeedParameter,
+          style: TextStyle(color: statusColorSpeedParameter),
+        ),
+      ],
     );
   }
 
   String _changeMode() {
     String label = '';
-    if (speedParameter.value == 0.0) {
+    if (speedParameter == 0.0) {
       label = 'Low';
-    } else if (speedParameter.value == 2.0) {
+    } else if (speedParameter == 2.0) {
       label = 'Average';
-    } else if (speedParameter.value == 4.0) {
+    } else if (speedParameter == 4.0) {
       label = 'Fast';
     }
     return label;
@@ -681,41 +759,43 @@ class _AutonomousPagee extends State<AutonomousPagee> {
 
   Color _changeModeColor() {
     Color modeColor = Colors.green;
-    if (speedParameter.value == 0.0) {
+    if (speedParameter == 0.0) {
       modeColor = Colors.green;
-    } else if (speedParameter.value == 2.0) {
+    } else if (speedParameter == 2.0) {
       modeColor = Colors.yellow;
-    } else if (speedParameter.value == 4.0) {
+    } else if (speedParameter == 4.0) {
       modeColor = Colors.orange;
     }
     return modeColor;
   }
 
-  SliderTheme speedSetter() {
+  SliderTheme speedSetter(BuildContext context, StateSetter setState) {
     return SliderTheme(
       data: const SliderThemeData(
         thumbColor: Colors.white,
-        thumbShape: RoundSliderThumbShape(enabledThumbRadius: 20),
+        thumbShape: RoundSliderThumbShape(enabledThumbRadius: 10),
         activeTrackColor: Color(0xff545454),
         inactiveTrackColor: Colors.grey,
         inactiveTickMarkColor: Colors.white,
-        trackHeight: 20,
+        trackHeight: 10,
       ),
       child: Slider(
-        value: speedParameter.value,
+        value: speedParameter,
         min: 0.0,
         max: 4.0,
         divisions: 2,
         onChanged: (value) {
           setState(() {
-            speedParameter.value = value;
-            statusMssgSpeedParameter.value = _changeMode();
-            statusColorSpeedParameter.value = _changeModeColor();
+            speedParameter = value;
+            statusMssgSpeedParameter = _changeMode();
+            statusColorSpeedParameter = _changeModeColor();
           });
         },
       ),
     );
   }
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   SizedBox parameterSettingsButton() {
     return SizedBox(
