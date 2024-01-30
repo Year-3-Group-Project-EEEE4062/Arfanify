@@ -5,10 +5,6 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:kumi_popup_window/kumi_popup_window.dart';
 
-//indicator if a medium has been found
-bool mediumFound = false;
-bool mediumConnected = false;
-
 class AppBarBLE extends StatefulWidget {
   const AppBarBLE({super.key});
 
@@ -41,8 +37,6 @@ class AppBarBLEState extends State<AppBarBLE> {
   //Might vary for different Mediums
   final List<DeviceIdentifier> mediumId = [
     const DeviceIdentifier('3C:E9:0E:83:A6:3E'),
-    const DeviceIdentifier('0C:B8:15:F2:C9:36'),
-    const DeviceIdentifier('08:D1:F9:99:2A:66')
   ];
 
   //to store the Medium found
