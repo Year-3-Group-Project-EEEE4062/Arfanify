@@ -1,127 +1,134 @@
 import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final Function(int) updateScaffoldBody;
+  const HomePage({super.key, required this.updateScaffoldBody});
 
   @override
-  _homePageState createState() => _homePageState();
+  HomePageState createState() => HomePageState();
 }
 
-class _homePageState extends State<HomePage> {
+class HomePageState extends State<HomePage> {
+  Color buttonBackgroundColor = const Color(0xff171717);
+  Color buttonForegroundColor = const Color.fromARGB(255, 234, 228, 228);
+
+  void buttonPressed(int index) {
+    widget.updateScaffoldBody(index);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Center(
-        // mainAxisAlignment: MainAxisAlignment.center,
-        // crossAxisAlignment: CrossAxisAlignment.stretch,
-        child: Column(
-      children: [
-        arfanifyIcon(),
-        remoteControlButton(),
-        autonomousButton(),
-        cloudBackupButton()
-      ],
-    ));
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          arfanifyIcon(),
+          remoteControlButton(),
+          autonomousButton(),
+          cloudBackupButton(),
+        ],
+      ),
+    );
   }
-}
 
-Image arfanifyIcon() {
-  return const Image(
-    image: AssetImage('assets/icons/Arfanify.png'),
-    width: 150,
-    height: 150,
-    color: Colors.white,
-  );
-}
+  Image arfanifyIcon() {
+    return const Image(
+      image: AssetImage('assets/icons/Arfanify.png'),
+      width: 200,
+      height: 200,
+      color: Colors.white,
+    );
+  }
 
-Container remoteControlButton() {
-  return Container(
-    margin: const EdgeInsets.all(10),
-    height: 120,
-    width: 180,
-    child: ElevatedButton(
-      onPressed: () {
-        print("remote control pressed");
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xff545454),
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+  Container remoteControlButton() {
+    return Container(
+      margin: const EdgeInsets.all(10),
+      height: 100,
+      width: 160,
+      child: ElevatedButton(
+        onPressed: () {
+          buttonPressed(1);
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: buttonBackgroundColor,
+          foregroundColor: buttonForegroundColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        child: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(Icons.settings_remote_sharp,
+                size: 60), // Adjust the size as needed
+            Text(
+              'Remote Control',
+              style: TextStyle(fontSize: 18),
+            ),
+          ],
         ),
       ),
-      child: const Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Icon(Icons.settings_remote_sharp,
-              size: 70), // Adjust the size as needed
-          Text(
-            'Remote Control',
-            style: TextStyle(fontSize: 20),
-          ),
-        ],
-      ),
-    ),
-  );
-}
+    );
+  }
 
-Container autonomousButton() {
-  return Container(
-    margin: const EdgeInsets.all(10),
-    height: 110,
-    width: 180,
-    child: ElevatedButton(
-      onPressed: () {
-        print(
-            "autonomous button pressed"); // Use the variable within the print statement
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xff545454),
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+  Container autonomousButton() {
+    return Container(
+      margin: const EdgeInsets.all(10),
+      height: 100,
+      width: 160,
+      child: ElevatedButton(
+        onPressed: () {
+          buttonPressed(2); // Use the variable within the print statement
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: buttonBackgroundColor,
+          foregroundColor: buttonForegroundColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        child: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(Icons.map_outlined, size: 60), // Adjust the size as needed
+            Text(
+              'Autonomous',
+              style: TextStyle(fontSize: 18),
+            ),
+          ],
         ),
       ),
-      child: const Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Icon(Icons.map_outlined, size: 70), // Adjust the size as needed
-          Text(
-            'Autonomous',
-            style: TextStyle(fontSize: 20),
-          ),
-        ],
-      ),
-    ),
-  );
-}
+    );
+  }
 
-Container cloudBackupButton() {
-  return Container(
-    margin: const EdgeInsets.all(10),
-    height: 110,
-    width: 180,
-    child: ElevatedButton(
-      onPressed: () {
-        print(
-            "cloud backup button pressed"); // Use the variable within the print statement
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xff545454),
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+  Container cloudBackupButton() {
+    return Container(
+      margin: const EdgeInsets.all(10),
+      height: 100,
+      width: 160,
+      child: ElevatedButton(
+        onPressed: () {
+          buttonPressed(3); // Use the variable within the print statement
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: buttonBackgroundColor,
+          foregroundColor: buttonForegroundColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        child: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(Icons.cloud_done, size: 60), // Adjust the size as needed
+            Text(
+              'Cloud Backup',
+              style: TextStyle(fontSize: 18),
+            ),
+          ],
         ),
       ),
-      child: const Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Icon(Icons.cloud_done, size: 70), // Adjust the size as needed
-          Text(
-            'Cloud Backup',
-            style: TextStyle(fontSize: 20),
-          ),
-        ],
-      ),
-    ),
-  );
+    );
+  }
 }
