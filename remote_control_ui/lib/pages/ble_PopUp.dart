@@ -5,15 +5,27 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:kumi_popup_window/kumi_popup_window.dart';
 
+//controller for the BLE
+class BLEcontroller {
+  late void Function(String) sendDataBLE;
+}
+
+//Widget for BLE
 class AppBarBLE extends StatefulWidget {
-  const AppBarBLE({super.key});
+  final BLEcontroller controller;
+
+  const AppBarBLE({super.key, required this.controller});
 
   @override
-  State<AppBarBLE> createState() => AppBarBLEState();
+  State<AppBarBLE> createState() => AppBarBLEState(controller);
 }
 
 //a public class so that main_page.dart can call the sendDataBLE function only
 class AppBarBLEState extends State<AppBarBLE> {
+  AppBarBLEState(BLEcontroller controller) {
+    controller.sendDataBLE = sendDataBLE;
+  }
+
   //variable used to let user visually see the BLE connection status
   ValueNotifier<Color> connectionColor =
       ValueNotifier<Color>(const Color.fromARGB(255, 224, 80, 70));

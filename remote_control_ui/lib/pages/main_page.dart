@@ -13,6 +13,8 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  final BLEcontroller myController = BLEcontroller();
+
   ////////////////////////variables
   int _selectedIndex = 0;
 
@@ -24,7 +26,7 @@ class _MainPageState extends State<MainPage> {
   }
 
   _updateMediumBLE(String command) {
-    AppBarBLEState().sendDataBLE(command);
+    //AppBarBLEState().sendDataBLE(command);
   }
 
   //return widget based on what user wants
@@ -191,7 +193,7 @@ class _MainPageState extends State<MainPage> {
       //set background colour of AppBar
       backgroundColor: Colors.black,
 
-      actions: const [AppBarBLE()],
+      actions: [AppBarBLE(controller: myController)],
       //adjust the bottom shape of the appbar
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(5))),
