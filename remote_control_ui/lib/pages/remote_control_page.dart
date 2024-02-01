@@ -12,15 +12,20 @@ class RemoteControlPage extends StatefulWidget {
 
 class RemoteControlState extends State<RemoteControlPage> {
   double _motion = 0;
-  String bLEremoteCommand = "R S  ";
+  String bLEremoteMode = "RMS";
+  String bLEremoteDirection = "RD ";
   String _status = 'Stop';
   Color _statusColor = Colors.red;
 
   //callback to goes back to main_page.dart to send data through BLE
-  void remoteControlSendBLE() {
+  void remoteControlSendBLE(String bLERemoteCommand) {
     debugPrint("Remote Callback Called");
-    debugPrint(bLEremoteCommand);
-    widget.bLE(bLEremoteCommand);
+    debugPrint(bLERemoteCommand);
+
+    //remote control always sends two things
+    //1st is the mode of the remote (ie. stop, low)
+    //2nd is the direction of the motion (ie. forward, left, right)
+    widget.bLE(bLERemoteCommand);
   }
 
   @override
@@ -97,9 +102,6 @@ class RemoteControlState extends State<RemoteControlPage> {
             _motion = value;
             _status = _changeMode();
             _statusColor = _changeModeColor();
-            if (kDebugMode) {
-              debugPrint("$_motion , $_status , $_statusColor");
-            }
           });
         },
       ),
@@ -110,32 +112,35 @@ class RemoteControlState extends State<RemoteControlPage> {
     String label = '';
     if (_motion == 0.0) {
       label = 'Stop';
-      bLEremoteCommand = bLEremoteCommand.replaceRange(2, 2 + 1, 'S');
-      remoteControlSendBLE();
+      bLEremoteMode = bLEremoteMode.replaceRange(2, 3, "S");
     } else if (_motion == 2.0) {
       label = 'Low';
-      bLEremoteCommand = bLEremoteCommand.replaceRange(2, 2 + 1, 'L');
-      remoteControlSendBLE();
+      bLEremoteMode = bLEremoteMode.replaceRange(2, 3, "L");
     } else if (_motion == 4.0) {
       label = 'Average';
+      bLEremoteMode = bLEremoteMode.replaceRange(2, 3, "A");
     } else if (_motion == 6.0) {
       label = 'Fast';
+      bLEremoteMode = bLEremoteMode.replaceRange(2, 3, "F");
     }
+
+    //send data through bLE
+    remoteControlSendBLE(bLEremoteMode);
     return label;
   }
 
   Color _changeModeColor() {
-    Color ModeColor = Colors.amber;
+    Color modeColor = Colors.amber;
     if (_motion == 0.0) {
-      ModeColor = Colors.red;
+      modeColor = Colors.red;
     } else if (_motion == 2.0) {
-      ModeColor = Colors.green;
+      modeColor = Colors.green;
     } else if (_motion == 4.0) {
-      ModeColor = Colors.yellow;
+      modeColor = Colors.yellow;
     } else if (_motion == 6.0) {
-      ModeColor = Colors.orange;
+      modeColor = Colors.orange;
     }
-    return ModeColor;
+    return modeColor;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -199,8 +204,10 @@ class RemoteControlState extends State<RemoteControlPage> {
           if (kDebugMode) {
             debugPrint("Forward button pressed");
           }
-          bLEremoteCommand = bLEremoteCommand.replaceRange(4, 4 + 1, 'F');
-          remoteControlSendBLE();
+
+          //send data through BLE
+          bLEremoteDirection = bLEremoteDirection.replaceRange(2, 3, "F");
+          remoteControlSendBLE(bLEremoteDirection);
         },
       ),
     );
@@ -223,6 +230,10 @@ class RemoteControlState extends State<RemoteControlPage> {
           if (kDebugMode) {
             debugPrint("Backwards button pressed");
           }
+
+          //send data through BLE
+          bLEremoteDirection = bLEremoteDirection.replaceRange(2, 3, "B");
+          remoteControlSendBLE(bLEremoteDirection);
         },
       ),
     );
@@ -245,6 +256,10 @@ class RemoteControlState extends State<RemoteControlPage> {
           if (kDebugMode) {
             debugPrint("Right button pressed");
           }
+
+          //send data through BLE
+          bLEremoteDirection = bLEremoteDirection.replaceRange(2, 3, "R");
+          remoteControlSendBLE(bLEremoteDirection);
         },
       ),
     );
@@ -267,6 +282,10 @@ class RemoteControlState extends State<RemoteControlPage> {
           if (kDebugMode) {
             debugPrint("Left button pressed");
           }
+
+          //send data through BLE
+          bLEremoteDirection = bLEremoteDirection.replaceRange(2, 3, "L");
+          remoteControlSendBLE(bLEremoteDirection);
         },
       ),
     );

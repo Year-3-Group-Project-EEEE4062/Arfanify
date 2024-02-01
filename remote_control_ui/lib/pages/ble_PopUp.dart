@@ -70,12 +70,9 @@ class AppBarBLEState extends State<AppBarBLE> {
   //this function can only be called by main_page.dart
   //other pages have to go through main_page.dart to call this function to send data to Medium
   void sendDataBLE(String dataToBeSent) async {
-    debugPrint("$mediumConnected");
+    debugPrint("Medium Connection: $mediumConnected");
     if (mediumConnected) {
       writeCharacteristics(dataToBeSent);
-    } else {
-      //for debugging purposes
-      debugPrint("Medium Not Connected Yet!!!");
     }
   }
 
