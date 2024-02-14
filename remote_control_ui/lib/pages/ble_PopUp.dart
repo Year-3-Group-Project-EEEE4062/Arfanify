@@ -48,7 +48,7 @@ class AppBarBLEState extends State<AppBarBLE> {
   //Medium remote ID for comparison when finding Medium
   //Might vary for different Mediums
   final List<DeviceIdentifier> mediumId = [
-    const DeviceIdentifier('3C:E9:0E:83:A6:3E'),
+    const DeviceIdentifier('D8:3A:DD:5C:97:CD'),
   ];
 
   //to store the Medium found
@@ -393,8 +393,9 @@ class AppBarBLEState extends State<AppBarBLE> {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Future<void> readCharacteristics() async {
     //Read the characteristic in the 3rd service (the user defined characteristic)
-    var characteristics = _services[2].characteristics;
-    BluetoothCharacteristic c = characteristics[0];
+    List<BluetoothCharacteristic> characteristics =
+        _services[2].characteristics;
+    BluetoothCharacteristic c = characteristics[1];
     String inputData;
     List<int> value;
 
@@ -405,13 +406,14 @@ class AppBarBLEState extends State<AppBarBLE> {
     inputData = utf8.decode(value);
 
     //debug printing of what characteristic is read
-    debugPrint(inputData);
+    debugPrint("Read: $inputData");
   }
 
   Future<void> writeCharacteristics(String command) async {
     //Take the characteristic in the 3rd service (the user defined characteristic)
-    var characteristics = _services[2].characteristics;
-    BluetoothCharacteristic c = characteristics[0];
+    List<BluetoothCharacteristic> characteristics =
+        _services[2].characteristics;
+    BluetoothCharacteristic c = characteristics[1];
     List<int> sendData;
 
     //Encode the command as utf8
@@ -422,6 +424,7 @@ class AppBarBLEState extends State<AppBarBLE> {
       await c.write(sendData, allowLongWrite: true);
     } catch (e) {
       debugPrint("Does not Work!!!");
+      debugPrint("$e");
     }
   }
 
