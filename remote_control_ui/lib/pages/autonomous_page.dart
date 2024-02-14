@@ -86,13 +86,11 @@ class _AutonomousPagee extends State<AutonomousPagee> {
         const SizedBox(height: 20),
         Container(
             height: 500,
-            decoration: BoxDecoration(
-              color: const Color(0xff171717),
-              borderRadius: BorderRadius.circular(20),
+            decoration: const BoxDecoration(
+              color: Color(0xff171717),
             ),
             child: Column(
               children: [
-                const SizedBox(height: 20),
                 Expanded(
                   child: currentUserLatLng == null
                       ? const Center(
@@ -103,7 +101,6 @@ class _AutonomousPagee extends State<AutonomousPagee> {
                         )
                       : theMap(),
                 ),
-                const SizedBox(height: 20),
               ],
             )),
         const SizedBox(height: 20), //spacing between map and controls

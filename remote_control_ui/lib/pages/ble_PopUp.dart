@@ -5,19 +5,27 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:kumi_popup_window/kumi_popup_window.dart';
 
-//indicator if a medium has been found
-bool mediumFound = false;
-bool mediumConnected = false;
+//controller for the BLE
+class BLEcontroller {
+  late void Function(String) sendDataBLE;
+}
 
+//Widget for BLE
 class AppBarBLE extends StatefulWidget {
-  const AppBarBLE({super.key});
+  final BLEcontroller controller;
+
+  const AppBarBLE({super.key, required this.controller});
 
   @override
-  State<AppBarBLE> createState() => AppBarBLEState();
+  State<AppBarBLE> createState() => AppBarBLEState(controller);
 }
 
 //a public class so that main_page.dart can call the sendDataBLE function only
 class AppBarBLEState extends State<AppBarBLE> {
+  AppBarBLEState(BLEcontroller controller) {
+    controller.sendDataBLE = sendDataBLE;
+  }
+
   //variable used to let user visually see the BLE connection status
   ValueNotifier<Color> connectionColor =
       ValueNotifier<Color>(const Color.fromARGB(255, 224, 80, 70));
@@ -40,9 +48,7 @@ class AppBarBLEState extends State<AppBarBLE> {
   //Medium remote ID for comparison when finding Medium
   //Might vary for different Mediums
   final List<DeviceIdentifier> mediumId = [
-    const DeviceIdentifier('3C:E9:0E:83:A6:3E'),
-    const DeviceIdentifier('0C:B8:15:F2:C9:36'),
-    const DeviceIdentifier('08:D1:F9:99:2A:66')
+    const DeviceIdentifier('D8:3A:DD:5C:97:CD'),
   ];
 
   //to store the Medium found
@@ -64,12 +70,9 @@ class AppBarBLEState extends State<AppBarBLE> {
   //this function can only be called by main_page.dart
   //other pages have to go through main_page.dart to call this function to send data to Medium
   void sendDataBLE(String dataToBeSent) async {
-    debugPrint("$mediumConnected");
+    debugPrint("Medium Connection: $mediumConnected");
     if (mediumConnected) {
       writeCharacteristics(dataToBeSent);
-    } else {
-      //for debugging purposes
-      debugPrint("Medium Not Connected Yet!!!");
     }
   }
 
@@ -390,8 +393,9 @@ class AppBarBLEState extends State<AppBarBLE> {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Future<void> readCharacteristics() async {
     //Read the characteristic in the 3rd service (the user defined characteristic)
-    var characteristics = _services[2].characteristics;
-    BluetoothCharacteristic c = characteristics[0];
+    List<BluetoothCharacteristic> characteristics =
+        _services[2].characteristics;
+    BluetoothCharacteristic c = characteristics[1];
     String inputData;
     List<int> value;
 
@@ -402,13 +406,14 @@ class AppBarBLEState extends State<AppBarBLE> {
     inputData = utf8.decode(value);
 
     //debug printing of what characteristic is read
-    debugPrint(inputData);
+    debugPrint("Read: $inputData");
   }
 
   Future<void> writeCharacteristics(String command) async {
     //Take the characteristic in the 3rd service (the user defined characteristic)
-    var characteristics = _services[2].characteristics;
-    BluetoothCharacteristic c = characteristics[0];
+    List<BluetoothCharacteristic> characteristics =
+        _services[2].characteristics;
+    BluetoothCharacteristic c = characteristics[1];
     List<int> sendData;
 
     //Encode the command as utf8
@@ -419,6 +424,7 @@ class AppBarBLEState extends State<AppBarBLE> {
       await c.write(sendData, allowLongWrite: true);
     } catch (e) {
       debugPrint("Does not Work!!!");
+      debugPrint("$e");
     }
   }
 

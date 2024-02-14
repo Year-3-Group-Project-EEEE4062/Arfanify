@@ -13,6 +13,8 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  final BLEcontroller myController = BLEcontroller();
+
   ////////////////////////variables
   int _selectedIndex = 0;
 
@@ -24,7 +26,8 @@ class _MainPageState extends State<MainPage> {
   }
 
   _updateMediumBLE(String command) {
-    AppBarBLEState().sendDataBLE(command);
+    //AppBarBLEState().sendDataBLE(command);
+    myController.sendDataBLE(command);
   }
 
   //return widget based on what user wants
@@ -59,6 +62,7 @@ class _MainPageState extends State<MainPage> {
   // DRAWER //
   Drawer drawerPage(BuildContext context) {
     return Drawer(
+      width: 220,
       backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       child: ListView(
         padding: const EdgeInsets.all(0),
@@ -79,9 +83,9 @@ class _MainPageState extends State<MainPage> {
 
   DrawerHeader drawerHeader() {
     return DrawerHeader(
-      decoration: BoxDecoration(
-          color: const Color(0xff171717),
-          borderRadius: BorderRadius.circular(10)),
+      decoration: const BoxDecoration(
+        color: Color(0xff171717),
+      ),
       //Container just acts as a filler so that Drawer Header has a child
       //if not, Drawer header not valid
       child: Container(
@@ -191,7 +195,7 @@ class _MainPageState extends State<MainPage> {
       //set background colour of AppBar
       backgroundColor: Colors.black,
 
-      actions: const [AppBarBLE()],
+      actions: [AppBarBLE(controller: myController)],
       //adjust the bottom shape of the appbar
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(5))),
