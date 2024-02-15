@@ -42,17 +42,20 @@ class RemoteControlState extends State<RemoteControlPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        modeGauge(),
-        modeBar(),
-        modeSetter(),
-        const SizedBox(height: 40), //just empty space
-        controlPad(),
-        const SizedBox(height: 40),
-      ],
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          modeGauge(),
+          modeBar(),
+          modeSetter(),
+          const SizedBox(height: 40), //just empty space
+          controlPad(),
+          const SizedBox(height: 40),
+        ],
+      ),
     );
   }
 

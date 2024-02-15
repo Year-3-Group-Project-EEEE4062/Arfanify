@@ -81,80 +81,83 @@ class _AutonomousPagee extends State<AutonomousPagee> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const SizedBox(height: 20),
-        Container(
-            height: 500,
-            decoration: const BoxDecoration(
-              color: Color(0xff171717),
-            ),
-            child: Column(
-              children: [
-                Expanded(
-                  child: currentUserLatLng == null
-                      ? const Center(
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 5,
-                          ),
-                        )
-                      : theMap(),
-                ),
-              ],
-            )),
-        const SizedBox(height: 20), //spacing between map and controls
-        Container(
-          decoration: BoxDecoration(
-            color: const Color(0xff171717),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              const SizedBox(width: 10), //layout spacing
-              Column(children: [
-                const SizedBox(height: 10), //layout spacing
-                _waypointsListViewerButton(),
-                const SizedBox(height: 10), //layout spacing
-              ]),
-              const SizedBox(width: 10), //layout spacing
-              Column(children: [
-                const SizedBox(height: 10), //layout spacing
-                _parameterSettingsButton(),
-                const SizedBox(height: 10), //layout spacing
-              ]),
-              const SizedBox(width: 10),
-              Column(children: [
-                const SizedBox(height: 10), //layout spacing
-                _summaryViewerButton(),
-                const SizedBox(height: 10), //layout spacing
-              ]),
-              const SizedBox(width: 10), //layout spacing
-              Container(
-                height: 140,
-                width: 3,
-                decoration: BoxDecoration(
-                    color: const Color.fromARGB(255, 121, 121, 121),
-                    borderRadius: BorderRadius.circular(20)),
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Column(
+        children: [
+          const SizedBox(height: 20),
+          Container(
+              height: 500,
+              decoration: const BoxDecoration(
+                color: Color(0xff171717),
               ),
-              const SizedBox(width: 10), //layout spacing
-              Column(
+              child: Column(
                 children: [
-                  const SizedBox(height: 10), //layout spacing
-                  _getUserLocation(),
-                  const SizedBox(height: 10), //layout spacing
-                  _generatePolyline(),
-                  const SizedBox(height: 10), //layout spacing
-                  _removeAllMarkers(),
-                  const SizedBox(height: 10), //layout spacing
+                  Expanded(
+                    child: currentUserLatLng == null
+                        ? const Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 5,
+                            ),
+                          )
+                        : theMap(),
+                  ),
                 ],
-              ),
-              const SizedBox(width: 10), //layout spacing
-            ],
-          ),
-        )
-      ],
+              )),
+          const SizedBox(height: 20), //spacing between map and controls
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xff171717),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                const SizedBox(width: 10), //layout spacing
+                Column(children: [
+                  const SizedBox(height: 10), //layout spacing
+                  _waypointsListViewerButton(),
+                  const SizedBox(height: 10), //layout spacing
+                ]),
+                const SizedBox(width: 10), //layout spacing
+                Column(children: [
+                  const SizedBox(height: 10), //layout spacing
+                  _parameterSettingsButton(),
+                  const SizedBox(height: 10), //layout spacing
+                ]),
+                const SizedBox(width: 10),
+                Column(children: [
+                  const SizedBox(height: 10), //layout spacing
+                  _summaryViewerButton(),
+                  const SizedBox(height: 10), //layout spacing
+                ]),
+                const SizedBox(width: 10), //layout spacing
+                Container(
+                  height: 140,
+                  width: 3,
+                  decoration: BoxDecoration(
+                      color: const Color.fromARGB(255, 121, 121, 121),
+                      borderRadius: BorderRadius.circular(20)),
+                ),
+                const SizedBox(width: 10), //layout spacing
+                Column(
+                  children: [
+                    const SizedBox(height: 10), //layout spacing
+                    _getUserLocation(),
+                    const SizedBox(height: 10), //layout spacing
+                    _generatePolyline(),
+                    const SizedBox(height: 10), //layout spacing
+                    _removeAllMarkers(),
+                    const SizedBox(height: 10), //layout spacing
+                  ],
+                ),
+                const SizedBox(width: 10), //layout spacing
+              ],
+            ),
+          )
+        ],
+      ),
     );
   }
 
