@@ -118,22 +118,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_advanced_drawer:
-    dependency: "direct main"
-    description:
-      name: flutter_advanced_drawer
-      sha256: d0d12b6b9bc65a481c37c22a4f59b5d400cddb46f1fe4b1682e7d91a0b724c91
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.3.5"
   flutter_blue_plus:
     dependency: "direct main"
     description:
       name: flutter_blue_plus
-      sha256: "976d8cfd4068c392a9c2236bb1952b2bbc3905747f4177c5baa95aaa1f054f75"
+      sha256: "5390406cae8639182d538195208f15fd42b4284db6f73ce040354aef3a7be016"
       url: "https://pub.dev"
     source: hosted
-    version: "1.31.13"
+    version: "1.31.14"
   flutter_launcher_icons:
     dependency: "direct main"
     description:
@@ -146,10 +138,10 @@ packages:
     dependency: "direct dev"
     description:
       name: flutter_lints
-      sha256: a25a15ebbdfc33ab1cd26c63a6ee519df92338a9c10f122adda92938253bef04
+      sha256: e2a421b7e59244faef694ba7b30562e489c2b489866e505074eb005cd7060db7
       url: "https://pub.dev"
     source: hosted
-    version: "2.0.3"
+    version: "3.0.1"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
@@ -308,10 +300,10 @@ packages:
     dependency: transitive
     description:
       name: intl
-      sha256: "3bc132a9dbce73a7e4a21a17d06e1878839ffbf975568bc875c60537824b0c4d"
+      sha256: d6f56758b7d3014a48af9701c085700aac781a92a87a62b1333b46d8879661cf
       url: "https://pub.dev"
     source: hosted
-    version: "0.18.1"
+    version: "0.19.0"
   js:
     dependency: transitive
     description:
@@ -348,10 +340,10 @@ packages:
     dependency: transitive
     description:
       name: lints
-      sha256: "0a217c6c989d21039f1498c3ed9f3ed71b354e69873f13a8dfc3c9fe76f1b452"
+      sha256: cbf8d4b858bb0134ef3ef87841abdf8d63bfc255c266b7bf6b39daa1085c4290
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.1"
+    version: "3.0.0"
   matcher:
     dependency: transitive
     description:
@@ -468,10 +460,10 @@ packages:
     dependency: "direct main"
     description:
       name: provider
-      sha256: cdbe7530b12ecd9eb455bdaa2fcb8d4dad22e80b8afb4798b41479d5ce26847f
+      sha256: "9a96a0a19b594dbc5bf0f1f27d2bc67d5f95957359b461cd9feb44ed6ae75096"
       url: "https://pub.dev"
     source: hosted
-    version: "6.0.5"
+    version: "6.1.1"
   sanitize_html:
     dependency: transitive
     description:
@@ -537,18 +529,18 @@ packages:
     dependency: transitive
     description:
       name: syncfusion_flutter_core
-      sha256: a2427697bfad5b611db78ea4c4daef82d3350b83c729a8dc37959662a31547f9
+      sha256: "4eed0d3ae50c16b5e8e4957f3c1917e9bd0315a08dfb49a104ca8fc10244bef3"
       url: "https://pub.dev"
     source: hosted
-    version: "23.2.7"
+    version: "24.2.6"
   syncfusion_flutter_gauges:
     dependency: "direct main"
     description:
       name: syncfusion_flutter_gauges
-      sha256: a559712b476b05ad2506925b5031dbba3c9e7ce83f482191a8185a3de054e7e6
+      sha256: "13649480bb4a064c244a4df836c7d1ba3a5ea8640bc57d5ddc42b238a026e9fc"
       url: "https://pub.dev"
     source: hosted
-    version: "23.2.7"
+    version: "24.2.6"
   term_glyph:
     dependency: transitive
     description:
@@ -565,6 +557,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.6.1"
+  toggle_switch:
+    dependency: "direct main"
+    description:
+      name: toggle_switch
+      sha256: "9e6af1f0c5a97d9de41109dc7b9e1b3bbe73417f89b10e0e44dc834fb493d4cb"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.0"
   typed_data:
     dependency: transitive
     description:

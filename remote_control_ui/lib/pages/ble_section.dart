@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:kumi_popup_window/kumi_popup_window.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:toggle_switch/toggle_switch.dart';
 
 //controller for the BLE
 class BLEcontroller {
@@ -13,8 +13,13 @@ class BLEcontroller {
 //Widget for BLE
 class AppBarBLE extends StatefulWidget {
   final BLEcontroller controller;
-
-  const AppBarBLE({super.key, required this.controller});
+  final double safeScreenHeight;
+  final double safeScreenWidth;
+  const AppBarBLE(
+      {super.key,
+      required this.controller,
+      required this.safeScreenHeight,
+      required this.safeScreenWidth});
 
   @override
   State<AppBarBLE> createState() => AppBarBLEState(controller);
@@ -45,9 +50,13 @@ class AppBarBLEState extends State<AppBarBLE> {
   //variable used to check the services available by connected device
   List<BluetoothService> _services = [];
 
-  //Medium remote ID for comparison when finding Medium
-  //Might vary for different Mediums
-  final List<DeviceIdentifier> mediumId = [
+  //When connecting to Medium or Boat, it targets the specific device ID
+  //bleIndex used to determine which device ID to look for
+  int bleIndex = 0;
+  //First ID: Medium
+  //Second ID: Boat
+  final List<DeviceIdentifier> devicesId = [
+    const DeviceIdentifier('D8:3A:DD:5C:97:CD'),
     const DeviceIdentifier('D8:3A:DD:5C:97:CD'),
   ];
 
@@ -58,13 +67,19 @@ class AppBarBLEState extends State<AppBarBLE> {
   bool mediumFound = false;
   bool mediumConnected = false;
 
+  //for better scaling of widgets with different screen sizes
+  late double _safeVertical;
+  late double _safeHorizontal;
+
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   void resetVariables() {
+    //change the connection color to red
+    connectionColor.value = const Color.fromARGB(255, 224, 80, 70);
     _scanResults.clear(); //reset scan as Bluetooth state changes
     _services.clear(); //reset services as Bluetooth state changes
     mediumFound = false; //reset back to medium not found
-    mediumConnected = false;
+    mediumConnected = false; //reset back to medium not connected
   }
 
   //this function can only be called by main_page.dart
@@ -73,6 +88,7 @@ class AppBarBLEState extends State<AppBarBLE> {
     debugPrint("Medium Connection: $mediumConnected");
     if (mediumConnected) {
       writeCharacteristics(dataToBeSent);
+      editActionMssg("Sent BLE\nmessage");
     }
   }
 
@@ -108,6 +124,10 @@ class AppBarBLEState extends State<AppBarBLE> {
   void initState() {
     super.initState();
 
+    //for scaling size of the widget
+    _safeVertical = widget.safeScreenHeight;
+    _safeHorizontal = widget.safeScreenWidth;
+
     //check if Bluetooth is ON or OFF
     _adapterStateStateSubscription =
         FlutterBluePlus.adapterState.listen((BluetoothAdapterState state) {
@@ -122,10 +142,10 @@ class AppBarBLEState extends State<AppBarBLE> {
         for (ScanResult r in results) {
           //check if detected device has already been detected before
           if (_scanResults.contains(r) == false) {
-            //check if it is a valid Medium remote ID or has a Medium name
-            if (mediumId.contains(r.device.remoteId) == true) {
+            //check if it is a valid device ID (Medium or Boat)
+            if (devicesId[bleIndex] == r.device.remoteId) {
               //Print detected onto console for debugging purpose
-              debugPrint(r.advertisementData.localName);
+              debugPrint(r.advertisementData.advName);
               debugPrint('${r.device.remoteId}');
 
               //medium detected and add to list
@@ -163,87 +183,81 @@ class AppBarBLEState extends State<AppBarBLE> {
   //building a widget
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.only(top: 20, right: 10),
-      child: OutlinedButton(
-        onPressed: () {
-          blePopUp(context);
-        },
-        style: OutlinedButton.styleFrom(
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          side: const BorderSide(color: Colors.white),
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Text(
-              'BLE',
-              style: TextStyle(fontSize: 20),
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: _safeVertical * 4,
             ),
+            //show connection status to Medium
+            Container(
+              height: _safeVertical * 5,
+              width: _safeHorizontal * 40,
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 33, 33, 33),
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: bleStatusRow(context),
+            ),
+            SizedBox(
+              width: _safeVertical * 10,
+            ),
+            bleScanButton(context)
           ],
         ),
-      ),
+        SizedBox(
+          height: _safeVertical * 0.9,
+        ),
+        contextBox(context), //show user what is currently happening in BLE
+        SizedBox(
+          height: _safeVertical * 0.9,
+        ),
+        deviceToggleButton(),
+        SizedBox(
+          height: _safeVertical * 0.9,
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            bleConnectButton(context),
+            bleDisconnectButton(context),
+          ],
+        ),
+      ],
     );
   }
 
-  KumiPopupWindow blePopUp(BuildContext context) {
-    return showPopupWindow(
-      context,
-      gravity: KumiPopupGravity.rightTop,
-      //curve: Curves.elasticOut,
-      //bgColor: Colors.grey.withOpacity(0.5),
-      clickOutDismiss: true,
-      clickBackDismiss: true,
-      customAnimation: false,
-      customPop: false,
-      customPage: false,
-      //targetRenderBox: (btnKey.currentContext.findRenderObject() as RenderBox),
-      needSafeDisplay: true,
-      underStatusBar: false,
-      underAppBar: true,
-      offsetX: 0,
-      offsetY: 0,
-      duration: const Duration(milliseconds: 200),
-      childFun: (pop) {
-        return Container(
-          key: GlobalKey(),
-          padding: const EdgeInsets.all(10),
-          height: 400,
-          width: 265,
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10), color: Colors.white),
-          child: Column(
-            children: [
-              const SizedBox(height: 10), //add space between each of them
-              Row(
-                children: [
-                  //show connection status to Medium
-                  bleStatusRow(context),
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ToggleSwitch deviceToggleButton() {
+    return ToggleSwitch(
+      minWidth: _safeHorizontal * 41.5,
+      minHeight: _safeVertical * 5,
+      fontSize: 17,
+      initialLabelIndex: bleIndex,
+      activeBgColor: const [Color(0xff768a76)],
+      activeFgColor: Colors.white,
+      inactiveBgColor: const Color.fromARGB(255, 68, 67, 67),
+      inactiveFgColor: Colors.white,
+      totalSwitches: 2,
+      labels: const ['Medium', 'Boat'],
+      onToggle: (index) {
+        debugPrint('switched to: $index');
+        //update ble index
+        bleIndex = index!;
 
-                  //allow user to test connection if connected
-                  //if not connected ContextBox would alert the user
-                  bleTestButton(context),
-                ],
-              ),
-              const SizedBox(height: 10),
-              contextBox(
-                  context), //show user what is currently happening in BLE
-              const SizedBox(height: 10),
-              Column(
-                //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  //allow user to Scan and Connect to Medium if necessary
-                  bleScanButton(context),
-                  bleConnectButton(context),
-                  bleDisconnectButton(context),
-                ],
-              ),
-            ],
-          ),
-        );
+        //reset connections as well to ask user to do connection again
+        if (mediumFound) {
+          if (mediumConnected) {
+            disconnectToDevice();
+            editActionMssg("Switched Device..\nScan again!");
+          } else {
+            editActionMssg("Switched Device..\nScan again!");
+            resetVariables();
+          }
+        }
       },
     );
   }
@@ -252,8 +266,8 @@ class AppBarBLEState extends State<AppBarBLE> {
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Row bleStatusRow(BuildContext context) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        const SizedBox(width: 20),
         ValueListenableBuilder(
             valueListenable: connectionColor,
             builder: (context, value, _) {
@@ -263,10 +277,9 @@ class AppBarBLEState extends State<AppBarBLE> {
                 color: connectionColor.value,
               );
             }),
-        const SizedBox(width: 10),
         const Text(
           'Connection',
-          style: TextStyle(color: Colors.black, fontSize: 20),
+          style: TextStyle(color: Colors.white, fontSize: 17),
         ),
       ],
     );
@@ -299,60 +312,69 @@ class AppBarBLEState extends State<AppBarBLE> {
   }
 
   Row contextBox(BuildContext context) {
-    return Row(textBaseline: TextBaseline.alphabetic, children: [
-      const SizedBox(width: 24),
-      Container(
-        height: 150,
-        width: 200,
-        decoration: BoxDecoration(
-            color: const Color.fromARGB(255, 33, 33, 33),
-            borderRadius: BorderRadius.circular(10)),
-        child: Column(
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Container(
-                width: 60,
-                height: 30,
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(10),
-                  //border: Border.all(width: 2, color: Colors.white)
-                ),
-                child: Center(
-                  child: ValueListenableBuilder(
-                      valueListenable: timeMssg,
-                      builder: (context, value, _) {
-                        return Text(timeMssg.value,
-                            softWrap: true,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 20));
-                      }),
+    return Row(
+      textBaseline: TextBaseline.alphabetic,
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        SizedBox(
+          width: _safeVertical * 4,
+        ),
+        Container(
+          height: _safeVertical * 35,
+          width: _safeHorizontal * 83,
+          decoration: BoxDecoration(
+              color: const Color.fromARGB(255, 33, 33, 33),
+              borderRadius: BorderRadius.circular(10)),
+          child: Column(
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  width: 60,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(10),
+                    //border: Border.all(width: 2, color: Colors.white)
+                  ),
+                  child: Center(
+                    child: ValueListenableBuilder(
+                        valueListenable: timeMssg,
+                        builder: (context, value, _) {
+                          return Text(timeMssg.value,
+                              softWrap: true,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                  color: Colors.white, fontSize: 20));
+                        }),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 24),
-            Center(
-              child: ValueListenableBuilder(
-                  valueListenable: actionMssg,
-                  builder: (context, value, _) {
-                    return Text(actionMssg.value,
-                        softWrap: true,
-                        textAlign: TextAlign.center,
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 20));
-                  }),
-            )
-          ],
+              const SizedBox(height: 24),
+              Center(
+                child: ValueListenableBuilder(
+                    valueListenable: actionMssg,
+                    builder: (context, value, _) {
+                      return Text(actionMssg.value,
+                          softWrap: true,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 20));
+                    }),
+              )
+            ],
+          ),
         ),
-      )
-    ]);
+        SizedBox(
+          width: _safeVertical * 4,
+        ),
+      ],
+    );
   }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  Future<void> disconnectToMedium() async {
+  Future<void> disconnectToDevice() async {
     if (mediumConnected) {
       editActionMssg("Attempting disconnection...");
 
@@ -368,23 +390,27 @@ class AppBarBLEState extends State<AppBarBLE> {
 
   Row bleDisconnectButton(BuildContext context) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        const SizedBox(width: 18),
-        TextButton(
-          style: TextButton.styleFrom(
+        OutlinedButton(
+          style: OutlinedButton.styleFrom(
             textStyle: Theme.of(context).textTheme.labelLarge,
+            // Customize other properties like padding, border, etc.
+            side: const BorderSide(
+                color: Color.fromARGB(255, 33, 33, 33),
+                width: 1.0), // Add an outline border
           ),
+          onPressed: () async {
+            // Only do something if Bluetooth is ON and working
+            if (checkAdapterState()) {
+              disconnectToDevice();
+            }
+          },
           child: const Text(
             'Disconnect',
             style: TextStyle(fontSize: 20),
           ),
-          onPressed: () async {
-            //only do something if bluetooth ON and working
-            if (checkAdapterState()) {
-              disconnectToMedium();
-            }
-          },
-        ),
+        )
       ],
     );
   }
@@ -466,12 +492,8 @@ class AppBarBLEState extends State<AppBarBLE> {
           //for debugging purpose to know if Medium connected or not
           debugPrint("Medium Connected!");
         } else if (state == BluetoothConnectionState.disconnected) {
-          //change the connection color to red
-          connectionColor.value = const Color.fromARGB(255, 224, 80, 70);
-          _services.clear(); //must rediscover services after disconnection
           editActionMssg("Disconnected from Medium...");
           resetVariables();
-          mediumConnected = false;
           debugPrint("Medium Disconnected!");
         }
       });
@@ -480,23 +502,30 @@ class AppBarBLEState extends State<AppBarBLE> {
 
   Row bleConnectButton(BuildContext context) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        const SizedBox(width: 18),
-        TextButton(
-          style: TextButton.styleFrom(
+        // SizedBox(
+        //   width: _safeVertical * 4,
+        // ),
+        OutlinedButton(
+          style: OutlinedButton.styleFrom(
             textStyle: Theme.of(context).textTheme.labelLarge,
-          ),
-          child: const Text(
-            'Connect',
-            style: TextStyle(fontSize: 20),
+            // Customize other properties like padding, border, etc.
+            side: const BorderSide(
+                color: Color.fromARGB(255, 33, 33, 33),
+                width: 1.0), // Add an outline border
           ),
           onPressed: () async {
-            //only do the scanning and connecting if bluetooth ON and working
+            // Only do something if Bluetooth is ON and working
             if (checkAdapterState()) {
               connectToMedium();
             }
           },
-        ),
+          child: const Text(
+            'Connect',
+            style: TextStyle(fontSize: 20),
+          ),
+        )
       ],
     );
   }
@@ -538,47 +567,27 @@ class AppBarBLEState extends State<AppBarBLE> {
 
   Row bleScanButton(BuildContext context) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        const SizedBox(width: 16),
-        TextButton(
-          style: TextButton.styleFrom(
+        OutlinedButton(
+          style: OutlinedButton.styleFrom(
             textStyle: Theme.of(context).textTheme.labelLarge,
-          ),
-          child: const Text(
-            'Scan',
-            style: TextStyle(fontSize: 20),
+            // Customize other properties like padding, border, etc.
+            side: const BorderSide(
+                color: Color.fromARGB(255, 33, 33, 33),
+                width: 1.0), // Add an outline border
           ),
           onPressed: () async {
-            //only do the scanning and connecting if bluetooth ON and working
+            // Only do something if Bluetooth is ON and working
             if (checkAdapterState()) {
               onScanPressed();
             }
           },
-        ),
-      ],
-    );
-  }
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //displaying of this button depends on checkConnection()
-  Row bleTestButton(BuildContext context) {
-    return Row(
-      children: [
-        const SizedBox(width: 14),
-        OutlinedButton(
-          style: OutlinedButton.styleFrom(
-            textStyle: Theme.of(context).textTheme.labelLarge,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            side: const BorderSide(color: Color.fromARGB(255, 0, 0, 0)),
-          ),
           child: const Text(
-            'Test',
+            'Scan',
             style: TextStyle(fontSize: 20),
           ),
-          onPressed: () {},
-        ),
+        )
       ],
     );
   }

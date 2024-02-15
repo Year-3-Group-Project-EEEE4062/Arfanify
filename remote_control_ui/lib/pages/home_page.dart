@@ -1,133 +1,238 @@
 import 'package:flutter/material.dart';
+import 'package:remote_control_ui/pages/ble_section.dart';
 
 class HomePage extends StatefulWidget {
   final Function(int) updateScaffoldBody;
-  const HomePage({super.key, required this.updateScaffoldBody});
+  final double safeScreenHeight;
+  final double safeScreenWidth;
+  const HomePage(
+      {super.key,
+      required this.updateScaffoldBody,
+      required this.safeScreenHeight,
+      required this.safeScreenWidth});
 
   @override
   HomePageState createState() => HomePageState();
 }
 
 class HomePageState extends State<HomePage> {
-  Color buttonBackgroundColor = const Color(0xff171717);
-  Color buttonForegroundColor = const Color.fromARGB(255, 234, 228, 228);
+  final BLEcontroller myController = BLEcontroller();
+  Color buttonBackgroundColor = const Color.fromARGB(255, 95, 94, 94);
+  Color buttonForegroundColor = Colors.white;
+
+  // for better scaling of widgets with different screen sizes
+  late double _safeVertical;
+  late double _safeHorizontal;
 
   void buttonPressed(int index) {
     widget.updateScaffoldBody(index);
   }
 
   @override
+  void initState() {
+    super.initState();
+
+    // initialize the variables
+    _safeVertical = widget.safeScreenHeight;
+    _safeHorizontal = widget.safeScreenWidth;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center,
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Column(
         children: [
-          arfanifyIcon(),
-          remoteControlButton(),
-          autonomousButton(),
-          cloudBackupButton(),
+          SizedBox(
+            height: _safeVertical * 5,
+          ),
+          mainPageTitle(),
+          SizedBox(
+            height: _safeVertical * 2,
+          ),
+          Center(
+            child: modeSection(),
+          ),
+          SizedBox(
+            height: _safeVertical * 2,
+          ),
+          Center(
+            child: bleSection(),
+          )
         ],
       ),
     );
   }
 
-  Image arfanifyIcon() {
-    return const Image(
-      image: AssetImage('assets/icons/Arfanify.png'),
-      width: 200,
-      height: 200,
-      color: Colors.white,
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  Container bleSection() {
+    return Container(
+      height: _safeVertical * 63,
+      width: _safeHorizontal * 100,
+      decoration: BoxDecoration(
+        color: const Color(0xffC8D0C8),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Column(
+        children: [
+          SizedBox(
+            height: _safeVertical,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: _safeVertical * 4,
+              ),
+              const Text(
+                "Bluetooth",
+                style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          SizedBox(
+            height: _safeVertical,
+          ),
+          // Defined in another class
+          AppBarBLE(
+            controller: myController,
+            safeScreenHeight: _safeVertical,
+            safeScreenWidth: _safeHorizontal,
+          ),
+        ],
+      ),
     );
   }
 
-  Container remoteControlButton() {
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  Container modeSection() {
     return Container(
-      margin: const EdgeInsets.all(10),
-      height: 100,
-      width: 160,
-      child: ElevatedButton(
+      height: _safeVertical * 23,
+      width: _safeHorizontal * 100,
+      decoration: BoxDecoration(
+        color: const Color(0xffC8D0C8),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Column(
+        children: [
+          SizedBox(
+            height: _safeVertical,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: _safeVertical * 4,
+              ),
+              const Text(
+                "Modes",
+                style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          SizedBox(
+            height: _safeVertical,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              remotePageButton(),
+              autoPageButton(),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
+  SizedBox remotePageButton() {
+    return SizedBox(
+      height: _safeVertical * 15,
+      width: _safeHorizontal * 40,
+      child: ElevatedButton.icon(
         onPressed: () {
           buttonPressed(1);
         },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: buttonBackgroundColor,
-          foregroundColor: buttonForegroundColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+        icon: Icon(
+          Icons.settings_remote_sharp,
+          size: _safeVertical * 7,
+          color: Colors.white,
         ),
-        child: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Icon(Icons.settings_remote_sharp,
-                size: 60), // Adjust the size as needed
-            Text(
-              'Remote Control',
-              style: TextStyle(fontSize: 18),
-            ),
-          ],
+        label: const Text(
+          'Remote',
+          style: TextStyle(fontSize: 17, color: Colors.white),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xff768a76),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
         ),
       ),
     );
   }
 
-  Container autonomousButton() {
-    return Container(
-      margin: const EdgeInsets.all(10),
-      height: 100,
-      width: 160,
-      child: ElevatedButton(
+  SizedBox autoPageButton() {
+    return SizedBox(
+      height: _safeVertical * 15,
+      width: _safeHorizontal * 40,
+      child: ElevatedButton.icon(
         onPressed: () {
-          buttonPressed(2); // Use the variable within the print statement
+          buttonPressed(2);
         },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: buttonBackgroundColor,
-          foregroundColor: buttonForegroundColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+        icon: Icon(
+          Icons.map_outlined,
+          size: _safeVertical * 7,
+          color: Colors.white,
         ),
-        child: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Icon(Icons.map_outlined, size: 60), // Adjust the size as needed
-            Text(
-              'Autonomous',
-              style: TextStyle(fontSize: 18),
-            ),
-          ],
+        label: const Text(
+          'Auto',
+          style: TextStyle(fontSize: 17, color: Colors.white),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xff768a76),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
         ),
       ),
     );
   }
 
-  Container cloudBackupButton() {
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  Container mainPageTitle() {
     return Container(
-      margin: const EdgeInsets.all(10),
-      height: 100,
-      width: 160,
-      child: ElevatedButton(
-        onPressed: () {
-          buttonPressed(3); // Use the variable within the print statement
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: buttonBackgroundColor,
-          foregroundColor: buttonForegroundColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+      height: _safeVertical * 8,
+      width: _safeHorizontal * 50,
+      decoration: BoxDecoration(
+        color: const Color(0xff768a76),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Icon(
+            Icons.directions_boat_filled,
+            color: Colors.white,
+            size: _safeVertical * 5,
           ),
-        ),
-        child: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Icon(Icons.cloud_done, size: 60), // Adjust the size as needed
-            Text(
-              'Cloud Backup',
-              style: TextStyle(fontSize: 18),
+          const Text(
+            'Arfanify',
+            style: TextStyle(
+              fontSize: 30,
+              color: Colors.white,
             ),
-          ],
-        ),
+          )
+        ],
       ),
     );
   }
