@@ -2,9 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:remote_control_ui/pages/autonomous_page.dart';
 import 'package:remote_control_ui/pages/home_page.dart';
-import 'package:remote_control_ui/pages/remote_control_page.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,6 +29,9 @@ void main() {
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
@@ -44,6 +45,9 @@ class MainApp extends StatelessWidget {
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
 
@@ -52,44 +56,14 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  ////////////////////////variables
-  int _selectedIndex = 0;
-
-  //update the selected index based on which page user wants to go to
-  _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
-  _updateDeviceBLE(String command) {}
-
-  //return widget based on what user wants
-  Widget goToPage(double height, double width) {
-    if (_selectedIndex == 0) {
-      return HomePage(
-        updateScaffoldBody: _onItemTapped,
-        safeScreenHeight: height,
-        safeScreenWidth: width,
-      );
-    } else if (_selectedIndex == 1) {
-      return RemoteControlPage(bLE: _updateDeviceBLE);
-    } else if (_selectedIndex == 2) {
-      return const AutonomousPagee();
-    }
-
-    // null safety
-    return const Scaffold();
-  }
-
   ////////////////////////Scaffold
   @override
   Widget build(BuildContext context) {
     final List<double> sizes = SizeConfig().init(context);
 
-    return goToPage(
-      sizes[0],
-      sizes[1],
+    return HomePage(
+      safeScreenHeight: sizes[0],
+      safeScreenWidth: sizes[1],
     );
   }
 }

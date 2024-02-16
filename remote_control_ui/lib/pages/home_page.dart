@@ -1,31 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:remote_control_ui/pages/ble_section.dart';
+import 'package:remote_control_ui/pages/remote_control_page.dart';
+import 'package:remote_control_ui/pages/autonomous_page.dart';
 
 class HomePage extends StatefulWidget {
-  final Function(int) updateScaffoldBody;
   final double safeScreenHeight;
   final double safeScreenWidth;
-  const HomePage(
-      {super.key,
-      required this.updateScaffoldBody,
-      required this.safeScreenHeight,
-      required this.safeScreenWidth});
+  const HomePage({
+    super.key,
+    required this.safeScreenHeight,
+    required this.safeScreenWidth,
+  });
 
   @override
   HomePageState createState() => HomePageState();
 }
 
 class HomePageState extends State<HomePage> {
-  final BLEcontroller myController = BLEcontroller();
-  Color buttonBackgroundColor = const Color.fromARGB(255, 95, 94, 94);
-  Color buttonForegroundColor = Colors.white;
+  //initialize controller for BLE widget
+  final BLEcontroller myBLEController = BLEcontroller();
 
   // for better scaling of widgets with different screen sizes
   late double _safeVertical;
   late double _safeHorizontal;
 
-  void buttonPressed(int index) {
-    widget.updateScaffoldBody(index);
+  //Use BLE widget controller to send data to BLE widget
+  void updateBLEwidget(String message) {
+    //Send message to BLE widget
+    myBLEController.sendDataBLE(message);
   }
 
   @override
@@ -46,7 +48,12 @@ class HomePageState extends State<HomePage> {
           SizedBox(
             height: _safeVertical * 5,
           ),
-          mainPageTitle(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              mainPageTitle(),
+            ],
+          ),
           SizedBox(
             height: _safeVertical * 2,
           ),
@@ -99,7 +106,7 @@ class HomePageState extends State<HomePage> {
           ),
           // Defined in another class
           AppBarBLE(
-            controller: myController,
+            bleController: myBLEController,
             safeScreenHeight: _safeVertical,
             safeScreenWidth: _safeHorizontal,
           ),
@@ -159,7 +166,18 @@ class HomePageState extends State<HomePage> {
       width: _safeHorizontal * 40,
       child: ElevatedButton.icon(
         onPressed: () {
-          buttonPressed(1);
+          //navigate to a remote page
+          //navigate to the auto page
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RemotePage(
+                bLE: updateBLEwidget,
+                safeScreenHeight: _safeVertical,
+                safeScreenWidth: _safeHorizontal,
+              ),
+            ),
+          );
         },
         icon: Icon(
           Icons.settings_remote_sharp,
@@ -186,7 +204,17 @@ class HomePageState extends State<HomePage> {
       width: _safeHorizontal * 40,
       child: ElevatedButton.icon(
         onPressed: () {
-          buttonPressed(2);
+          //navigate to the auto page
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AutoPage(
+                bLE: updateBLEwidget,
+                safeScreenHeight: _safeVertical,
+                safeScreenWidth: _safeHorizontal,
+              ),
+            ),
+          );
         },
         icon: Icon(
           Icons.map_outlined,
@@ -209,14 +237,10 @@ class HomePageState extends State<HomePage> {
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  Container mainPageTitle() {
-    return Container(
-      height: _safeVertical * 8,
-      width: _safeHorizontal * 50,
-      decoration: BoxDecoration(
-        color: const Color(0xff768a76),
-        borderRadius: BorderRadius.circular(30),
-      ),
+  SizedBox mainPageTitle() {
+    return SizedBox(
+      height: _safeVertical * 7,
+      width: _safeHorizontal * 37,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
@@ -225,10 +249,10 @@ class HomePageState extends State<HomePage> {
             color: Colors.white,
             size: _safeVertical * 5,
           ),
-          const Text(
-            'Arfanify',
+          Text(
+            'ARFANIFY',
             style: TextStyle(
-              fontSize: 30,
+              fontSize: _safeVertical * 2,
               color: Colors.white,
             ),
           )

@@ -12,23 +12,23 @@ class BLEcontroller {
 
 //Widget for BLE
 class AppBarBLE extends StatefulWidget {
-  final BLEcontroller controller;
+  final BLEcontroller bleController;
   final double safeScreenHeight;
   final double safeScreenWidth;
   const AppBarBLE(
       {super.key,
-      required this.controller,
+      required this.bleController,
       required this.safeScreenHeight,
       required this.safeScreenWidth});
 
   @override
-  State<AppBarBLE> createState() => AppBarBLEState(controller);
+  State<AppBarBLE> createState() => AppBarBLEState(bleController);
 }
 
 //a public class so that main_page.dart can call the sendDataBLE function only
 class AppBarBLEState extends State<AppBarBLE> {
-  AppBarBLEState(BLEcontroller controller) {
-    controller.sendDataBLE = sendDataBLE;
+  AppBarBLEState(BLEcontroller blEcontroller) {
+    blEcontroller.sendDataBLE = sendDataBLE;
   }
 
   //variable used to let user visually see the BLE connection status

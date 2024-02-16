@@ -3,17 +3,28 @@ import 'dart:async';
 import 'dart:math';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:kumi_popup_window/kumi_popup_window.dart';
+import 'package:interactive_bottom_sheet/interactive_bottom_sheet.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
-class AutonomousPagee extends StatefulWidget {
-  const AutonomousPagee({super.key});
+class AutoPage extends StatefulWidget {
+  final double safeScreenHeight;
+  final double safeScreenWidth;
+  final Function(String) bLE;
+  const AutoPage(
+      {super.key,
+      required this.safeScreenHeight,
+      required this.safeScreenWidth,
+      required this.bLE});
 
   @override
-  State<AutonomousPagee> createState() => _AutonomousPagee();
+  State<AutoPage> createState() => _AutoPageState();
 }
 
-class _AutonomousPagee extends State<AutonomousPagee> {
+class _AutoPageState extends State<AutoPage> {
+  // for better scaling of widgets with different screen sizes
+  late double _safeVertical;
+  late double _safeHorizontal;
+
   Position? currentUserLatLng;
   final Completer<GoogleMapController> _mapsController = Completer();
   late String _darkMapStyle;
@@ -60,6 +71,10 @@ class _AutonomousPagee extends State<AutonomousPagee> {
   @override
   void initState() {
     super.initState();
+    // initialize the variables
+    _safeVertical = widget.safeScreenHeight;
+    _safeHorizontal = widget.safeScreenWidth;
+
     _loadMapStyles(); //load the dark mode map json file design
     //set the map to user current location
     _getUserCurrentLocation().then((value) async {
@@ -83,80 +98,126 @@ class _AutonomousPagee extends State<AutonomousPagee> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Column(
+      bottomSheet: const InteractiveBottomSheet(
+        options: InteractiveBottomSheetOptions(
+          maxSize: 0.8,
+          snapList: [0.25, 0.5],
+        ),
+        draggableAreaOptions: DraggableAreaOptions(topBorderRadius: 30),
+        child: Padding(
+          padding: EdgeInsets.all(15),
+          child: Column(),
+        ),
+      ),
+      body: Stack(
         children: [
-          const SizedBox(height: 20),
-          Container(
-              height: 500,
-              decoration: const BoxDecoration(
-                color: Color(0xff171717),
-              ),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: currentUserLatLng == null
-                        ? const Center(
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 5,
-                            ),
-                          )
-                        : theMap(),
-                  ),
-                ],
-              )),
-          const SizedBox(height: 20), //spacing between map and controls
-          Container(
-            decoration: BoxDecoration(
-              color: const Color(0xff171717),
-              borderRadius: BorderRadius.circular(20),
+          //for showing the map
+          SizedBox(
+            width: double.infinity,
+            height: double.infinity,
+            child: currentUserLatLng == null
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 5,
+                    ),
+                  )
+                // : Container(
+                //     decoration: const BoxDecoration(color: Colors.blueGrey),
+                //   ),
+                : theMap(),
+          ),
+
+          //for positioning the home button onto the map
+          Positioned(
+            top: _safeVertical * 5,
+            right: _safeHorizontal * 1,
+            child: SizedBox(
+              height: _safeVertical * 7,
+              width: _safeHorizontal * 20,
+              child: homeButton(context),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                const SizedBox(width: 10), //layout spacing
-                Column(children: [
-                  const SizedBox(height: 10), //layout spacing
-                  _waypointsListViewerButton(),
-                  const SizedBox(height: 10), //layout spacing
-                ]),
-                const SizedBox(width: 10), //layout spacing
-                Column(children: [
-                  const SizedBox(height: 10), //layout spacing
-                  _parameterSettingsButton(),
-                  const SizedBox(height: 10), //layout spacing
-                ]),
-                const SizedBox(width: 10),
-                Column(children: [
-                  const SizedBox(height: 10), //layout spacing
-                  _summaryViewerButton(),
-                  const SizedBox(height: 10), //layout spacing
-                ]),
-                const SizedBox(width: 10), //layout spacing
-                Container(
-                  height: 140,
-                  width: 3,
-                  decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 121, 121, 121),
-                      borderRadius: BorderRadius.circular(20)),
-                ),
-                const SizedBox(width: 10), //layout spacing
-                Column(
-                  children: [
-                    const SizedBox(height: 10), //layout spacing
-                    _getUserLocation(),
-                    const SizedBox(height: 10), //layout spacing
-                    _generatePolyline(),
-                    const SizedBox(height: 10), //layout spacing
-                    _removeAllMarkers(),
-                    const SizedBox(height: 10), //layout spacing
-                  ],
-                ),
-                const SizedBox(width: 10), //layout spacing
-              ],
+          ),
+          //For positioning the title of the page
+          Positioned(
+            top: _safeVertical * 5,
+            left: _safeHorizontal * 1,
+            child: autoPageTitle(),
+          ),
+
+          //For positioning the map button
+          Positioned(
+            top: _safeVertical * 55,
+            right: _safeHorizontal * 2,
+            child: _getUserLocationButton(),
+          ),
+          Positioned(
+            top: _safeVertical * 63,
+            right: _safeHorizontal * 2,
+            child: _generatePolylineButton(),
+          ),
+          Positioned(
+            top: _safeVertical * 71,
+            right: _safeHorizontal * 2,
+            child: _removeAllMarkers(),
+          )
+        ],
+      ),
+    );
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  //Title of the page
+  SizedBox autoPageTitle() {
+    return SizedBox(
+      height: _safeVertical * 7,
+      width: _safeHorizontal * 30,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Icon(
+            Icons.map_outlined,
+            color: Colors.white,
+            size: _safeVertical * 5,
+          ),
+          Text(
+            '> Auto',
+            style: TextStyle(
+              fontSize: _safeVertical * 2,
+              color: Colors.white,
             ),
           )
         ],
+      ),
+    );
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  //home button to return back to home page
+  OutlinedButton homeButton(BuildContext context) {
+    return OutlinedButton(
+      onPressed: () {
+        // Pop context to return back to the home page
+        Navigator.pop(context);
+      },
+      style: OutlinedButton.styleFrom(
+        side: const BorderSide(
+          width: 3,
+          color: Colors.white,
+          style: BorderStyle.solid,
+        ),
+        backgroundColor: const Color(0xff768a76), // Outline color
+        shape: RoundedRectangleBorder(
+          borderRadius:
+              BorderRadius.circular(30), // Adjust the border radius as needed
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.home_filled,
+          color: Colors.white,
+          size: _safeVertical * 4,
+        ),
       ),
     );
   }
@@ -274,6 +335,32 @@ class _AutonomousPagee extends State<AutonomousPagee> {
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // created method for getting user current location
+  SizedBox _getUserLocationButton() {
+    return SizedBox(
+      height: _safeVertical * 7,
+      width: _safeHorizontal * 20,
+      child: OutlinedButton(
+        onPressed: () async {
+          _getUserCurrentLocation().then((value) async {
+            debugPrint(
+                "User Current Location: ${value.latitude} , ${value.longitude}");
+            currentUserLatLng = value; //update user current location
+            _newCameraPosition(value);
+          });
+        },
+        style: OutlinedButton.styleFrom(
+          backgroundColor: const Color.fromARGB(255, 33, 33, 33),
+          shape: const CircleBorder(),
+          side: const BorderSide(color: Colors.black),
+        ),
+        child: const Icon(
+          Icons.my_location,
+          color: Colors.blue,
+        ),
+      ),
+    );
+  }
+
   Future<void> _newCameraPosition(Position value) async {
     // create a new camera position with respect to the user's location
     CameraPosition cameraPosition = CameraPosition(
@@ -289,34 +376,48 @@ class _AutonomousPagee extends State<AutonomousPagee> {
     setState(() {});
   }
 
-  SizedBox _getUserLocation() {
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  SizedBox _generatePolylineButton() {
     return SizedBox(
-      height: 40,
-      width: 70,
-      child: OutlinedButton(
-        onPressed: () async {
-          _getUserCurrentLocation().then((value) async {
-            debugPrint(
-                "User Current Location: ${value.latitude} , ${value.longitude}");
-            currentUserLatLng = value; //update user current location
-            _newCameraPosition(value);
-          });
+      height: _safeVertical * 7,
+      width: _safeHorizontal * 20,
+      child: ValueListenableBuilder(
+        valueListenable: polylineButtonColor,
+        builder: (context, value, _) {
+          return OutlinedButton(
+            onPressed: () {
+              //only generate polylines if there are at least 2 markers on the map
+              if (pathWaypoints.length >= 2 && !isPolylinesON) {
+                debugPrint("Generating Polylines");
+
+                //generate the polylines
+                _setPolylinesUsingMarkers();
+
+                //alert user of polyline change of state
+                _changePolylineButtonColor();
+              } else if (isPolylinesON) {
+                setState(() {
+                  _changePolylineButtonColor();
+                  pathPolylines.clear();
+                });
+              }
+            },
+            style: OutlinedButton.styleFrom(
+              backgroundColor: const Color.fromARGB(255, 33, 33, 33),
+              shape: const CircleBorder(),
+              side: const BorderSide(color: Colors.black),
+            ),
+            child: const Icon(
+              Icons.polyline,
+              color: Colors.yellow,
+            ),
+          );
         },
-        style: OutlinedButton.styleFrom(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          side: const BorderSide(color: Color.fromARGB(255, 255, 255, 255)),
-        ),
-        child: const Icon(
-          Icons.my_location,
-          color: Colors.blue,
-        ),
       ),
     );
   }
 
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   _setPolylinesUsingMarkers() {
     //generate a list of LatLng based on the set markers by user
     List<LatLng> markerPositions =
@@ -351,53 +452,12 @@ class _AutonomousPagee extends State<AutonomousPagee> {
     }
   }
 
-  SizedBox _generatePolyline() {
-    return SizedBox(
-      height: 40,
-      width: 70,
-      child: ValueListenableBuilder(
-        valueListenable: polylineButtonColor,
-        builder: (context, value, _) {
-          return OutlinedButton(
-            onPressed: () {
-              //only generate polylines if there are at least 2 markers on the map
-              if (pathWaypoints.length >= 2 && !isPolylinesON) {
-                debugPrint("Generating Polylines");
-
-                //generate the polylines
-                _setPolylinesUsingMarkers();
-
-                //alert user of polyline change of state
-                _changePolylineButtonColor();
-              } else if (isPolylinesON) {
-                setState(() {
-                  _changePolylineButtonColor();
-                  pathPolylines.clear();
-                });
-              }
-            },
-            style: OutlinedButton.styleFrom(
-              backgroundColor: polylineButtonColor.value,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-              side: const BorderSide(color: Color.fromARGB(255, 255, 255, 255)),
-            ),
-            child: const Icon(
-              Icons.polyline,
-              color: Colors.yellow,
-            ),
-          );
-        },
-      ),
-    );
-  }
-
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   SizedBox _removeAllMarkers() {
     return SizedBox(
-      height: 40,
-      width: 70,
+      height: _safeVertical * 7,
+      width: _safeHorizontal * 20,
       child: OutlinedButton(
         onPressed: () {
           setState(() {
@@ -411,9 +471,9 @@ class _AutonomousPagee extends State<AutonomousPagee> {
           });
         },
         style: OutlinedButton.styleFrom(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          side: const BorderSide(color: Color.fromARGB(255, 255, 255, 255)),
+          backgroundColor: const Color.fromARGB(255, 33, 33, 33),
+          shape: const CircleBorder(),
+          side: const BorderSide(color: Colors.black),
         ),
         child: const Icon(
           Icons.location_off,
@@ -425,75 +485,78 @@ class _AutonomousPagee extends State<AutonomousPagee> {
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  KumiPopupWindow _waypointsListViewerPopUp(BuildContext context) {
-    List<Marker> pathWaypointsList = pathWaypoints.toList();
+  SizedBox _waypointsListViewerButton() {
+    return SizedBox(
+      height: 140,
+      width: 70,
+      child: OutlinedButton(
+          onPressed: () {
+            _waypointsListViewerPopUp(context);
+          },
+          style: OutlinedButton.styleFrom(
+            backgroundColor: const Color.fromARGB(255, 0, 0, 0),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            side: const BorderSide(color: Color.fromARGB(255, 255, 255, 255)),
+          ),
+          child: const Center(
+            child: Icon(
+              Icons.edit_location_alt,
+              color: Color.fromARGB(255, 255, 255, 255),
+              size: 40,
+            ),
+          )),
+    );
+  }
 
-    return showPopupWindow(
-      context,
-      gravity: KumiPopupGravity.center,
-      clickOutDismiss: true,
-      clickBackDismiss: true,
-      customAnimation: false,
-      customPop: false,
-      customPage: false,
-      needSafeDisplay: true,
-      underStatusBar: false,
-      underAppBar: true,
-      offsetX: 0,
-      offsetY: -70,
-      duration: const Duration(milliseconds: 200),
-      childFun: (pop) {
-        return Container(
-            key: GlobalKey(),
-            padding: const EdgeInsets.all(10),
-            height: 350,
-            width: 300,
+  Container _waypointsListViewerPopUp(BuildContext context) {
+    List<Marker> pathWaypointsList = pathWaypoints.toList();
+    return Container(
+      height: 350,
+      width: 300,
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10), color: Colors.white),
+      child: Column(
+        children: [
+          Container(
             decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10), color: Colors.white),
-            child: Column(
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: Colors.black,
+              borderRadius: BorderRadius.circular(10),
+              color: Colors.black,
+            ),
+            padding: const EdgeInsets.all(10),
+            child: const Text(
+              "Waypoints Checker",
+              style: TextStyle(
+                fontSize: 20,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            child: Text(
+              "Number of waypoints: ${pathWaypointsList.length}",
+              style: const TextStyle(fontSize: 15, color: Colors.grey),
+            ),
+          ),
+          const SizedBox(height: 5),
+          Container(
+            height: 250,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
+            child: (pathWaypointsList.isNotEmpty)
+                ? Flex(
+                    direction: Axis.vertical,
+                    children: [
+                      _waypointListBuilder(pathWaypointsList, context),
+                    ],
+                  )
+                : const Center(
+                    child: Text("No waypoints set!",
+                        style: TextStyle(fontSize: 20, color: Colors.grey)),
                   ),
-                  padding: const EdgeInsets.all(10),
-                  child: const Text(
-                    "Waypoints Checker",
-                    style: TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  child: Text(
-                    "Number of waypoints: ${pathWaypointsList.length}",
-                    style: const TextStyle(fontSize: 15, color: Colors.grey),
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Container(
-                  height: 250,
-                  decoration:
-                      BoxDecoration(borderRadius: BorderRadius.circular(10)),
-                  child: (pathWaypointsList.isNotEmpty)
-                      ? Flex(
-                          direction: Axis.vertical,
-                          children: [
-                            _waypointListBuilder(pathWaypointsList, context),
-                          ],
-                        )
-                      : const Center(
-                          child: Text("No waypoints set!",
-                              style:
-                                  TextStyle(fontSize: 20, color: Colors.grey)),
-                        ),
-                ),
-              ],
-            ));
-      },
+          ),
+        ],
+      ),
     );
   }
 
@@ -568,13 +631,15 @@ class _AutonomousPagee extends State<AutonomousPagee> {
     );
   }
 
-  SizedBox _waypointsListViewerButton() {
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  SizedBox _parameterSettingsButton() {
     return SizedBox(
       height: 140,
       width: 70,
       child: OutlinedButton(
           onPressed: () {
-            _waypointsListViewerPopUp(context);
+            _parameterSettingsPopUp(context);
           },
           style: OutlinedButton.styleFrom(
             backgroundColor: const Color.fromARGB(255, 0, 0, 0),
@@ -584,7 +649,7 @@ class _AutonomousPagee extends State<AutonomousPagee> {
           ),
           child: const Center(
             child: Icon(
-              Icons.edit_location_alt,
+              Icons.settings_suggest,
               color: Color.fromARGB(255, 255, 255, 255),
               size: 40,
             ),
@@ -592,59 +657,39 @@ class _AutonomousPagee extends State<AutonomousPagee> {
     );
   }
 
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  KumiPopupWindow _parameterSettingsPopUp(BuildContext context) {
-    return showPopupWindow(
-      context,
-      gravity: KumiPopupGravity.center,
-      clickOutDismiss: true,
-      clickBackDismiss: true,
-      customAnimation: false,
-      customPop: false,
-      customPage: false,
-      needSafeDisplay: true,
-      underStatusBar: false,
-      underAppBar: true,
-      offsetX: 0,
-      offsetY: -70,
-      duration: const Duration(milliseconds: 200),
-      childFun: (pop) {
-        return Container(
-          key: GlobalKey(),
-          padding: const EdgeInsets.all(10),
-          height: 350,
-          width: 300,
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10), color: Colors.white),
-          child: Column(
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: Colors.black,
-                ),
-                padding: const EdgeInsets.all(10),
-                child: const Text(
-                  "Parameter Settings",
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.white,
-                  ),
-                ),
+  Container _parameterSettingsPopUp(BuildContext context) {
+    return Container(
+      key: GlobalKey(),
+      padding: const EdgeInsets.all(10),
+      height: 350,
+      width: 300,
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10), color: Colors.white),
+      child: Column(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: Colors.black,
+            ),
+            padding: const EdgeInsets.all(10),
+            child: const Text(
+              "Parameter Settings",
+              style: TextStyle(
+                fontSize: 20,
+                color: Colors.white,
               ),
-              const SizedBox(height: 10),
-              _speedSection(),
-              const SizedBox(height: 10),
-              _frequencySection(),
-            ],
+            ),
           ),
-        );
-      },
+          const SizedBox(height: 10),
+          _speedSection(),
+          const SizedBox(height: 10),
+          _frequencySection(),
+        ],
+      ),
     );
   }
 
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Container _frequencySection() {
     return Container(
       decoration: BoxDecoration(
@@ -717,7 +762,6 @@ class _AutonomousPagee extends State<AutonomousPagee> {
     );
   }
 
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Container _speedSection() {
     return Container(
       decoration: BoxDecoration(
@@ -804,14 +848,18 @@ class _AutonomousPagee extends State<AutonomousPagee> {
   }
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  SizedBox _parameterSettingsButton() {
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  SizedBox _summaryViewerButton() {
     return SizedBox(
       height: 140,
       width: 70,
       child: OutlinedButton(
           onPressed: () {
-            _parameterSettingsPopUp(context);
+            //only calculate the estimated total distance if there are at least two waypoints
+            if (pathWaypoints.length >= 2) {
+              totalEstimatedDistance = _calculateDistance();
+            }
+            _summaryViewerPopUp(context);
           },
           style: OutlinedButton.styleFrom(
             backgroundColor: const Color.fromARGB(255, 0, 0, 0),
@@ -821,7 +869,7 @@ class _AutonomousPagee extends State<AutonomousPagee> {
           ),
           child: const Center(
             child: Icon(
-              Icons.settings_suggest,
+              Icons.summarize,
               color: Color.fromARGB(255, 255, 255, 255),
               size: 40,
             ),
@@ -829,61 +877,42 @@ class _AutonomousPagee extends State<AutonomousPagee> {
     );
   }
 
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  KumiPopupWindow _summaryViewerPopUp(BuildContext context) {
-    return showPopupWindow(
-      context,
-      gravity: KumiPopupGravity.center,
-      clickOutDismiss: true,
-      clickBackDismiss: true,
-      customAnimation: false,
-      customPop: false,
-      customPage: false,
-      needSafeDisplay: true,
-      underStatusBar: false,
-      underAppBar: true,
-      offsetX: 0,
-      offsetY: -70,
-      duration: const Duration(milliseconds: 200),
-      childFun: (pop) {
-        return Container(
-          key: GlobalKey(),
-          padding: const EdgeInsets.all(10),
-          height: 350,
-          width: 300,
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10), color: Colors.white),
-          child: Column(
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: Colors.black,
-                ),
-                padding: const EdgeInsets.all(10),
-                child: const Text(
-                  "Summary",
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.white,
-                  ),
-                ),
+  Container _summaryViewerPopUp(BuildContext context) {
+    return Container(
+      key: GlobalKey(),
+      padding: const EdgeInsets.all(10),
+      height: 350,
+      width: 300,
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10), color: Colors.white),
+      child: Column(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: Colors.black,
+            ),
+            padding: const EdgeInsets.all(10),
+            child: const Text(
+              "Summary",
+              style: TextStyle(
+                fontSize: 20,
+                color: Colors.white,
               ),
-              const SizedBox(height: 10),
-              //only show summary if user has more than 2 waypoints on the map
-              (pathWaypoints.length >= 2)
-                  ? _summaryContent()
-                  : const SizedBox(
-                      height: 250,
-                      child: Center(
-                        child: Text("Must have at least\ntwo waypoints set!",
-                            style: TextStyle(fontSize: 20, color: Colors.grey)),
-                      )),
-            ],
+            ),
           ),
-        );
-      },
+          const SizedBox(height: 10),
+          //only show summary if user has more than 2 waypoints on the map
+          (pathWaypoints.length >= 2)
+              ? _summaryContent()
+              : const SizedBox(
+                  height: 250,
+                  child: Center(
+                    child: Text("Must have at least\ntwo waypoints set!",
+                        style: TextStyle(fontSize: 20, color: Colors.grey)),
+                  )),
+        ],
+      ),
     );
   }
 
@@ -949,33 +978,5 @@ class _AutonomousPagee extends State<AutonomousPagee> {
 
   dynamic _deg2rad(deg) {
     return deg * (pi / 180);
-  }
-
-  SizedBox _summaryViewerButton() {
-    return SizedBox(
-      height: 140,
-      width: 70,
-      child: OutlinedButton(
-          onPressed: () {
-            //only calculate the estimated total distance if there are at least two waypoints
-            if (pathWaypoints.length >= 2) {
-              totalEstimatedDistance = _calculateDistance();
-            }
-            _summaryViewerPopUp(context);
-          },
-          style: OutlinedButton.styleFrom(
-            backgroundColor: const Color.fromARGB(255, 0, 0, 0),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            side: const BorderSide(color: Color.fromARGB(255, 255, 255, 255)),
-          ),
-          child: const Center(
-            child: Icon(
-              Icons.summarize,
-              color: Color.fromARGB(255, 255, 255, 255),
-              size: 40,
-            ),
-          )),
-    );
   }
 }

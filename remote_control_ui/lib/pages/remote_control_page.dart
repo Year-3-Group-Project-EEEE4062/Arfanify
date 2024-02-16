@@ -2,42 +2,48 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 
-class RemoteControlPage extends StatefulWidget {
+class RemotePage extends StatefulWidget {
+  final double safeScreenHeight;
+  final double safeScreenWidth;
   final Function(String) bLE;
-  const RemoteControlPage({super.key, required this.bLE});
+  const RemotePage(
+      {super.key,
+      required this.bLE,
+      required this.safeScreenHeight,
+      required this.safeScreenWidth});
 
   @override
-  RemoteControlState createState() => RemoteControlState();
+  RemotePageState createState() => RemotePageState();
 }
 
-class RemoteControlState extends State<RemoteControlPage> {
+class RemotePageState extends State<RemotePage> {
   double _motion = 0;
   String bLEremoteMode = "RMS";
   String bLEremoteDirection = "RD ";
   String _status = 'Stop';
   Color _statusColor = Colors.red;
 
+  // for better scaling of widgets with different screen sizes
+  late double _safeVertical;
+  late double _safeHorizontal;
+
   //callback to goes back to main_page.dart to send data through BLE
   void remoteControlSendBLE(String bLERemoteCommand) {
     debugPrint("Remote Callback Called");
     debugPrint(bLERemoteCommand);
 
-    //remote control always sends two things
-    //1st is the mode of the remote (ie. stop, low)
-    //2nd is the direction of the motion (ie. forward, left, right)
+    //remote control sends a list of integers
+    //each integer represents an action
     widget.bLE(bLERemoteCommand);
   }
 
   @override
   void initState() {
     super.initState();
-  }
 
-  @override
-  //when remote control page closed, it will dispose of the variables
-  void dispose() {
-    // Clean up any resources here.
-    super.dispose();
+    // initialize the variables
+    _safeVertical = widget.safeScreenHeight;
+    _safeHorizontal = widget.safeScreenWidth;
   }
 
   @override
@@ -45,21 +51,221 @@ class RemoteControlState extends State<RemoteControlPage> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          modeGauge(),
-          modeBar(),
-          modeSetter(),
-          const SizedBox(height: 40), //just empty space
-          controlPad(),
-          const SizedBox(height: 40),
+          SizedBox(
+            height: _safeVertical * 5,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              remotePageTitle(),
+              SizedBox(
+                height: _safeVertical * 7,
+                width: _safeHorizontal * 20,
+                child: homeButton(context),
+              ),
+            ],
+          ),
+          SizedBox(
+            height: _safeVertical * 3,
+          ),
+          motionLayout(),
+          SizedBox(height: _safeVertical * 2), //just empty space
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              SizedBox(width: _safeHorizontal * 2),
+              featuresLayout(),
+              movementsLayout(),
+              SizedBox(width: _safeHorizontal * 2),
+            ],
+          )
         ],
       ),
     );
   }
 
   //////////////////////////////////////////////////////////////////////////////
+  Container featuresLayout() {
+    return Container(
+      height: _safeVertical * 42,
+      width: _safeHorizontal * 40,
+      decoration: BoxDecoration(
+        color: const Color(0xffC8D0C8),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                "Features",
+                style: TextStyle(
+                    fontSize: 22,
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          SizedBox(
+            height: _safeVertical * 15,
+            width: _safeHorizontal * 33,
+            child: TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white, // Text color
+                backgroundColor: const Color(0xff768a76), // Background color
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20), // Rounded corners
+                ),
+                // Add other properties as needed
+              ),
+              onPressed: () {
+                // Add your button action here
+              },
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.thermostat, // Your desired icon
+                    size: _safeVertical * 8,
+                  ),
+                  Text(
+                    'Measure', // Your label text
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: _safeVertical * 2), // Customize label style
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(height: _safeVertical * 2), //just empty space
+          SizedBox(
+            height: _safeVertical * 15,
+            width: _safeHorizontal * 33,
+            child: TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white, // Text color
+                backgroundColor: const Color(0xff768a76), // Background color
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20), // Rounded corners
+                ),
+                // Add other properties as needed
+              ),
+              onPressed: () {
+                // Add your button action here
+              },
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.home_filled, // Your desired icon
+                    size: _safeVertical * 8,
+                  ),
+                  Text(
+                    'Go Home', // Your label text
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: _safeVertical * 2), // Customize label style
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  //home button to return back to home page
+  OutlinedButton homeButton(BuildContext context) {
+    return OutlinedButton(
+      onPressed: () {
+        // Pop context to return back to the home page
+        Navigator.pop(context);
+      },
+      style: OutlinedButton.styleFrom(
+        side: const BorderSide(
+          width: 3,
+          color: Colors.white,
+          style: BorderStyle.solid,
+        ),
+        backgroundColor: const Color(0xff768a76), // Outline color
+        shape: RoundedRectangleBorder(
+          borderRadius:
+              BorderRadius.circular(30), // Adjust the border radius as needed
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.home_filled,
+          color: Colors.white,
+          size: _safeVertical * 4,
+        ),
+      ),
+    );
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  SizedBox remotePageTitle() {
+    return SizedBox(
+      height: _safeVertical * 7,
+      width: _safeHorizontal * 35,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Icon(
+            Icons.settings_remote_sharp,
+            color: Colors.white,
+            size: _safeVertical * 5,
+          ),
+          Text(
+            '> Remote',
+            style: TextStyle(
+              fontSize: _safeVertical * 2,
+              color: Colors.white,
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  Container motionLayout() {
+    return Container(
+      height: _safeVertical * 42,
+      width: _safeHorizontal * 84,
+      decoration: BoxDecoration(
+        color: const Color.fromARGB(255, 33, 33, 33),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          modeGauge(),
+          modeBar(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: _safeHorizontal * 80,
+                child: modeSetter(),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   SizedBox modeGauge() {
     return SizedBox(
       height: 250,
@@ -84,7 +290,6 @@ class RemoteControlState extends State<RemoteControlPage> {
     );
   }
 
-  //////////////////////////////////////////////////////////////////////////////
   SliderTheme modeSetter() {
     return SliderTheme(
       data: const SliderThemeData(
@@ -146,7 +351,6 @@ class RemoteControlState extends State<RemoteControlPage> {
     return modeColor;
   }
 
-  //////////////////////////////////////////////////////////////////////////////
   Row modeBar() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -166,42 +370,71 @@ class RemoteControlState extends State<RemoteControlPage> {
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  Container controlPad() {
+  Container movementsLayout() {
     return Container(
-      color: Colors.black,
-      height: null,
-      width: null,
+      height: _safeVertical * 42,
+      width: _safeHorizontal * 40,
+      decoration: BoxDecoration(
+        color: const Color(0xffC8D0C8),
+        borderRadius: BorderRadius.circular(30),
+      ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          forward_button(),
-          Row(
+          const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              left_button(),
-              const SizedBox(
-                width: 80,
+              Text(
+                "Movements",
+                style: TextStyle(
+                    fontSize: 22,
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold),
               ),
-              right_button(),
             ],
           ),
-          backwards_button(),
+          controlPad(),
         ],
       ),
     );
   }
 
-  SizedBox forward_button() {
+  Column controlPad() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        forwardMovement(),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            leftMovement(),
+            SizedBox(
+              width: _safeHorizontal * 4,
+            ),
+            rightMovement(),
+          ],
+        ),
+        backwardsMovement(),
+      ],
+    );
+  }
+
+  SizedBox forwardMovement() {
     return SizedBox(
-      height: 100,
-      width: 80,
+      height: _safeVertical * 11,
+      width: _safeHorizontal * 15,
       child: FloatingActionButton(
         heroTag: null,
         backgroundColor: const Color.fromARGB(255, 33, 33, 33),
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        child: const Icon(
-          Icons.arrow_upward_outlined,
-          size: 40,
+        child: const Center(
+          child: Icon(
+            Icons.arrow_upward_outlined,
+            size: 40,
+          ),
         ),
         onPressed: () {
           if (kDebugMode) {
@@ -216,18 +449,20 @@ class RemoteControlState extends State<RemoteControlPage> {
     );
   }
 
-  SizedBox backwards_button() {
+  SizedBox backwardsMovement() {
     return SizedBox(
-      height: 100,
-      width: 80,
+      height: _safeVertical * 11,
+      width: _safeHorizontal * 15,
       child: FloatingActionButton(
         heroTag: null,
         backgroundColor: const Color.fromARGB(255, 33, 33, 33),
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        child: const Icon(
-          Icons.arrow_downward_outlined,
-          size: 40,
+        child: const Center(
+          child: Icon(
+            Icons.arrow_downward_outlined,
+            size: 40,
+          ),
         ),
         onPressed: () {
           if (kDebugMode) {
@@ -242,18 +477,20 @@ class RemoteControlState extends State<RemoteControlPage> {
     );
   }
 
-  SizedBox right_button() {
+  SizedBox rightMovement() {
     return SizedBox(
-      height: 80,
-      width: 100,
+      height: _safeVertical * 12,
+      width: _safeHorizontal * 15,
       child: FloatingActionButton(
         heroTag: null,
         backgroundColor: const Color.fromARGB(255, 33, 33, 33),
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        child: const Icon(
-          Icons.arrow_forward_outlined,
-          size: 40,
+        child: const Center(
+          child: Icon(
+            Icons.arrow_forward_outlined,
+            size: 40,
+          ),
         ),
         onPressed: () {
           if (kDebugMode) {
@@ -268,18 +505,20 @@ class RemoteControlState extends State<RemoteControlPage> {
     );
   }
 
-  SizedBox left_button() {
+  SizedBox leftMovement() {
     return SizedBox(
-      height: 80,
-      width: 100,
+      height: _safeVertical * 12,
+      width: _safeHorizontal * 15,
       child: FloatingActionButton(
         heroTag: null,
         backgroundColor: const Color.fromARGB(255, 33, 33, 33),
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        child: const Icon(
-          Icons.arrow_back_outlined,
-          size: 40,
+        child: const Center(
+          child: Icon(
+            Icons.arrow_back_outlined,
+            size: 40,
+          ),
         ),
         onPressed: () {
           if (kDebugMode) {
@@ -291,29 +530,6 @@ class RemoteControlState extends State<RemoteControlPage> {
           remoteControlSendBLE(bLEremoteDirection);
         },
       ),
-    );
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  AppBar bar() {
-    return AppBar(
-      //adjust the size of the app bar
-      toolbarHeight: 50,
-      //styling of the text in the app bar
-      title: const Text(
-        'Remote Control',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 25,
-          fontWeight: FontWeight.w300,
-          height: 1.8,
-        ),
-      ),
-      iconTheme: const IconThemeData(size: 40, color: Colors.white),
-      //alignment of the text in the app bar
-      centerTitle: true,
-      //set background colour of AppBar
-      backgroundColor: Colors.black,
     );
   }
 }
