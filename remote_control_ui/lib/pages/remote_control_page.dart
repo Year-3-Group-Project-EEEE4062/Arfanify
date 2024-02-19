@@ -22,7 +22,7 @@ class RemotePageState extends State<RemotePage> {
   // List of integers that holds movement instructions for the boat
   // bleModeMovement[0] holds the remote or auto mode (0,1)
   // bleModeMovement[1] holds the motion S, A, F (0,1,2)
-  // bleModeMovement[2] holds the movement F, B, R, L(0,1,2,4)
+  // bleModeMovement[2] holds the movement F, B, R, L(0,1,2,3)
   List<int> bleModeMovement = [
     0,
     0,

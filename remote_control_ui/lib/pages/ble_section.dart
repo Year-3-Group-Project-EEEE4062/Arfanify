@@ -504,7 +504,7 @@ class AppBarBLEState extends State<AppBarBLE> {
             //Write to characteristic to initialize the date and time
             //get the phone's current date and time
             List<int> dateAndTime = getDateTime(6);
-            dateAndTime.insert(0, 3);
+            dateAndTime.insert(0, 2);
             writeCharacteristics(dateAndTime);
 
             //for debugging purpose to know if Medium connected or not
