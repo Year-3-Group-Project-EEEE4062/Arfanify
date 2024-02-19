@@ -25,7 +25,7 @@ class HomePageState extends State<HomePage> {
   late double _safeHorizontal;
 
   //Use BLE widget controller to send data to BLE widget
-  void updateBLEwidget(String message) {
+  void updateBLEwidget(List<int> message) {
     //Send message to BLE widget
     myBLEController.sendDataBLE(message);
   }
@@ -73,43 +73,25 @@ class HomePageState extends State<HomePage> {
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  Container bleSection() {
-    return Container(
-      height: _safeVertical * 63,
-      width: _safeHorizontal * 100,
-      decoration: BoxDecoration(
-        color: const Color(0xffC8D0C8),
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Column(
+  SizedBox mainPageTitle() {
+    return SizedBox(
+      height: _safeVertical * 7,
+      width: _safeHorizontal * 37,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          SizedBox(
-            height: _safeVertical,
+          Icon(
+            Icons.directions_boat_filled,
+            color: Colors.white,
+            size: _safeVertical * 5,
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: _safeVertical * 4,
-              ),
-              const Text(
-                "Bluetooth",
-                style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          SizedBox(
-            height: _safeVertical,
-          ),
-          // Defined in another class
-          AppBarBLE(
-            bleController: myBLEController,
-            safeScreenHeight: _safeVertical,
-            safeScreenWidth: _safeHorizontal,
-          ),
+          Text(
+            'ARFANIFY',
+            style: TextStyle(
+              fontSize: _safeVertical * 2,
+              color: Colors.white,
+            ),
+          )
         ],
       ),
     );
@@ -136,10 +118,10 @@ class HomePageState extends State<HomePage> {
               SizedBox(
                 width: _safeVertical * 4,
               ),
-              const Text(
+              Text(
                 "Modes",
                 style: TextStyle(
-                    fontSize: 20,
+                    fontSize: _safeHorizontal * 5,
                     color: Colors.black,
                     fontWeight: FontWeight.bold),
               ),
@@ -184,9 +166,9 @@ class HomePageState extends State<HomePage> {
           size: _safeVertical * 7,
           color: Colors.white,
         ),
-        label: const Text(
+        label: Text(
           'Remote',
-          style: TextStyle(fontSize: 17, color: Colors.white),
+          style: TextStyle(fontSize: _safeHorizontal * 4, color: Colors.white),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xff768a76),
@@ -221,9 +203,9 @@ class HomePageState extends State<HomePage> {
           size: _safeVertical * 7,
           color: Colors.white,
         ),
-        label: const Text(
+        label: Text(
           'Auto',
-          style: TextStyle(fontSize: 17, color: Colors.white),
+          style: TextStyle(fontSize: _safeHorizontal * 4, color: Colors.white),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xff768a76),
@@ -237,25 +219,43 @@ class HomePageState extends State<HomePage> {
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  SizedBox mainPageTitle() {
-    return SizedBox(
-      height: _safeVertical * 7,
-      width: _safeHorizontal * 37,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  Container bleSection() {
+    return Container(
+      height: _safeVertical * 63,
+      width: _safeHorizontal * 100,
+      decoration: BoxDecoration(
+        color: const Color(0xffC8D0C8),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Column(
         children: [
-          Icon(
-            Icons.directions_boat_filled,
-            color: Colors.white,
-            size: _safeVertical * 5,
+          SizedBox(
+            height: _safeVertical,
           ),
-          Text(
-            'ARFANIFY',
-            style: TextStyle(
-              fontSize: _safeVertical * 2,
-              color: Colors.white,
-            ),
-          )
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: _safeVertical * 4,
+              ),
+              Text(
+                "Bluetooth",
+                style: TextStyle(
+                    fontSize: _safeHorizontal * 5,
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          SizedBox(
+            height: _safeVertical,
+          ),
+          // Defined in another class
+          AppBarBLE(
+            bleController: myBLEController,
+            safeScreenHeight: _safeVertical,
+            safeScreenWidth: _safeHorizontal,
+          ),
         ],
       ),
     );

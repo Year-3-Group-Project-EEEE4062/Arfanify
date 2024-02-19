@@ -10,7 +10,7 @@ import 'package:toggle_switch/toggle_switch.dart';
 class AutoPage extends StatefulWidget {
   final double safeScreenHeight;
   final double safeScreenWidth;
-  final Function(String) bLE;
+  final Function(List<int>) bLE;
   const AutoPage(
       {super.key,
       required this.safeScreenHeight,
@@ -71,6 +71,15 @@ class _AutoPageState extends State<AutoPage> {
       debugPrint("ERROR: $error");
     });
     return await Geolocator.getCurrentPosition();
+  }
+
+  void autoModeSendBLE(List<int> bLERemoteCommand) {
+    debugPrint("Auto Mode BLE Callback Called");
+    debugPrint("$bLERemoteCommand");
+
+    //remote control sends a list of integers
+    //each integer represents an action
+    widget.bLE(bLERemoteCommand);
   }
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -171,7 +180,7 @@ class _AutoPageState extends State<AutoPage> {
       options: InteractiveBottomSheetOptions(
         initialSize: _safeVertical * 0.031,
         minimumSize: _safeHorizontal * 0.031,
-        maxSize: _safeVertical * 0.105,
+        maxSize: _safeVertical * 0.114,
         snapList: [0.25, 0.5],
       ),
       draggableAreaOptions: const DraggableAreaOptions(topBorderRadius: 30),
@@ -182,6 +191,13 @@ class _AutoPageState extends State<AutoPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [_waypointsListViewerSection(context)],
+            ),
+            SizedBox(
+              height: _safeVertical * 1,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [_parameterSettingsSection(context)],
             ),
             SizedBox(
               height: _safeVertical * 1,
@@ -368,7 +384,8 @@ class _AutoPageState extends State<AutoPage> {
               SizedBox(
                 child: Text(
                   "Number of waypoints: ${pathWaypointsList.length}",
-                  style: const TextStyle(fontSize: 15, color: Colors.grey),
+                  style: TextStyle(
+                      fontSize: _safeHorizontal * 4, color: Colors.grey),
                 ),
               ),
               SizedBox(
@@ -387,15 +404,17 @@ class _AutoPageState extends State<AutoPage> {
                               _waypointListBuilder(pathWaypointsList, context),
                             ],
                           )
-                        : const Center(
-                            child: Text("Confirmed\nWaypoints",
+                        : Center(
+                            child: Text("Confirmed Waypoints",
                                 style: TextStyle(
-                                    fontSize: 20, color: Colors.white)),
+                                    fontSize: _safeHorizontal * 5,
+                                    color: Colors.white)),
                           )
-                    : const Center(
+                    : Center(
                         child: Text("No waypoints set!",
-                            style:
-                                TextStyle(fontSize: 20, color: Colors.white)),
+                            style: TextStyle(
+                                fontSize: _safeHorizontal * 5,
+                                color: Colors.white)),
                       ),
               ),
             ],
@@ -635,6 +654,45 @@ class _AutoPageState extends State<AutoPage> {
             )
           ],
         ),
+      ),
+    );
+  }
+
+  Container _summaryViewerPopUp(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      height: _safeVertical * 20,
+      width: _safeHorizontal * 95,
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: const Color(0xffC8D0C8)),
+      child: Column(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: Colors.black,
+            ),
+            padding: const EdgeInsets.all(10),
+            child: const Text(
+              "Summary",
+              style: TextStyle(
+                fontSize: 20,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          //only show summary if user has more than 2 waypoints on the map
+          (pathWaypoints.length >= 2)
+              ? _summaryContent()
+              : const SizedBox(
+                  height: 250,
+                  child: Center(
+                    child: Text("Must have at least\ntwo waypoints set!",
+                        style: TextStyle(fontSize: 20, color: Colors.grey)),
+                  )),
+        ],
       ),
     );
   }
@@ -964,45 +1022,6 @@ class _AutoPageState extends State<AutoPage> {
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  Container _summaryViewerPopUp(BuildContext context) {
-    return Container(
-      key: GlobalKey(),
-      padding: const EdgeInsets.all(10),
-      height: 350,
-      width: 300,
-      decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10), color: Colors.white),
-      child: Column(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              color: Colors.black,
-            ),
-            padding: const EdgeInsets.all(10),
-            child: const Text(
-              "Summary",
-              style: TextStyle(
-                fontSize: 20,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          //only show summary if user has more than 2 waypoints on the map
-          (pathWaypoints.length >= 2)
-              ? _summaryContent()
-              : const SizedBox(
-                  height: 250,
-                  child: Center(
-                    child: Text("Must have at least\ntwo waypoints set!",
-                        style: TextStyle(fontSize: 20, color: Colors.grey)),
-                  )),
-        ],
-      ),
-    );
-  }
-
   Container _summaryContent() {
     return Container(
       decoration: BoxDecoration(
