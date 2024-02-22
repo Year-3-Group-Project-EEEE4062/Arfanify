@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:toggle_switch/toggle_switch.dart';
+import 'package:remote_control_ui/converter/data_converter.dart';
 
 //controller for the BLE
 class BLEcontroller {
@@ -484,6 +486,8 @@ class AppBarBLEState extends State<AppBarBLE> {
       var subscription = deviceStats.connectionState.listen(
         (BluetoothConnectionState state) async {
           if (state == BluetoothConnectionState.connected) {
+            Uint8List byteCommand;
+
             //connected change the icon color to green
             connectionColor.value = const Color.fromARGB(255, 128, 232, 80);
 
@@ -503,9 +507,8 @@ class AppBarBLEState extends State<AppBarBLE> {
 
             //Write to characteristic to initialize the date and time
             //get the phone's current date and time
-            List<int> dateAndTime = getDateTime(6);
-            dateAndTime.insert(0, 2);
-            writeCharacteristics(dateAndTime);
+            byteCommand = integerToByteArray(0x03, getDateTime(6));
+            writeCharacteristics(byteCommand);
 
             //for debugging purpose to know if Medium connected or not
             debugPrint("Medium Connected!");

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
+import 'package:remote_control_ui/converter/data_converter.dart';
 
 class RemotePage extends StatefulWidget {
   final double safeScreenHeight;
@@ -26,14 +27,12 @@ class RemotePageState extends State<RemotePage> {
   List<int> bleModeMovement = [
     0,
     0,
-    0,
   ];
 
   // List of integers that holds the features intructions for the boat
   // bleFeatures[0] holds the remote or auto mode (0,1)
   // bleFeatures[1] holds the feature either measure or go home (0,1)
   List<int> bleFeatures = [
-    0,
     0,
   ];
 
@@ -44,14 +43,20 @@ class RemotePageState extends State<RemotePage> {
   late double _safeVertical;
   late double _safeHorizontal;
 
+  // convert the data to
   //callback to goes back to main_page.dart to send data through BLE
   void remoteModeSendBLE(List<int> bLERemoteCommand) {
+    int remoteModeIdentifier = 0x01;
+
     debugPrint("Remote Mode BLE Callback Called");
-    debugPrint("$bLERemoteCommand");
+
+    // Convert int list command to byte array
+    Uint8List byteCommand =
+        integerToByteArray(remoteModeIdentifier, bLERemoteCommand);
 
     //remote control sends a list of integers
     //each integer represents an action
-    widget.bLE(bLERemoteCommand);
+    widget.bLE(byteCommand);
   }
 
   @override
@@ -150,7 +155,7 @@ class RemotePageState extends State<RemotePage> {
         ),
         onPressed: () {
           // Change the bleFeature list index[1] to 0 indicate measure mode
-          bleFeatures[1] = 0;
+          bleFeatures[0] = 0;
 
           //Send command through BLE
           remoteModeSendBLE(bleFeatures);
@@ -191,7 +196,7 @@ class RemotePageState extends State<RemotePage> {
         onPressed: () {
           // Add your button action here
           // Change the bleFeature list index[1] to 0 indicate go home mode
-          bleFeatures[1] = 1;
+          bleFeatures[0] = 1;
 
           //Send command through BLE
           remoteModeSendBLE(bleFeatures);
@@ -332,11 +337,12 @@ class RemotePageState extends State<RemotePage> {
       child: Slider(
         value: _motion.toDouble(),
         min: 0.0,
-        max: 2.0,
+        max: 4.0,
         divisions: 2,
         onChanged: (value) {
           setState(() {
             _motion = value.toInt();
+            debugPrint("Motion value: $_motion");
             _status = _changeMode();
             _statusColor = _changeModeColor();
           });
@@ -349,24 +355,22 @@ class RemotePageState extends State<RemotePage> {
     String label = '';
     if (_motion == 0) {
       label = 'Slow';
-    } else if (_motion == 1) {
-      label = 'Average';
     } else if (_motion == 2) {
+      label = 'Average';
+    } else if (_motion == 4) {
       label = 'Fast';
     }
 
-    //send data through bLE
-    // remoteModeSendBLE(bLEremoteMode);
     return label;
   }
 
   Color _changeModeColor() {
     Color modeColor = Colors.amber;
-    if (_motion == 0.0) {
+    if (_motion == 0) {
       modeColor = Colors.green;
-    } else if (_motion == 2.0) {
+    } else if (_motion == 2) {
       modeColor = Colors.yellow;
-    } else if (_motion == 4.0) {
+    } else if (_motion == 4) {
       modeColor = Colors.red;
     }
     return modeColor;
@@ -466,8 +470,9 @@ class RemotePageState extends State<RemotePage> {
             debugPrint("Forward button pressed");
           }
           // Change the bleModeMovement index
-          bleModeMovement[1] = _motion;
-          bleModeMovement[2] = 0;
+          bleModeMovement[0] = 0;
+          bleModeMovement[1] = (_motion + 1) * 15;
+          debugPrint("${bleModeMovement[1]}");
 
           // Send data through BLE
           remoteModeSendBLE(bleModeMovement);
@@ -497,8 +502,8 @@ class RemotePageState extends State<RemotePage> {
           }
 
           // Change the bleModeMovement index
-          bleModeMovement[1] = _motion;
-          bleModeMovement[2] = 1;
+          bleModeMovement[0] = 1;
+          bleModeMovement[1] = (_motion + 1) * 15;
 
           // Send data through BLE
           remoteModeSendBLE(bleModeMovement);
@@ -528,8 +533,8 @@ class RemotePageState extends State<RemotePage> {
           }
 
           // Change the bleModeMovement index
-          bleModeMovement[1] = _motion;
-          bleModeMovement[2] = 2;
+          bleModeMovement[0] = 2;
+          bleModeMovement[1] = (_motion + 1) * 15;
 
           // Send data through BLE
           remoteModeSendBLE(bleModeMovement);
@@ -559,8 +564,8 @@ class RemotePageState extends State<RemotePage> {
           }
 
           // Change the bleModeMovement index
-          bleModeMovement[1] = _motion;
-          bleModeMovement[2] = 3;
+          bleModeMovement[0] = 3;
+          bleModeMovement[1] = (_motion + 1) * 15;
 
           // Send data through BLE
           remoteModeSendBLE(bleModeMovement);
