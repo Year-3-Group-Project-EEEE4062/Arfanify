@@ -69,6 +69,12 @@ class RemotePageState extends State<RemotePage> {
   }
 
   @override
+  void dispose() {
+    debugPrint("Remote page disposed!");
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,

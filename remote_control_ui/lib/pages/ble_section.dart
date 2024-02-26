@@ -54,11 +54,12 @@ class AppBarBLEState extends State<AppBarBLE> {
   //When connecting to Medium or Boat, it targets the specific device ID
   //bleIndex used to determine which device ID to look for
   int bleIndex = 0;
+
   //First ID: Medium
   //Second ID: Boat
   final List<DeviceIdentifier> devicesId = [
-    const DeviceIdentifier('D8:3A:DD:5C:97:CD'),
-    const DeviceIdentifier('D8:3A:DD:5C:97:CD'),
+    const DeviceIdentifier('D8:3A:DD:5C:97:CD'), //Medium device ID
+    const DeviceIdentifier('D8:3A:DD:7A:54:65'), //Boat device ID
   ];
 
   //to store the Medium found
@@ -175,6 +176,8 @@ class AppBarBLEState extends State<AppBarBLE> {
 
     //dispose listener for scan results
     _scanResultsSubscription.cancel();
+
+    debugPrint("BLE listeners disposed!");
 
     super.dispose();
   }
@@ -457,8 +460,17 @@ class AppBarBLEState extends State<AppBarBLE> {
 
   Future<void> writeCharacteristics(List<int> command) async {
     //Take the characteristic in the 3rd service (the user defined characteristic)
-    List<BluetoothCharacteristic> characteristics =
-        _services[2].characteristics;
+    List<BluetoothCharacteristic> characteristics;
+
+    //Medium(RPi Pico W) have 3 services, targeted is in index 2
+    //RPi4 have 4 services, the targeted one is in index 3
+    if (bleIndex == 0) {
+      characteristics = _services[2].characteristics;
+    } else {
+      //Means Rpi4 is the connected device
+      characteristics = _services[3].characteristics;
+    }
+
     BluetoothCharacteristic c = characteristics[1];
 
     //send the data through BLE to the Medium
@@ -491,7 +503,7 @@ class AppBarBLEState extends State<AppBarBLE> {
             //connected change the icon color to green
             connectionColor.value = const Color.fromARGB(255, 128, 232, 80);
 
-            editActionMssg("Medium Connected..\n Stay Safe!!");
+            editActionMssg("Device Connected..\n Stay Safe!!");
 
             //set that Medium has been found
             deviceConnected = true;
@@ -505,19 +517,22 @@ class AppBarBLEState extends State<AppBarBLE> {
             //Discover the services of the Medium
             _services = await deviceStats.discoverServices();
 
+            //ONLY FOR MEDIUM!!
             //Write to characteristic to initialize the date and time
             //get the phone's current date and time
-            byteCommand = integerToByteArray(0x03, getDateTime(6));
-            writeCharacteristics(byteCommand);
+            if (bleIndex == 0) {
+              byteCommand = integerToByteArray(0x03, getDateTime(6));
+              writeCharacteristics(byteCommand);
+            }
 
             //for debugging purpose to know if Medium connected or not
-            debugPrint("Medium Connected!");
+            debugPrint("Device Connected!");
           }
           // listen for disconnection
           else if (state == BluetoothConnectionState.disconnected) {
-            editActionMssg("Disconnected from Medium...");
+            editActionMssg("Disconnected from Device...");
             resetVariables();
-            debugPrint("Medium Disconnected!");
+            debugPrint("Device Disconnected!");
           }
         },
       );
@@ -565,9 +580,9 @@ class AppBarBLEState extends State<AppBarBLE> {
 
     if (deviceFound) {
       //show user in context box that medium detected
-      editActionMssg("Scan Stopped... \nMedium Found!");
+      editActionMssg("Scan Stopped... \nDevice Found!");
     } else {
-      editActionMssg("Scan Stopped... \nNo Medium Detected!");
+      editActionMssg("Scan Stopped... \nNo Device Detected!");
     }
   }
 

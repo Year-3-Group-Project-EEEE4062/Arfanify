@@ -103,6 +103,7 @@ class _AutoPageState extends State<AutoPage> {
 
   @override
   void dispose() {
+    debugPrint("Auto page disposed!");
     //Dispose the controller after everytime user navigates to a different page
     _mapsController.future.then((controller) {
       controller.dispose();
@@ -178,8 +179,8 @@ class _AutoPageState extends State<AutoPage> {
   InteractiveBottomSheet autoBottomSheet(BuildContext context) {
     return InteractiveBottomSheet(
       options: InteractiveBottomSheetOptions(
-        initialSize: _safeVertical * 0.031,
-        minimumSize: _safeHorizontal * 0.031,
+        // initialSize: _safeVertical * 0.031,
+        // minimumSize: _safeHorizontal * 0.031,
         maxSize: _safeVertical * 0.114,
         snapList: [0.25, 0.5],
       ),
@@ -321,7 +322,7 @@ class _AutoPageState extends State<AutoPage> {
     List<Marker> pathWaypointsList = pathWaypoints.toList();
     return Container(
         height: _safeVertical * 31,
-        width: _safeHorizontal * 95,
+        width: _safeHorizontal * 90,
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             color: const Color(0xffC8D0C8)),
@@ -584,7 +585,7 @@ class _AutoPageState extends State<AutoPage> {
   Container _parameterSettingsSection(BuildContext context) {
     return Container(
       height: _safeVertical * 31,
-      width: _safeHorizontal * 95,
+      width: _safeHorizontal * 90,
       decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
           color: const Color(0xffC8D0C8)),
@@ -662,7 +663,7 @@ class _AutoPageState extends State<AutoPage> {
     return Container(
       padding: const EdgeInsets.all(10),
       height: _safeVertical * 20,
-      width: _safeHorizontal * 95,
+      width: _safeHorizontal * 90,
       decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
           color: const Color(0xffC8D0C8)),
@@ -938,7 +939,7 @@ class _AutoPageState extends State<AutoPage> {
               }
             },
             style: OutlinedButton.styleFrom(
-              backgroundColor: const Color.fromARGB(255, 33, 33, 33),
+              backgroundColor: polylineButtonColor.value,
               shape: const CircleBorder(),
               side: const BorderSide(color: Colors.black),
             ),
