@@ -59,7 +59,7 @@ class AppBarBLEState extends State<AppBarBLE> {
   //Second ID: Boat
   final List<DeviceIdentifier> devicesId = [
     const DeviceIdentifier('D8:3A:DD:5C:97:CD'), //Medium device ID
-    const DeviceIdentifier('D8:3A:DD:59:75:D3'), //Boat device ID
+    const DeviceIdentifier('D8:3A:DD:7A:54:64'), //Boat device ID
   ];
 
   //to store the Medium found
