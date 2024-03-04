@@ -55,11 +55,10 @@ class AppBarBLEState extends State<AppBarBLE> {
   //bleIndex used to determine which device ID to look for
   int bleIndex = 0;
 
-  //First ID: Medium
-  //Second ID: Boat
-  final List<DeviceIdentifier> devicesId = [
-    const DeviceIdentifier('D8:3A:DD:5C:97:CD'), //Medium device ID
-    const DeviceIdentifier('D8:3A:DD:59:75:D3'), //Boat device ID
+  //Used for searching the device to connect to
+  final List<String> deviceName = [
+    'Medium',
+    'BoatBoat',
   ];
 
   //to store the Medium found
@@ -145,11 +144,7 @@ class AppBarBLEState extends State<AppBarBLE> {
           //check if detected device has already been detected before
           if (_scanResults.contains(r) == false) {
             //check if it is a valid device ID (Medium or Boat)
-            if (devicesId[bleIndex] == r.device.remoteId) {
-              //Print detected onto console for debugging purpose
-              debugPrint(r.advertisementData.advName);
-              debugPrint('${r.device.remoteId}');
-
+            if (deviceName[bleIndex] == r.advertisementData.advName) {
               //medium detected and add to list
               _scanResults.add(r);
 
