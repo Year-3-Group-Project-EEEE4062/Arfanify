@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'dart:async';
 import 'dart:math';
 import 'package:geolocator/geolocator.dart';
@@ -29,8 +30,6 @@ class _AutoPageState extends State<AutoPage> {
   //Boolean to determine user has confirmed parameters for auto mode
   bool isWaypointsReady = false;
   int waypointsReadyIndex = 1;
-  bool isParameterSettingsReady = false;
-  int parameterSettingsReadyIndex = 1;
 
   Position? currentUserLatLng;
   final Completer<GoogleMapController> _mapsController = Completer();
@@ -46,16 +45,6 @@ class _AutoPageState extends State<AutoPage> {
   ValueNotifier<Color> polylineButtonColor =
       ValueNotifier<Color>(const Color(0xff171717));
   bool isPolylinesON = false;
-
-  double speedParameter = 0;
-  String statusMssgSpeedParameter = 'Low';
-  Color statusColorSpeedParameter = Colors.green;
-
-  double frequencyParameter = 0;
-  String statusMssgFrequencyParameter = 'every 10 m';
-  Color statusColorFrequencyParameter = Colors.orange;
-
-  double? totalEstimatedDistance;
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -179,10 +168,9 @@ class _AutoPageState extends State<AutoPage> {
   InteractiveBottomSheet autoBottomSheet(BuildContext context) {
     return InteractiveBottomSheet(
       options: InteractiveBottomSheetOptions(
-        // initialSize: _safeVertical * 0.031,
-        // minimumSize: _safeHorizontal * 0.031,
-        maxSize: _safeVertical * 0.114,
-        snapList: [0.25, 0.5],
+        backgroundColor: Colors.black,
+        maxSize: _safeVertical * 0.09,
+        snapList: [0.25, _safeVertical * 0.09],
       ),
       draggableAreaOptions: const DraggableAreaOptions(topBorderRadius: 30),
       child: Padding(
@@ -198,14 +186,7 @@ class _AutoPageState extends State<AutoPage> {
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [_parameterSettingsSection(context)],
-            ),
-            SizedBox(
-              height: _safeVertical * 1,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [_parameterSettingsSection(context)],
+              children: [_summaryViewerPopUp(context)],
             ),
           ],
         ),
@@ -360,17 +341,21 @@ class _AutoPageState extends State<AutoPage> {
                       totalSwitches: 2,
                       icons: const [Icons.check, Icons.cancel],
                       onToggle: (index) {
-                        debugPrint('Waypoint Checker switched to: $index');
-
                         setState(() {
-                          waypointsReadyIndex = index!;
                           //int 1 indicates not ready
                           //int 0 indicates ready
                           //this is due to how the toggle switch index is placed
                           //where ready button on index 0 and NOT ready button on index 1
                           if (index == 0) {
-                            isWaypointsReady = true;
+                            if (pathWaypoints.length >= 2) {
+                              waypointsReadyIndex = 0;
+                              isWaypointsReady = true;
+                            } else {
+                              //this means no waypoints but user still confirm
+                              waypointsReadyIndex = 1;
+                            }
                           } else if (index == 1) {
+                            waypointsReadyIndex = 1;
                             isWaypointsReady = false;
                           }
                         });
@@ -386,7 +371,7 @@ class _AutoPageState extends State<AutoPage> {
                 child: Text(
                   "Number of waypoints: ${pathWaypointsList.length}",
                   style: TextStyle(
-                      fontSize: _safeHorizontal * 4, color: Colors.grey),
+                      fontSize: _safeHorizontal * 4, color: Colors.red),
                 ),
               ),
               SizedBox(
@@ -424,165 +409,88 @@ class _AutoPageState extends State<AutoPage> {
   }
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///widgets in parameter settings in bottom sheet
-  Container _frequencySection() {
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  Padding _summaryContent() {
+    return Padding(
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          _totalDistance(),
+        ],
+      ),
+    );
+  }
+
+  Container _totalDistance() {
+    //get the estimated total distance travel
+    double totalEstimatedDistance = _calculateDistance();
+
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        color: Colors.black,
+        borderRadius: BorderRadius.circular(20),
+        color: const Color(0xff171717),
       ),
       padding: const EdgeInsets.all(10),
-      child: StatefulBuilder(
-        builder: (BuildContext context, StateSetter setState) {
-          return Column(
-            children: [
-              _frequencyStatusRow(context, setState),
-              _frequencySetter(context, setState),
-            ],
-          );
-        },
+      child: Row(
+        children: [
+          const Text(
+            "Estimated Total Distance: ",
+            style: TextStyle(
+              fontSize: 15,
+              color: Colors.white,
+            ),
+          ),
+          Text(
+            "${totalEstimatedDistance.toStringAsFixed(2)} m",
+            style: const TextStyle(
+              fontSize: 15,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Row _frequencyStatusRow(BuildContext context, StateSetter setState) {
-    return Row(
-      children: [
-        const Text(
-          "Frequency: ",
-          style: TextStyle(color: Colors.white),
-        ),
-        Text(
-          statusMssgFrequencyParameter,
-          style: TextStyle(color: statusColorFrequencyParameter),
-        ),
-      ],
-    );
-  }
+  double _calculateDistance() {
+    List<Marker> pathWaypointsList = pathWaypoints.toList();
 
-  String _changeFrequency() {
-    String label = '';
-    if (frequencyParameter == 0.0) {
-      label = 'every 10 m';
-    } else if (frequencyParameter == 2.0) {
-      label = 'every 20 m';
-    } else if (frequencyParameter == 4.0) {
-      label = 'every 30 m';
+    double totalDistance = 0;
+    for (int i = 0; i < pathWaypointsList.length; i++) {
+      if (i < pathWaypointsList.length - 1) {
+        // skip the last index
+        totalDistance += _getStraightLineDistance(
+            pathWaypointsList[i + 1].position.latitude,
+            pathWaypointsList[i + 1].position.longitude,
+            pathWaypointsList[i].position.latitude,
+            pathWaypointsList[i].position.longitude);
+      }
     }
-    return label;
+    return totalDistance;
   }
 
-  SliderTheme _frequencySetter(BuildContext context, StateSetter setState) {
-    return SliderTheme(
-      data: const SliderThemeData(
-        thumbColor: Colors.white,
-        thumbShape: RoundSliderThumbShape(enabledThumbRadius: 10),
-        activeTrackColor: Color(0xff545454),
-        inactiveTrackColor: Colors.grey,
-        inactiveTickMarkColor: Colors.white,
-        trackHeight: 10,
-      ),
-      child: Slider(
-        value: frequencyParameter,
-        min: 0.0,
-        max: 4.0,
-        divisions: 2,
-        onChanged: (value) {
-          setState(() {
-            frequencyParameter = value;
-            statusMssgFrequencyParameter = _changeFrequency();
-          });
-        },
-      ),
-    );
+  //straight line distance calculation based on HaverSine formula
+  double _getStraightLineDistance(lat1, lon1, lat2, lon2) {
+    var R = 6371; // Radius of the earth in km
+    var dLat = _deg2rad(lat2 - lat1);
+    var dLon = _deg2rad(lon2 - lon1);
+    var a = sin(dLat / 2) * sin(dLat / 2) +
+        cos(_deg2rad(lat1)) *
+            cos(_deg2rad(lat2)) *
+            sin(dLon / 2) *
+            sin(dLon / 2);
+    var c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    var d = R * c; // Distance in km
+    return d * 1000; //in m
   }
 
-  Container _speedSection() {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        color: Colors.black,
-      ),
-      padding: const EdgeInsets.all(10),
-      child: StatefulBuilder(
-        builder: (BuildContext context, StateSetter setState) {
-          return Column(
-            children: [
-              _speedStatusRow(context, setState),
-              _speedSetter(context, setState),
-            ],
-          );
-        },
-      ),
-    );
+  dynamic _deg2rad(deg) {
+    return deg * (pi / 180);
   }
 
-  Row _speedStatusRow(BuildContext context, StateSetter setState) {
-    return Row(
-      children: [
-        const Text(
-          "Speed: ",
-          style: TextStyle(color: Colors.white),
-        ),
-        Text(
-          statusMssgSpeedParameter,
-          style: TextStyle(color: statusColorSpeedParameter),
-        ),
-      ],
-    );
-  }
-
-  String _changeMode() {
-    String label = '';
-    if (speedParameter == 0.0) {
-      label = 'Low';
-    } else if (speedParameter == 2.0) {
-      label = 'Average';
-    } else if (speedParameter == 4.0) {
-      label = 'Fast';
-    }
-    return label;
-  }
-
-  Color _changeModeColor() {
-    Color modeColor = Colors.green;
-    if (speedParameter == 0.0) {
-      modeColor = Colors.green;
-    } else if (speedParameter == 2.0) {
-      modeColor = Colors.yellow;
-    } else if (speedParameter == 4.0) {
-      modeColor = Colors.orange;
-    }
-    return modeColor;
-  }
-
-  SliderTheme _speedSetter(BuildContext context, StateSetter setState) {
-    return SliderTheme(
-      data: const SliderThemeData(
-        thumbColor: Colors.white,
-        thumbShape: RoundSliderThumbShape(enabledThumbRadius: 10),
-        activeTrackColor: Color(0xff545454),
-        inactiveTrackColor: Colors.grey,
-        inactiveTickMarkColor: Colors.white,
-        trackHeight: 10,
-      ),
-      child: Slider(
-        value: speedParameter,
-        min: 0.0,
-        max: 4.0,
-        divisions: 2,
-        onChanged: (value) {
-          setState(() {
-            speedParameter = value;
-            statusMssgSpeedParameter = _changeMode();
-            statusColorSpeedParameter = _changeModeColor();
-          });
-        },
-      ),
-    );
-  }
-
-  Container _parameterSettingsSection(BuildContext context) {
+  Container _summaryViewerPopUp(BuildContext context) {
     return Container(
       height: _safeVertical * 31,
       width: _safeHorizontal * 90,
@@ -598,44 +506,11 @@ class _AutoPageState extends State<AutoPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "Parameter Settings",
+                  "Summary",
                   style: TextStyle(
                       fontSize: _safeVertical * 2,
                       color: Colors.black,
                       fontWeight: FontWeight.bold),
-                ),
-                SizedBox(
-                  height: _safeVertical * 3.5,
-                  child: ToggleSwitch(
-                    customWidths: [_safeHorizontal * 15, _safeHorizontal * 10],
-                    cornerRadius: 30.0,
-                    activeBgColors: const [
-                      [Colors.green],
-                      [Colors.redAccent]
-                    ],
-                    initialLabelIndex: parameterSettingsReadyIndex,
-                    activeFgColor: Colors.white,
-                    inactiveBgColor: Colors.grey,
-                    inactiveFgColor: Colors.white,
-                    totalSwitches: 2,
-                    icons: const [Icons.check, Icons.cancel],
-                    onToggle: (index) {
-                      debugPrint('Parameter setting switched to: $index');
-
-                      setState(() {
-                        parameterSettingsReadyIndex = index!;
-                        //int 1 indicates not ready
-                        //int 0 indicates ready
-                        //this is due to how the toggle switch index is placed
-                        //where ready button on index 0 and NOT ready button on index 1
-                        if (index == 0) {
-                          isParameterSettingsReady = true;
-                        } else if (index == 1) {
-                          isParameterSettingsReady = false;
-                        }
-                      });
-                    },
-                  ),
                 ),
               ],
             ),
@@ -645,64 +520,103 @@ class _AutoPageState extends State<AutoPage> {
                   SizedBox(
                     height: _safeVertical * 1,
                   ),
-                  _speedSection(),
-                  SizedBox(
-                    height: _safeVertical * 1.5,
+                  Container(
+                    height: _safeVertical * 17,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.black),
+                    child: (pathWaypoints.length >= 2)
+                        ? _summaryContent()
+                        : Center(
+                            child: Text("Place at least 2 waypoints!",
+                                style: TextStyle(
+                                    fontSize: _safeHorizontal * 5,
+                                    color: Colors.white)),
+                          ),
                   ),
-                  _frequencySection(),
                 ],
               ),
-            )
+            ),
+            SizedBox(
+              height: _safeVertical * 1.5,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(
+                  height: _safeVertical * 5,
+                  width: _safeHorizontal * 35,
+                  child: OutlinedButton(
+                    onPressed: () {
+                      setState(
+                        () {
+                          if (isWaypointsReady) {
+                            debugPrint("Will send data to Medium!!");
+                          } else {
+                            debugPrint("Please confirm waypoints first!!");
+                          }
+                        },
+                      );
+                    },
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: sendButtonColor(),
+                      side: const BorderSide(color: Colors.black),
+                    ),
+                    child: const Text(
+                      "Send",
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: _safeVertical * 5,
+                  width: _safeHorizontal * 35,
+                  child: OutlinedButton(
+                    onPressed: () {
+                      setState(
+                        () {
+                          debugPrint("Cancelling ongoing operations!!");
+                        },
+                      );
+                    },
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      side: const BorderSide(color: Colors.black),
+                    ),
+                    child: const Text(
+                      "Cancel",
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
     );
   }
 
-  Container _summaryViewerPopUp(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      height: _safeVertical * 20,
-      width: _safeHorizontal * 90,
-      decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          color: const Color(0xffC8D0C8)),
-      child: Column(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              color: Colors.black,
-            ),
-            padding: const EdgeInsets.all(10),
-            child: const Text(
-              "Summary",
-              style: TextStyle(
-                fontSize: 20,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          //only show summary if user has more than 2 waypoints on the map
-          (pathWaypoints.length >= 2)
-              ? _summaryContent()
-              : const SizedBox(
-                  height: 250,
-                  child: Center(
-                    child: Text("Must have at least\ntwo waypoints set!",
-                        style: TextStyle(fontSize: 20, color: Colors.grey)),
-                  )),
-        ],
-      ),
-    );
+  Color sendButtonColor() {
+    if (isWaypointsReady && (pathWaypoints.length >= 2)) {
+      return Colors.green;
+    } else {
+      return const Color.fromARGB(255, 33, 33, 33);
+    }
   }
 
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///Map related features
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  // created method for getting user current location
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// created method for getting user current location
   SizedBox _getUserLocationButton() {
     return SizedBox(
       height: _safeVertical * 7,
@@ -748,29 +662,37 @@ class _AutoPageState extends State<AutoPage> {
     //get how many markers have been dropped so far
     int waypointNumber = pathWaypoints.length;
 
-    setState(() {
-      // Create a new marker with a unique id and the given position
-      Marker marker = Marker(
-        markerId: MarkerId("Waypoint No.${waypointNumber + 1}"),
-        position: point,
-        //icon: BitmapDescriptor.fromBytes(iconDataToBytes(Icon(Icons.directions_boat_filled,))),
-        infoWindow: InfoWindow(
-            title: "Waypoint No.${waypointNumber + 1}",
-            snippet: "Lat: ${point.latitude}, Lng: ${point.longitude}"),
-        icon: waypointsIcon,
-      );
-      // Add the marker to the set and update the state
-      setState(() {
-        debugPrint("Waypoint No.${waypointNumber + 1}");
-        pathWaypoints.add(marker);
+    if (!isWaypointsReady) {
+      setState(
+        () {
+          // Create a new marker with a unique id and the given position
+          Marker marker = Marker(
+            markerId: MarkerId("Waypoint No.${waypointNumber + 1}"),
+            position: point,
+            //icon: BitmapDescriptor.fromBytes(iconDataToBytes(Icon(Icons.directions_boat_filled,))),
+            infoWindow: InfoWindow(
+                title: "Waypoint No.${waypointNumber + 1}",
+                snippet: "Lat: ${point.latitude}, Lng: ${point.longitude}"),
+            icon: waypointsIcon,
+          );
+          // Add the marker to the set and update the state
+          setState(
+            () {
+              debugPrint("Waypoint No.${waypointNumber + 1}");
+              pathWaypoints.add(marker);
 
-        //everytime a new marker dropped polylines reset and turned off
-        if (pathPolylines.isNotEmpty) {
-          pathPolylines.clear();
-          _changePolylineButtonColor();
-        }
-      });
-    });
+              //everytime a new marker dropped polylines reset and turned off
+              if (pathPolylines.isNotEmpty) {
+                pathPolylines.clear();
+                _changePolylineButtonColor();
+              }
+            },
+          );
+        },
+      );
+    } else {
+      debugPrint("Cannot add as waypoints confirmed!!");
+    }
   }
 
   void _checkMarkerToUser(LatLng point) {
@@ -852,9 +774,9 @@ class _AutoPageState extends State<AutoPage> {
     );
   }
 
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //Title of the page
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Title of the page
   SizedBox autoPageTitle() {
     return SizedBox(
       height: _safeVertical * 7,
@@ -879,9 +801,9 @@ class _AutoPageState extends State<AutoPage> {
     );
   }
 
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //home button to return back to home page
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//home button to return back to home page
   OutlinedButton homeButton(BuildContext context) {
     return OutlinedButton(
       onPressed: () {
@@ -910,8 +832,8 @@ class _AutoPageState extends State<AutoPage> {
     );
   }
 
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///Polyline button widget related
   SizedBox _generatePolylineButton() {
     return SizedBox(
@@ -987,8 +909,8 @@ class _AutoPageState extends State<AutoPage> {
     }
   }
 
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///remove all marker widget related
   SizedBox _removeAllMarkers() {
     return SizedBox(
@@ -997,7 +919,7 @@ class _AutoPageState extends State<AutoPage> {
       child: OutlinedButton(
         onPressed: () {
           setState(() {
-            if (pathWaypoints.isNotEmpty) {
+            if (pathWaypoints.isNotEmpty && !isWaypointsReady) {
               pathWaypoints.clear();
               //reset the toggle switch for waypoints
               waypointsReadyIndex = 1;
@@ -1019,71 +941,5 @@ class _AutoPageState extends State<AutoPage> {
         ),
       ),
     );
-  }
-
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  Container _summaryContent() {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        color: Colors.black,
-      ),
-      padding: const EdgeInsets.all(10),
-      child: Row(
-        children: [
-          const Text(
-            "Estimated Total Distance: ",
-            style: TextStyle(
-              fontSize: 15,
-              color: Colors.white,
-            ),
-          ),
-          Text(
-            "${totalEstimatedDistance!.toStringAsFixed(2)} m",
-            style: const TextStyle(
-              fontSize: 15,
-              color: Colors.white,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  double _calculateDistance() {
-    List<Marker> pathWaypointsList = pathWaypoints.toList();
-
-    double totalDistance = 0;
-    for (int i = 0; i < pathWaypointsList.length; i++) {
-      if (i < pathWaypointsList.length - 1) {
-        // skip the last index
-        totalDistance += _getStraightLineDistance(
-            pathWaypointsList[i + 1].position.latitude,
-            pathWaypointsList[i + 1].position.longitude,
-            pathWaypointsList[i].position.latitude,
-            pathWaypointsList[i].position.longitude);
-      }
-    }
-    return totalDistance;
-  }
-
-  //straight line distance calculation based on HaverSine formula
-  double _getStraightLineDistance(lat1, lon1, lat2, lon2) {
-    var R = 6371; // Radius of the earth in km
-    var dLat = _deg2rad(lat2 - lat1);
-    var dLon = _deg2rad(lon2 - lon1);
-    var a = sin(dLat / 2) * sin(dLat / 2) +
-        cos(_deg2rad(lat1)) *
-            cos(_deg2rad(lat2)) *
-            sin(dLon / 2) *
-            sin(dLon / 2);
-    var c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    var d = R * c; // Distance in km
-    return d * 1000; //in m
-  }
-
-  dynamic _deg2rad(deg) {
-    return deg * (pi / 180);
   }
 }
