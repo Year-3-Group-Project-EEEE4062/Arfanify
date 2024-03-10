@@ -46,6 +46,8 @@ class _AutoPageState extends State<AutoPage> {
       ValueNotifier<Color>(const Color(0xff171717));
   bool isPolylinesON = false;
 
+  Set<Circle> userCircle = {};
+
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Future _loadMapStyles() async {
@@ -83,9 +85,8 @@ class _AutoPageState extends State<AutoPage> {
     _loadMapStyles(); //load the dark mode map json file design
     //set the map to user current location
     _getUserCurrentLocation().then((value) async {
-      debugPrint(
-          "User Current Location: ${value.latitude} , ${value.longitude}");
       currentUserLatLng = value;
+      _addUserCircle(LatLng(value.latitude, value.longitude));
       setState(() {}); //refresh the map with user location
     });
   }
@@ -627,6 +628,7 @@ class _AutoPageState extends State<AutoPage> {
             debugPrint(
                 "User Current Location: ${value.latitude} , ${value.longitude}");
             currentUserLatLng = value; //update user current location
+            _addUserCircle(LatLng(value.latitude, value.longitude));
             _newCameraPosition(value);
           });
         },
@@ -641,6 +643,37 @@ class _AutoPageState extends State<AutoPage> {
         ),
       ),
     );
+  }
+
+  void _addUserCircle(LatLng point) {
+    userCircle.clear();
+
+    if (!isWaypointsReady) {
+      setState(
+        () {
+          Circle circles = Circle(
+            circleId: const CircleId('userCircle'),
+            center: LatLng(
+              point.latitude,
+              point.longitude,
+            ), // Replace with your current location
+            radius: 7, // Radius in meters
+            fillColor: Colors.black, // Blue fill color
+            strokeColor: Colors.red, // Black stroke color
+            strokeWidth: 4,
+          );
+
+          // Add the marker to the set and update the state
+          setState(
+            () {
+              userCircle.add(circles);
+            },
+          );
+        },
+      );
+    } else {
+      debugPrint("Cannot add as waypoints confirmed!!");
+    }
   }
 
   Future<void> _newCameraPosition(Position value) async {
@@ -746,6 +779,7 @@ class _AutoPageState extends State<AutoPage> {
 
   GoogleMap theMap() {
     return GoogleMap(
+      style: _darkMapStyle,
       mapType: MapType.normal,
       zoomControlsEnabled: false,
       compassEnabled: true,
@@ -756,6 +790,7 @@ class _AutoPageState extends State<AutoPage> {
           zoom: 18),
       markers: pathWaypoints,
       polylines: pathPolylines,
+      circles: userCircle,
       onLongPress:
           pathWaypoints.isEmpty ? _checkMarkerToUser : _checkMarkerToMarker,
       onMapCreated: (GoogleMapController controller) async {
@@ -763,13 +798,6 @@ class _AutoPageState extends State<AutoPage> {
 
         //assigning the controller
         _mapsController.complete(controller);
-
-        //use future to get the object of the _mapsController to change its properties
-        final GoogleMapController settingMapStyle =
-            await _mapsController.future;
-
-        //use the object to set the Map's theme
-        settingMapStyle.setMapStyle(_darkMapStyle);
       },
     );
   }

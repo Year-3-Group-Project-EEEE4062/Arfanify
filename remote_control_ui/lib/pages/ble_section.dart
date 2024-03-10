@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -51,15 +52,8 @@ class AppBarBLEState extends State<AppBarBLE> {
   //variable used to check the services available by connected device
   List<BluetoothService> _services = [];
 
-  //When connecting to Medium or Boat, it targets the specific device ID
-  //bleIndex used to determine which device ID to look for
-  int bleIndex = 0;
-
   //Used for searching the device to connect to
-  final List<String> deviceName = [
-    'Medium',
-    'BoatBoat',
-  ];
+  final String deviceName = 'Medium';
 
   //to store the Medium found
   late BluetoothDevice deviceStats;
@@ -86,10 +80,10 @@ class AppBarBLEState extends State<AppBarBLE> {
   //this function can only be called by main_page.dart
   //other pages have to go through main_page.dart to call this function to send data to Medium
   void sendDataBLE(List<int> dataToBeSent) async {
-    debugPrint("Medium Connection: $deviceConnected");
     if (deviceConnected) {
       writeCharacteristics(dataToBeSent);
       editActionMssg("Sent BLE\nmessage");
+      debugPrint("Sent: $dataToBeSent");
     }
   }
 
@@ -144,7 +138,7 @@ class AppBarBLEState extends State<AppBarBLE> {
           //check if detected device has already been detected before
           if (_scanResults.contains(r) == false) {
             //check if it is a valid device ID (Medium or Boat)
-            if (deviceName[bleIndex] == r.advertisementData.advName) {
+            if (deviceName == r.advertisementData.advName) {
               //medium detected and add to list
               _scanResults.add(r);
 
@@ -171,8 +165,6 @@ class AppBarBLEState extends State<AppBarBLE> {
 
     //dispose listener for scan results
     _scanResultsSubscription.cancel();
-
-    debugPrint("BLE listeners disposed!");
 
     super.dispose();
   }
@@ -213,51 +205,59 @@ class AppBarBLEState extends State<AppBarBLE> {
         SizedBox(
           height: _safeVertical * 0.9,
         ),
-        deviceToggleButton(),
-        SizedBox(
-          height: _safeVertical * 0.9,
+        Container(
+          height: _safeVertical * 9,
+          width: _safeHorizontal * 83,
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              bleConnectButton(context),
+              bleDisconnectButton(context),
+            ],
+          ),
         ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            bleConnectButton(context),
-            bleDisconnectButton(context),
-          ],
-        ),
+        (deviceConnected)
+            ? Column(
+                children: [
+                  SizedBox(
+                    height: _safeVertical * 0.9,
+                  ),
+                  bleTestButton(context)
+                ],
+              )
+            : SizedBox(
+                height: _safeVertical * 0.9,
+              ),
       ],
     );
   }
 
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ToggleSwitch deviceToggleButton() {
-    return ToggleSwitch(
-      minWidth: _safeHorizontal * 41.5,
-      minHeight: _safeVertical * 5,
-      fontSize: _safeHorizontal * 4,
-      initialLabelIndex: bleIndex,
-      activeBgColor: const [Color(0xff768a76)],
-      activeFgColor: Colors.white,
-      inactiveBgColor: const Color.fromARGB(255, 68, 67, 67),
-      inactiveFgColor: Colors.white,
-      totalSwitches: 2,
-      labels: const ['Medium', 'Boat'],
-      onToggle: (index) {
-        debugPrint('switched to: $index');
-        //update ble index
-        bleIndex = index!;
-
-        //reset connections as well to ask user to do connection again
-        if (deviceFound) {
-          if (deviceConnected) {
-            disconnectToDevice();
-            editActionMssg("Switched Device..\nScan again!");
-          } else {
-            editActionMssg("Switched Device..\nScan again!");
-            resetVariables();
-          }
-        }
-      },
+  Row bleTestButton(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            textStyle: Theme.of(context).textTheme.labelLarge,
+            // Customize other properties like padding, border, etc.
+            side: const BorderSide(
+                color: Colors.black, width: 1.0), // Add an outline border
+          ),
+          onPressed: () async {
+            sendDataBLE(utf8.encode('!'));
+            editActionMssg("Check Medium's\n Boat Ping status");
+          },
+          child: Text(
+            'Test to check boat connection',
+            style: TextStyle(fontSize: _safeHorizontal * 5),
+          ),
+        )
+      ],
     );
   }
 
@@ -334,22 +334,21 @@ class AppBarBLEState extends State<AppBarBLE> {
           width: _safeVertical * 4,
         ),
         Container(
-          height: _safeVertical * 35,
+          height: _safeVertical * 31,
           width: _safeHorizontal * 83,
           decoration: BoxDecoration(
               color: const Color.fromARGB(255, 33, 33, 33),
-              borderRadius: BorderRadius.circular(10)),
+              borderRadius: BorderRadius.circular(30)),
           child: Column(
             children: [
               Align(
                 alignment: Alignment.centerLeft,
                 child: Container(
-                  width: _safeHorizontal * 15,
-                  height: _safeVertical * 5,
+                  width: _safeHorizontal * 20,
+                  height: _safeVertical * 7,
                   decoration: BoxDecoration(
                     color: Colors.black,
-                    borderRadius: BorderRadius.circular(10),
-                    //border: Border.all(width: 2, color: Colors.white)
+                    borderRadius: BorderRadius.circular(30),
                   ),
                   child: Center(
                     child: ValueListenableBuilder(
@@ -360,7 +359,7 @@ class AppBarBLEState extends State<AppBarBLE> {
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                   color: Colors.white,
-                                  fontSize: _safeHorizontal * 4));
+                                  fontSize: _safeHorizontal * 6));
                         }),
                   ),
                 ),
@@ -377,7 +376,7 @@ class AppBarBLEState extends State<AppBarBLE> {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               color: Colors.white,
-                              fontSize: _safeHorizontal * 5));
+                              fontSize: _safeHorizontal * 7));
                     }),
               )
             ],
@@ -415,8 +414,7 @@ class AppBarBLEState extends State<AppBarBLE> {
             textStyle: Theme.of(context).textTheme.labelLarge,
             // Customize other properties like padding, border, etc.
             side: const BorderSide(
-                color: Color.fromARGB(255, 33, 33, 33),
-                width: 1.0), // Add an outline border
+                color: Colors.white, width: 1.0), // Add an outline border
           ),
           onPressed: () async {
             // Only do something if Bluetooth is ON and working
@@ -426,7 +424,7 @@ class AppBarBLEState extends State<AppBarBLE> {
           },
           child: Text(
             'Disconnect',
-            style: TextStyle(fontSize: _safeHorizontal * 5),
+            style: TextStyle(fontSize: _safeHorizontal * 5, color: Colors.red),
           ),
         )
       ],
@@ -458,13 +456,7 @@ class AppBarBLEState extends State<AppBarBLE> {
     List<BluetoothCharacteristic> characteristics;
 
     //Medium(RPi Pico W) have 3 services, targeted is in index 2
-    //RPi4 have 4 services, the targeted one is in index 3
-    if (bleIndex == 0) {
-      characteristics = _services[2].characteristics;
-    } else {
-      //Means Rpi4 is the connected device
-      characteristics = _services[3].characteristics;
-    }
+    characteristics = _services[2].characteristics;
 
     BluetoothCharacteristic c = characteristics[1];
 
@@ -512,22 +504,21 @@ class AppBarBLEState extends State<AppBarBLE> {
             //Discover the services of the Medium
             _services = await deviceStats.discoverServices();
 
-            //ONLY FOR MEDIUM!!
             //Write to characteristic to initialize the date and time
             //get the phone's current date and time
-            if (bleIndex == 0) {
-              byteCommand = integerToByteArray(0x03, getDateTime(6));
-              writeCharacteristics(byteCommand);
-            }
+            byteCommand = integerToByteArray(0x03, getDateTime(6));
+            writeCharacteristics(byteCommand);
 
             //for debugging purpose to know if Medium connected or not
             debugPrint("Device Connected!");
+
+            setState(() {});
           }
           // listen for disconnection
           else if (state == BluetoothConnectionState.disconnected) {
             editActionMssg("Disconnected from Device...");
             resetVariables();
-            debugPrint("Device Disconnected!");
+            setState(() {});
           }
         },
       );
@@ -550,8 +541,7 @@ class AppBarBLEState extends State<AppBarBLE> {
             textStyle: Theme.of(context).textTheme.labelLarge,
             // Customize other properties like padding, border, etc.
             side: const BorderSide(
-                color: Color.fromARGB(255, 33, 33, 33),
-                width: 1.0), // Add an outline border
+                color: Colors.white, width: 1.0), // Add an outline border
           ),
           onPressed: () async {
             // Only do something if Bluetooth is ON and working
@@ -561,7 +551,8 @@ class AppBarBLEState extends State<AppBarBLE> {
           },
           child: Text(
             'Connect',
-            style: TextStyle(fontSize: _safeHorizontal * 5),
+            style:
+                TextStyle(fontSize: _safeHorizontal * 5, color: Colors.green),
           ),
         )
       ],
