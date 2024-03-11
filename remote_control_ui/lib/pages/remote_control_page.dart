@@ -22,22 +22,25 @@ class RemotePageState extends State<RemotePage> {
 
   // List of integers that holds movement instructions for the boat
   // bleModeMovement[0] holds the remote or auto mode (0,1)
-  // bleModeMovement[1] holds the motion S, A, F (0,1,2)
+  // bleModeMovement[1] holds the motion S, A, F(0,1,2)
   // bleModeMovement[2] holds the movement F, B, R, L(0,1,2,3)
   List<int> bleModeMovement = [
     0,
     0,
   ];
 
-  // List of integers that holds the features intructions for the boat
-  // bleFeatures[0] holds the remote or auto mode (0,1)
-  // bleFeatures[1] holds the feature either measure or go home (0,1)
-  List<int> bleFeatures = [
+  List<int> bleStop = [
     0,
   ];
 
   String _status = 'Slow';
   Color _statusColor = Colors.green;
+
+  String _liveMotion = 'None';
+  Color __liveMotionColor = Colors.purple;
+
+  String _liveMovement = 'None';
+  Color __liveMovementColor = Colors.red;
 
   // for better scaling of widgets with different screen sizes
   late double _safeVertical;
@@ -103,7 +106,14 @@ class RemotePageState extends State<RemotePage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               SizedBox(width: _safeHorizontal * 2),
-              featuresLayout(),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  featuresLayout(),
+                  SizedBox(height: _safeVertical * 2), //just empty space
+                  stopButton(),
+                ],
+              ),
               movementsLayout(),
               SizedBox(width: _safeHorizontal * 2),
             ],
@@ -116,7 +126,7 @@ class RemotePageState extends State<RemotePage> {
   //////////////////////////////////////////////////////////////////////////////
   Container featuresLayout() {
     return Container(
-      height: _safeVertical * 42,
+      height: _safeVertical * 25,
       width: _safeHorizontal * 40,
       decoration: BoxDecoration(
         color: const Color(0xffC8D0C8),
@@ -130,96 +140,136 @@ class RemotePageState extends State<RemotePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                "Features",
+                "Live Settings",
                 style: TextStyle(
-                    fontSize: _safeHorizontal * 5,
+                    fontSize: _safeHorizontal * 6,
                     color: Colors.black,
                     fontWeight: FontWeight.bold),
               ),
             ],
           ),
-          measureButton(),
+          Container(
+            height: _safeVertical * 8,
+            width: _safeHorizontal * 35,
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10), color: Colors.black),
+            child: Padding(
+              padding: const EdgeInsets.all(5),
+              child: liveMotionBar(),
+            ),
+          ),
+          Container(
+            height: _safeVertical * 8,
+            width: _safeHorizontal * 35,
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10), color: Colors.black),
+            child: Padding(
+              padding: const EdgeInsets.all(5),
+              child: liveMovementBar(),
+            ),
+          ),
           SizedBox(height: _safeVertical * 2), //just empty space
-          goHomeButton(),
         ],
       ),
     );
   }
 
-  SizedBox measureButton() {
-    return SizedBox(
-      height: _safeVertical * 15,
-      width: _safeHorizontal * 33,
-      child: TextButton(
-        style: TextButton.styleFrom(
-          foregroundColor: Colors.white, // Text color
-          backgroundColor: const Color(0xff768a76), // Background color
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20), // Rounded corners
-          ),
-          // Add other properties as needed
-        ),
-        onPressed: () {
-          // Change the bleFeature list index[1] to 0 indicate measure mode
-          bleFeatures[0] = 0;
-
-          //Send command through BLE
-          remoteModeSendBLE(bleFeatures);
-        },
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
+  Column liveMotionBar() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            Icon(
-              Icons.thermostat, // Your desired icon
-              size: _safeVertical * 8,
-            ),
+            SizedBox(width: _safeHorizontal * 2),
             Text(
-              'Measure', // Your label text
+              'Motion: ',
               style: TextStyle(
-                  color: Colors.white,
-                  fontSize: _safeVertical * 2), // Customize label style
+                  fontSize: _safeHorizontal * 5,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
             ),
           ],
         ),
-      ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            SizedBox(width: _safeHorizontal * 5),
+            Text(
+              _liveMotion,
+              style: TextStyle(
+                  fontSize: _safeHorizontal * 5, color: __liveMotionColor),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
-  SizedBox goHomeButton() {
+  Column liveMovementBar() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            SizedBox(width: _safeHorizontal * 2),
+            Text(
+              'Movement: ',
+              style: TextStyle(
+                  fontSize: _safeHorizontal * 5,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
+            ),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            SizedBox(width: _safeHorizontal * 5),
+            Text(
+              _liveMovement,
+              style: TextStyle(
+                  fontSize: _safeHorizontal * 5, color: __liveMovementColor),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  SizedBox stopButton() {
     return SizedBox(
       height: _safeVertical * 15,
-      width: _safeHorizontal * 33,
+      width: _safeHorizontal * 40,
       child: TextButton(
         style: TextButton.styleFrom(
           foregroundColor: Colors.white, // Text color
-          backgroundColor: const Color(0xff768a76), // Background color
+          backgroundColor: Colors.red, // Background color
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20), // Rounded corners
+            borderRadius: BorderRadius.circular(30), // Rounded corners
           ),
           // Add other properties as needed
         ),
         onPressed: () {
-          // Add your button action here
-          // Change the bleFeature list index[1] to 0 indicate go home mode
-          bleFeatures[0] = 1;
-
-          //Send command through BLE
-          remoteModeSendBLE(bleFeatures);
+          // Send data through BLE
+          remoteModeSendBLE(bleStop);
+          updateLiveSettings("None", Colors.purple, "None", Colors.purple);
         },
-        child: Column(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Icon(
-              Icons.home_filled, // Your desired icon
-              size: _safeVertical * 8,
+              Icons.remove_circle_outline, // Your desired icon
+              size: _safeVertical * 7,
             ),
+            SizedBox(width: _safeHorizontal * 2),
             Text(
-              'Go Home', // Your label text
+              'STOP', // Your label text
               style: TextStyle(
                   color: Colors.white,
-                  fontSize: _safeVertical * 2), // Customize label style
+                  fontSize: _safeVertical * 4), // Customize label style
             ),
           ],
         ),
@@ -387,7 +437,7 @@ class RemotePageState extends State<RemotePage> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          'Motion: ',
+          'Desired Motion: ',
           style: TextStyle(
               fontSize: _safeHorizontal * 5,
               fontWeight: FontWeight.bold,
@@ -414,21 +464,23 @@ class RemotePageState extends State<RemotePage> {
         borderRadius: BorderRadius.circular(30),
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          SizedBox(height: _safeVertical), //just empty space
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 "Movements",
                 style: TextStyle(
-                    fontSize: _safeHorizontal * 5,
+                    fontSize: _safeHorizontal * 6,
                     color: Colors.black,
                     fontWeight: FontWeight.bold),
               ),
             ],
           ),
+          SizedBox(height: _safeVertical), //just empty space
           controlPad(),
         ],
       ),
@@ -456,6 +508,17 @@ class RemotePageState extends State<RemotePage> {
     );
   }
 
+  void updateLiveSettings(String desiredMotion, Color desiredMotionColor,
+      String movement, Color movementColor) {
+    _liveMotion = desiredMotion;
+    __liveMotionColor = desiredMotionColor;
+
+    _liveMovement = movement;
+    __liveMovementColor = movementColor;
+
+    setState(() {});
+  }
+
   SizedBox forwardMovement() {
     return SizedBox(
       height: _safeVertical * 11,
@@ -472,9 +535,6 @@ class RemotePageState extends State<RemotePage> {
           ),
         ),
         onPressed: () {
-          if (kDebugMode) {
-            debugPrint("Forward button pressed");
-          }
           // Change the bleModeMovement index
           bleModeMovement[0] = 0;
           bleModeMovement[1] = (_motion + 1) * 15;
@@ -482,6 +542,8 @@ class RemotePageState extends State<RemotePage> {
 
           // Send data through BLE
           remoteModeSendBLE(bleModeMovement);
+
+          updateLiveSettings(_status, _statusColor, "Forward", Colors.red);
         },
       ),
     );
@@ -513,6 +575,8 @@ class RemotePageState extends State<RemotePage> {
 
           // Send data through BLE
           remoteModeSendBLE(bleModeMovement);
+
+          updateLiveSettings(_status, _statusColor, "Backwards", Colors.red);
         },
       ),
     );
@@ -544,6 +608,8 @@ class RemotePageState extends State<RemotePage> {
 
           // Send data through BLE
           remoteModeSendBLE(bleModeMovement);
+
+          updateLiveSettings(_status, _statusColor, "Rightwards", Colors.red);
         },
       ),
     );
@@ -575,6 +641,8 @@ class RemotePageState extends State<RemotePage> {
 
           // Send data through BLE
           remoteModeSendBLE(bleModeMovement);
+
+          updateLiveSettings(_status, _statusColor, "Leftwards", Colors.red);
         },
       ),
     );

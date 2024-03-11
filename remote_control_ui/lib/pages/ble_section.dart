@@ -187,7 +187,7 @@ class AppBarBLEState extends State<AppBarBLE> {
               height: _safeVertical * 5,
               width: _safeHorizontal * 40,
               decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 33, 33, 33),
+                color: Colors.black,
                 borderRadius: BorderRadius.circular(30),
               ),
               child: bleStatusRow(context),
