@@ -73,7 +73,10 @@ class RemotePageState extends State<RemotePage> {
 
   @override
   void dispose() {
-    debugPrint("Remote page disposed!");
+    if (_liveMovement != 'None') {
+      // Send data through BLE
+      remoteModeSendBLE(bleStop);
+    }
     super.dispose();
   }
 
