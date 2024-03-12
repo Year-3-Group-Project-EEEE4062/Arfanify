@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math';
@@ -41,9 +42,13 @@ class _AutoPageState extends State<AutoPage> {
   BitmapDescriptor waypointsIcon = BitmapDescriptor.defaultMarker;
 
   Set<Polyline> pathPolylines = {};
-  ValueNotifier<Color> polylineButtonColor =
-      ValueNotifier<Color>(const Color(0xff171717));
+  ValueNotifier<Color> polylineButtonColor = ValueNotifier<Color>(Colors.black);
   bool isPolylinesON = false;
+
+  List<LatLng> markersLatLng = [];
+  Set<Polygon> polygonArea = HashSet<Polygon>();
+  ValueNotifier<Color> polygonButtonColor = ValueNotifier<Color>(Colors.black);
+  bool isPolygonsON = false;
 
   Set<Circle> userCircle = {};
 
@@ -143,15 +148,23 @@ class _AutoPageState extends State<AutoPage> {
 
           //For positioning the map button
           Positioned(
-            top: _safeVertical * 53,
+            top: _safeVertical * 45,
             right: _safeHorizontal * 2,
             child: _getUserLocationButton(),
           ),
+
+          Positioned(
+            top: _safeVertical * 53,
+            right: _safeHorizontal * 2,
+            child: _addPolygonsButton(),
+          ),
+
           Positioned(
             top: _safeVertical * 61,
             right: _safeHorizontal * 2,
             child: _generatePolylineButton(),
           ),
+
           Positioned(
             top: _safeVertical * 69,
             right: _safeHorizontal * 2,
@@ -414,7 +427,7 @@ class _AutoPageState extends State<AutoPage> {
     return Padding(
       padding: const EdgeInsets.all(10),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           _totalDistance(),
@@ -632,9 +645,9 @@ class _AutoPageState extends State<AutoPage> {
           });
         },
         style: OutlinedButton.styleFrom(
-          backgroundColor: const Color.fromARGB(255, 33, 33, 33),
+          backgroundColor: Colors.black,
           shape: const CircleBorder(),
-          side: const BorderSide(color: Colors.black),
+          side: const BorderSide(color: Colors.white),
         ),
         child: const Icon(
           Icons.my_location,
@@ -651,12 +664,13 @@ class _AutoPageState extends State<AutoPage> {
       setState(
         () {
           Circle circles = Circle(
+            zIndex: 1000,
             circleId: const CircleId('userCircle'),
             center: LatLng(
               point.latitude,
               point.longitude,
             ), // Replace with your current location
-            radius: 7, // Radius in meters
+            radius: 5, // Radius in meters
             fillColor: Colors.black, // Blue fill color
             strokeColor: Colors.red, // Black stroke color
             strokeWidth: 4,
@@ -712,6 +726,7 @@ class _AutoPageState extends State<AutoPage> {
             () {
               debugPrint("Waypoint No.${waypointNumber + 1}");
               pathWaypoints.add(marker);
+              markersLatLng.add(point);
 
               //everytime a new marker dropped polylines reset and turned off
               if (pathPolylines.isNotEmpty) {
@@ -779,6 +794,7 @@ class _AutoPageState extends State<AutoPage> {
   GoogleMap theMap() {
     return GoogleMap(
       style: _darkMapStyle,
+      buildingsEnabled: false,
       mapType: MapType.normal,
       zoomControlsEnabled: false,
       compassEnabled: true,
@@ -790,6 +806,7 @@ class _AutoPageState extends State<AutoPage> {
       markers: pathWaypoints,
       polylines: pathPolylines,
       circles: userCircle,
+      polygons: polygonArea,
       onLongPress:
           pathWaypoints.isEmpty ? _checkMarkerToUser : _checkMarkerToMarker,
       onMapCreated: (GoogleMapController controller) async {
@@ -873,8 +890,6 @@ class _AutoPageState extends State<AutoPage> {
             onPressed: () {
               //only generate polylines if there are at least 2 markers on the map
               if (pathWaypoints.length >= 2 && !isPolylinesON) {
-                debugPrint("Generating Polylines");
-
                 //generate the polylines
                 _setPolylinesUsingMarkers();
 
@@ -890,7 +905,7 @@ class _AutoPageState extends State<AutoPage> {
             style: OutlinedButton.styleFrom(
               backgroundColor: polylineButtonColor.value,
               shape: const CircleBorder(),
-              side: const BorderSide(color: Colors.black),
+              side: const BorderSide(color: Colors.white),
             ),
             child: const Icon(
               Icons.polyline,
@@ -919,20 +934,73 @@ class _AutoPageState extends State<AutoPage> {
 
     //refresh widget
     setState(() {
-      debugPrint("Polylines generated!");
       pathPolylines.add(polyline);
-      debugPrint("$pathPolylines");
     });
   }
 
   void _changePolylineButtonColor() {
-    debugPrint("isPolylinesON: $isPolylinesON");
     if (!isPolylinesON) {
       polylineButtonColor.value = const Color.fromARGB(255, 96, 214, 99);
       isPolylinesON = true;
     } else if (isPolylinesON) {
-      polylineButtonColor.value = const Color(0xff171717);
+      polylineButtonColor.value = Colors.black;
       isPolylinesON = false;
+    }
+  }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///remove all marker widget related
+  SizedBox _addPolygonsButton() {
+    return SizedBox(
+      height: _safeVertical * 7,
+      width: _safeHorizontal * 20,
+      child: OutlinedButton(
+        onPressed: () {
+          if (pathWaypoints.length >= 3) {
+            setState(() {
+              if (!isPolygonsON) {
+                polygonArea.clear();
+                polygonArea.add(
+                  Polygon(
+                    polygonId: const PolygonId("Area of Measurement"),
+                    points: markersLatLng,
+                    fillColor: Colors.green.withOpacity(0.3),
+                    strokeColor: const Color.fromARGB(255, 96, 214, 99),
+                    strokeWidth: 4,
+                    geodesic: true,
+                  ),
+                );
+                _changePolygonsButtonColor();
+              } else {
+                polygonArea.clear();
+                _changePolygonsButtonColor();
+              }
+            });
+          } else {
+            debugPrint("Add at least 3 waypoints on map");
+          }
+        },
+        style: OutlinedButton.styleFrom(
+          backgroundColor: polygonButtonColor.value,
+          shape: const CircleBorder(),
+          side: const BorderSide(color: Colors.white),
+        ),
+        child: const Icon(
+          Icons.format_shapes,
+          color: Colors.orange,
+        ),
+      ),
+    );
+  }
+
+  void _changePolygonsButtonColor() {
+    if (!isPolygonsON) {
+      polygonButtonColor.value = const Color.fromARGB(255, 96, 214, 99);
+      isPolygonsON = true;
+    } else if (isPolygonsON) {
+      polygonButtonColor.value = Colors.black;
+      isPolygonsON = false;
     }
   }
 
@@ -948,19 +1016,29 @@ class _AutoPageState extends State<AutoPage> {
           setState(() {
             if (pathWaypoints.isNotEmpty && !isWaypointsReady) {
               pathWaypoints.clear();
+
               //reset the toggle switch for waypoints
               waypointsReadyIndex = 1;
+
+              //reset polylines to none
               if (pathPolylines.isNotEmpty) {
                 pathPolylines.clear();
                 _changePolylineButtonColor();
+              }
+
+              //reset polygons to none
+              if (polygonArea.isNotEmpty) {
+                markersLatLng.clear();
+                polygonArea.clear();
+                _changePolygonsButtonColor();
               }
             }
           });
         },
         style: OutlinedButton.styleFrom(
-          backgroundColor: const Color.fromARGB(255, 33, 33, 33),
+          backgroundColor: Colors.black,
           shape: const CircleBorder(),
-          side: const BorderSide(color: Colors.black),
+          side: const BorderSide(color: Colors.white),
         ),
         child: const Icon(
           Icons.location_off,
