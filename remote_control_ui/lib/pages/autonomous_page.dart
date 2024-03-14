@@ -41,10 +41,6 @@ class _AutoPageState extends State<AutoPage> {
   BitmapDescriptor userIcon = BitmapDescriptor.defaultMarker;
   BitmapDescriptor waypointsIcon = BitmapDescriptor.defaultMarker;
 
-  Set<Polyline> pathPolylines = {};
-  ValueNotifier<Color> polylineButtonColor = ValueNotifier<Color>(Colors.black);
-  bool isPolylinesON = false;
-
   List<LatLng> markersLatLng = [];
   Set<Polygon> polygonArea = HashSet<Polygon>();
   ValueNotifier<Color> polygonButtonColor = ValueNotifier<Color>(Colors.black);
@@ -156,13 +152,13 @@ class _AutoPageState extends State<AutoPage> {
           Positioned(
             top: _safeVertical * 53,
             right: _safeHorizontal * 2,
-            child: _addPolygonsButton(),
+            child: _getUserLocationButton(),
           ),
 
           Positioned(
             top: _safeVertical * 61,
             right: _safeHorizontal * 2,
-            child: _generatePolylineButton(),
+            child: _addPolygonsButton(),
           ),
 
           Positioned(
@@ -727,12 +723,6 @@ class _AutoPageState extends State<AutoPage> {
               debugPrint("Waypoint No.${waypointNumber + 1}");
               pathWaypoints.add(marker);
               markersLatLng.add(point);
-
-              //everytime a new marker dropped polylines reset and turned off
-              if (pathPolylines.isNotEmpty) {
-                pathPolylines.clear();
-                _changePolylineButtonColor();
-              }
             },
           );
         },
@@ -804,7 +794,6 @@ class _AutoPageState extends State<AutoPage> {
               LatLng(currentUserLatLng!.latitude, currentUserLatLng!.longitude),
           zoom: 18),
       markers: pathWaypoints,
-      polylines: pathPolylines,
       circles: userCircle,
       polygons: polygonArea,
       onLongPress:
@@ -878,78 +867,6 @@ class _AutoPageState extends State<AutoPage> {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///Polyline button widget related
-  SizedBox _generatePolylineButton() {
-    return SizedBox(
-      height: _safeVertical * 7,
-      width: _safeHorizontal * 20,
-      child: ValueListenableBuilder(
-        valueListenable: polylineButtonColor,
-        builder: (context, value, _) {
-          return OutlinedButton(
-            onPressed: () {
-              //only generate polylines if there are at least 2 markers on the map
-              if (pathWaypoints.length >= 2 && !isPolylinesON) {
-                //generate the polylines
-                _setPolylinesUsingMarkers();
-
-                //alert user of polyline change of state
-                _changePolylineButtonColor();
-              } else if (isPolylinesON) {
-                setState(() {
-                  _changePolylineButtonColor();
-                  pathPolylines.clear();
-                });
-              }
-            },
-            style: OutlinedButton.styleFrom(
-              backgroundColor: polylineButtonColor.value,
-              shape: const CircleBorder(),
-              side: const BorderSide(color: Colors.white),
-            ),
-            child: const Icon(
-              Icons.polyline,
-              color: Colors.yellow,
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  _setPolylinesUsingMarkers() {
-    //generate a list of LatLng based on the set markers by user
-    List<LatLng> markerPositions =
-        pathWaypoints.map((marker) => marker.position).toList();
-
-    debugPrint("$markerPositions");
-
-    //generate the polylines
-    Polyline polyline = Polyline(
-      polylineId: const PolylineId('polyline'),
-      points: markerPositions,
-      width: 2,
-      color: const Color.fromARGB(255, 96, 214, 99),
-    );
-
-    //refresh widget
-    setState(() {
-      pathPolylines.add(polyline);
-    });
-  }
-
-  void _changePolylineButtonColor() {
-    if (!isPolylinesON) {
-      polylineButtonColor.value = const Color.fromARGB(255, 96, 214, 99);
-      isPolylinesON = true;
-    } else if (isPolylinesON) {
-      polylineButtonColor.value = Colors.black;
-      isPolylinesON = false;
-    }
-  }
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///remove all marker widget related
   SizedBox _addPolygonsButton() {
     return SizedBox(
@@ -1019,12 +936,6 @@ class _AutoPageState extends State<AutoPage> {
 
               //reset the toggle switch for waypoints
               waypointsReadyIndex = 1;
-
-              //reset polylines to none
-              if (pathPolylines.isNotEmpty) {
-                pathPolylines.clear();
-                _changePolylineButtonColor();
-              }
 
               //reset polygons to none
               if (polygonArea.isNotEmpty) {

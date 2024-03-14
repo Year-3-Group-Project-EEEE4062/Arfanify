@@ -61,6 +61,9 @@ class AppBarBLEState extends State<AppBarBLE> {
   bool deviceFound = false;
   bool deviceConnected = false;
 
+  late var connectionSubscription;
+  late var notifySubscription;
+
   //for better scaling of widgets with different screen sizes
   late double _safeVertical;
   late double _safeHorizontal;
@@ -432,22 +435,35 @@ class AppBarBLEState extends State<AppBarBLE> {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  Future<void> readCharacteristics() async {
+  Future<void> notifyCharacteristics() async {
     //Read the characteristic in the 3rd service (the user defined characteristic)
     List<BluetoothCharacteristic> characteristics =
         _services[2].characteristics;
-    BluetoothCharacteristic c = characteristics[1];
-    // String inputData;
-    List<int> value;
 
-    //read the characteristic message
-    value = await c.read();
+    //get the notify characteristic stored in 0th index of service
+    BluetoothCharacteristic c = characteristics[0];
 
-    //make it human readable instead of list of integers
-    // inputData = utf8.decode(value);
+    notifySubscription = c.onValueReceived.listen((value) {
+      // onValueReceived is updated:
+      //   - anytime read() is called
+      //   - anytime a notification arrives (if subscribed)
+      //debug print what was notified by characteristic
+      debugPrint("Notify Data type: ${value.runtimeType}");
+      debugPrint("Notify: $value");
+    });
 
-    //debug printing of what characteristic is read
-    debugPrint("Read: $value");
+    // subscribe
+    // Note: If a characteristic supports both **notifications** and **indications**,
+    // it will default to **notifications**. This matches how CoreBluetooth works on iOS.
+    try {
+      await c.setNotifyValue(true);
+    } catch (e) {
+      debugPrint("Does not Work!!!");
+      debugPrint("$e");
+    }
+
+    // cleanup: cancel subscription when disconnected
+    deviceStats.cancelWhenDisconnected(notifySubscription);
   }
 
   Future<void> writeCharacteristics(List<int> command) async {
@@ -481,18 +497,12 @@ class AppBarBLEState extends State<AppBarBLE> {
       }
 
       // listen for a connection
-      var subscription = deviceStats.connectionState.listen(
+      connectionSubscription = deviceStats.connectionState.listen(
         (BluetoothConnectionState state) async {
           if (state == BluetoothConnectionState.connected) {
             Uint8List byteCommand;
 
-            //connected change the icon color to green
-            connectionColor.value = const Color.fromARGB(255, 128, 232, 80);
-
             editActionMssg("Device Connected..\n Stay Safe!!");
-
-            //set that Medium has been found
-            deviceConnected = true;
 
             // Very important!
             //request the maximum transmission unit (MTU) of 512 bytes
@@ -503,15 +513,21 @@ class AppBarBLEState extends State<AppBarBLE> {
             //Discover the services of the Medium
             _services = await deviceStats.discoverServices();
 
+            //Initialize the listener for notify characteristic
+            notifyCharacteristics();
+
             //Write to characteristic to initialize the date and time
             //get the phone's current date and time
             byteCommand = integerToByteArray(0x03, getDateTime(6));
             writeCharacteristics(byteCommand);
 
-            //for debugging purpose to know if Medium connected or not
-            debugPrint("Device Connected!");
+            setState(() {
+              //connected change the icon color to green
+              connectionColor.value = const Color.fromARGB(255, 128, 232, 80);
 
-            setState(() {});
+              //set that Medium has been found
+              deviceConnected = true;
+            });
           }
           // listen for disconnection
           else if (state == BluetoothConnectionState.disconnected) {
@@ -526,7 +542,7 @@ class AppBarBLEState extends State<AppBarBLE> {
       // Note: `delayed:true` lets us receive the `disconnected` event in our handler
       // Note: `next:true` means cancel on *next* disconnection. Without this, it
       //   would cancel immediately because we're already disconnected right now.
-      deviceStats.cancelWhenDisconnected(subscription,
+      deviceStats.cancelWhenDisconnected(connectionSubscription,
           delayed: true, next: true);
     }
   }
