@@ -41,3 +41,6 @@ flutter:
     - assets\icons\Arfanify.png
     - assets\icons\Arfanify.svg
     - assets\json\map_style.json
+    - assets/icons/user.png
+    - assets/icons/pin.png
+    - assets/icons/boatboat.png

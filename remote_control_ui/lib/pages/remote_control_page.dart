@@ -2,22 +2,35 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_gauges/gauges.dart';
 import 'package:remote_control_ui/converter/data_converter.dart';
+import 'package:floating_snackbar/floating_snackbar.dart';
+
+//controller for the BLE
+class remoteModeController {
+  late void Function(Uint8List) notifyBLE;
+}
 
 class RemotePage extends StatefulWidget {
   final double safeScreenHeight;
   final double safeScreenWidth;
-  final Function(List<int>) bLE;
-  const RemotePage(
-      {super.key,
-      required this.bLE,
-      required this.safeScreenHeight,
-      required this.safeScreenWidth});
+  final Function(List<int>) sendbLE;
+  final remoteModeController notifyController;
+  const RemotePage({
+    super.key,
+    required this.sendbLE,
+    required this.safeScreenHeight,
+    required this.safeScreenWidth,
+    required this.notifyController,
+  });
 
   @override
-  RemotePageState createState() => RemotePageState();
+  RemotePageState createState() => RemotePageState(notifyController);
 }
 
 class RemotePageState extends State<RemotePage> {
+  RemotePageState(remoteModeController notifyController) {
+    notifyController.notifyBLE = remoteModeNotifyBLE;
+  }
+
   int _motion = 0;
 
   // List of integers that holds movement instructions for the boat
@@ -29,9 +42,7 @@ class RemotePageState extends State<RemotePage> {
     0,
   ];
 
-  List<int> bleStop = [
-    0,
-  ];
+  List<int> bleStop = [0];
 
   String _status = 'Slow';
   Color _statusColor = Colors.green;
@@ -46,7 +57,8 @@ class RemotePageState extends State<RemotePage> {
   late double _safeVertical;
   late double _safeHorizontal;
 
-  // convert the data to
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //callback to goes back to main_page.dart to send data through BLE
   void remoteModeSendBLE(List<int> bLERemoteCommand) {
     int remoteModeIdentifier = 0x01;
@@ -59,8 +71,24 @@ class RemotePageState extends State<RemotePage> {
 
     //remote control sends a list of integers
     //each integer represents an action
-    widget.bLE(byteCommand);
+    widget.sendbLE(byteCommand);
   }
+
+  void remoteModeNotifyBLE(Uint8List bLEAutoCommand) {}
+
+  void showSnackBar(String snackMssg, BuildContext context) {
+    FloatingSnackBar(
+      message: snackMssg,
+      context: context,
+      textColor: Colors.black,
+      // textStyle: const TextStyle(color: Colors.green),
+      duration: const Duration(milliseconds: 4000),
+      backgroundColor: const Color.fromARGB(255, 0, 221, 255),
+    );
+  }
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   @override
   void initState() {
@@ -538,11 +566,6 @@ class RemotePageState extends State<RemotePage> {
           ),
         ),
         onPressed: () {
-          // Change the bleModeMovement index
-          bleModeMovement[0] = 0;
-          bleModeMovement[1] = (_motion + 1) * 15;
-          debugPrint("${bleModeMovement[1]}");
-
           // Send data through BLE
           remoteModeSendBLE(bleModeMovement);
 
@@ -568,10 +591,6 @@ class RemotePageState extends State<RemotePage> {
           ),
         ),
         onPressed: () {
-          if (kDebugMode) {
-            debugPrint("Backwards button pressed");
-          }
-
           // Change the bleModeMovement index
           bleModeMovement[0] = 1;
           bleModeMovement[1] = (_motion + 1) * 15;
@@ -601,10 +620,6 @@ class RemotePageState extends State<RemotePage> {
           ),
         ),
         onPressed: () {
-          if (kDebugMode) {
-            debugPrint("Right button pressed");
-          }
-
           // Change the bleModeMovement index
           bleModeMovement[0] = 2;
           bleModeMovement[1] = (_motion + 1) * 15;
@@ -634,10 +649,6 @@ class RemotePageState extends State<RemotePage> {
           ),
         ),
         onPressed: () {
-          if (kDebugMode) {
-            debugPrint("Left button pressed");
-          }
-
           // Change the bleModeMovement index
           bleModeMovement[0] = 3;
           bleModeMovement[1] = (_motion + 1) * 15;

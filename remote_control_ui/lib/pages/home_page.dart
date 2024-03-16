@@ -17,18 +17,26 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> {
+  final PageStorageBucket _bucket = PageStorageBucket();
+
   //initialize controller for BLE widget
   final BLEcontroller myBLEController = BLEcontroller();
+
+  final remoteModeController myRemoteController = remoteModeController();
+
+  final autoModeController myAutoController = autoModeController();
 
   // for better scaling of widgets with different screen sizes
   late double _safeVertical;
   late double _safeHorizontal;
 
   //Use BLE widget controller to send data to BLE widget
-  void updateBLEwidget(List<int> message) {
+  void sendBLEwidget(List<int> message) {
     //Send message to BLE widget
     myBLEController.sendDataBLE(message);
   }
+
+  void sendToRemotePage() {}
 
   @override
   void initState() {
@@ -154,9 +162,10 @@ class HomePageState extends State<HomePage> {
             context,
             MaterialPageRoute(
               builder: (context) => RemotePage(
-                bLE: updateBLEwidget,
                 safeScreenHeight: _safeVertical,
                 safeScreenWidth: _safeHorizontal,
+                sendbLE: sendBLEwidget,
+                notifyController: myRemoteController,
               ),
             ),
           );
@@ -190,10 +199,14 @@ class HomePageState extends State<HomePage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => AutoPage(
-                bLE: updateBLEwidget,
-                safeScreenHeight: _safeVertical,
-                safeScreenWidth: _safeHorizontal,
+              builder: (context) => PageStorage(
+                bucket: _bucket,
+                child: AutoPage(
+                  safeScreenHeight: _safeVertical,
+                  safeScreenWidth: _safeHorizontal,
+                  sendbLE: sendBLEwidget,
+                  notifyController: myAutoController,
+                ),
               ),
             ),
           );

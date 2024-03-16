@@ -5,24 +5,39 @@ import 'dart:math';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:interactive_bottom_sheet/interactive_bottom_sheet.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart' show ByteData, Uint8List, rootBundle;
+import 'package:remote_control_ui/converter/data_converter.dart';
 import 'package:toggle_switch/toggle_switch.dart';
+import 'package:floating_snackbar/floating_snackbar.dart';
+import 'dart:ui' as ui;
+
+//controller for the BLE
+class autoModeController {
+  late void Function(Uint8List) notifyBLE;
+}
 
 class AutoPage extends StatefulWidget {
   final double safeScreenHeight;
   final double safeScreenWidth;
-  final Function(List<int>) bLE;
-  const AutoPage(
-      {super.key,
-      required this.safeScreenHeight,
-      required this.safeScreenWidth,
-      required this.bLE});
+  final Function(List<int>) sendbLE;
+  final autoModeController notifyController;
+  const AutoPage({
+    super.key,
+    required this.safeScreenHeight,
+    required this.safeScreenWidth,
+    required this.sendbLE,
+    required this.notifyController,
+  });
 
   @override
-  State<AutoPage> createState() => _AutoPageState();
+  State<AutoPage> createState() => _AutoPageState(notifyController);
 }
 
 class _AutoPageState extends State<AutoPage> {
+  _AutoPageState(autoModeController notifyController) {
+    notifyController.notifyBLE = autoModeNotifyBLE;
+  }
+
   // for better scaling of widgets with different screen sizes
   late double _safeVertical;
   late double _safeHorizontal;
@@ -38,16 +53,17 @@ class _AutoPageState extends State<AutoPage> {
   int maxMarkerToMarkerDistance = 100; //max 100 meters
   int maxMarkerToUserDistance = 1000; //1km
   Set<Marker> pathWaypoints = {};
-  BitmapDescriptor userIcon = BitmapDescriptor.defaultMarker;
-  BitmapDescriptor waypointsIcon = BitmapDescriptor.defaultMarker;
+  int markerCounter = 0;
+  late int userMarkerIndex;
+  late Uint8List userIcon;
+  late Uint8List markerIcon;
+  late Uint8List boatIcon;
+  late int boatMarkerIndex;
 
   List<LatLng> markersLatLng = [];
   Set<Polygon> polygonArea = HashSet<Polygon>();
   ValueNotifier<Color> polygonButtonColor = ValueNotifier<Color>(Colors.black);
   bool isPolygonsON = false;
-
-  Set<Circle> userCircle = {};
-
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Future _loadMapStyles() async {
@@ -64,13 +80,57 @@ class _AutoPageState extends State<AutoPage> {
     return await Geolocator.getCurrentPosition();
   }
 
-  void autoModeSendBLE(List<int> bLERemoteCommand) {
+  Future<Uint8List> getBytesFromAsset(String path, int width) async {
+    ByteData data = await rootBundle.load(path);
+    ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(),
+        targetWidth: width);
+    ui.FrameInfo fi = await codec.getNextFrame();
+    return (await fi.image.toByteData(format: ui.ImageByteFormat.png))!
+        .buffer
+        .asUint8List();
+  }
+
+  Future<void> setCustomMarkerIcon() async {
+    markerIcon = await getBytesFromAsset('assets/icons/pin.png', 200);
+    boatIcon = await getBytesFromAsset('assets/icons/boatboat.png', 150);
+    userIcon = await getBytesFromAsset('assets/icons/user.png', 150);
+  }
+
+  void autoModeSendBLE(var bLEAutoCommand, int dataType) {
+    int autoModeIdentifier = 0x02;
+
     debugPrint("Auto Mode BLE Callback Called");
-    debugPrint("$bLERemoteCommand");
+
+    Uint8List byteCommand;
+
+    //dataType = 0 indicates that sending integers (instructions)
+    //dataType = 1 indicates that sending doubles (waypoints)
+    if (dataType == 0) {
+      // Convert int list command to byte array
+      byteCommand = integerToByteArray(autoModeIdentifier, bLEAutoCommand);
+    } else {
+      // Convert int list command to byte array
+      byteCommand = doubleToByteArray(autoModeIdentifier, bLEAutoCommand);
+    }
 
     //remote control sends a list of integers
     //each integer represents an action
-    widget.bLE(bLERemoteCommand);
+    widget.sendbLE(byteCommand);
+  }
+
+  void autoModeNotifyBLE(Uint8List bLEAutoCommand) async {
+    await _addBoatMarker(const LatLng(2.9448078, 101.8744417));
+  }
+
+  void showSnackBar(String snackMssg, BuildContext context) {
+    FloatingSnackBar(
+      message: snackMssg,
+      context: context,
+      textColor: Colors.black,
+      // textStyle: const TextStyle(color: Colors.green),
+      duration: const Duration(milliseconds: 4000),
+      backgroundColor: const Color.fromARGB(255, 0, 221, 255),
+    );
   }
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -83,10 +143,13 @@ class _AutoPageState extends State<AutoPage> {
     _safeHorizontal = widget.safeScreenWidth;
 
     _loadMapStyles(); //load the dark mode map json file design
+
+    setCustomMarkerIcon(); //get the custom markers
+
     //set the map to user current location
     _getUserCurrentLocation().then((value) async {
       currentUserLatLng = value;
-      _addUserCircle(LatLng(value.latitude, value.longitude));
+      _addUserMarker(LatLng(value.latitude, value.longitude));
       setState(() {}); //refresh the map with user location
     });
   }
@@ -119,9 +182,6 @@ class _AutoPageState extends State<AutoPage> {
                       strokeWidth: 5,
                     ),
                   )
-                // : Container(
-                //     decoration: const BoxDecoration(color: Colors.blueGrey),
-                //   ),
                 : theMap(),
           ),
 
@@ -152,7 +212,7 @@ class _AutoPageState extends State<AutoPage> {
           Positioned(
             top: _safeVertical * 53,
             right: _safeHorizontal * 2,
-            child: _getUserLocationButton(),
+            child: _getBoatLocationButton(),
           ),
 
           Positioned(
@@ -224,9 +284,9 @@ class _AutoPageState extends State<AutoPage> {
       List<Marker> pathWaypointsList, BuildContext context) {
     return Expanded(
       child: ListView.builder(
-        itemCount: pathWaypointsList.length,
+        itemCount: markersLatLng.length,
         itemBuilder: (BuildContext context, int index) {
-          Marker marker = pathWaypointsList[index];
+          LatLng marker = markersLatLng[index];
           return Container(
             margin: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
             padding: const EdgeInsets.all(10.0),
@@ -257,7 +317,7 @@ class _AutoPageState extends State<AutoPage> {
                       child: OutlinedButton(
                         onPressed: () async {
                           Navigator.pop(context);
-                          await _locateMarker(marker.position);
+                          await _locateMarker(marker);
                         }, //do something here
                         style: OutlinedButton.styleFrom(
                           shape: RoundedRectangleBorder(
@@ -288,12 +348,12 @@ class _AutoPageState extends State<AutoPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "Latitude:\n${marker.position.latitude}",
+                        "Latitude:\n${marker.latitude}",
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                       Text(
-                        "Longitude:\n${marker.position.longitude}",
+                        "Longitude:\n${marker.longitude}",
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, color: Colors.white),
                       ),
@@ -464,17 +524,15 @@ class _AutoPageState extends State<AutoPage> {
   }
 
   double _calculateDistance() {
-    List<Marker> pathWaypointsList = pathWaypoints.toList();
-
     double totalDistance = 0;
-    for (int i = 0; i < pathWaypointsList.length; i++) {
-      if (i < pathWaypointsList.length - 1) {
+    for (int i = 0; i < markersLatLng.length; i++) {
+      if (i < markersLatLng.length - 1) {
         // skip the last index
         totalDistance += _getStraightLineDistance(
-            pathWaypointsList[i + 1].position.latitude,
-            pathWaypointsList[i + 1].position.longitude,
-            pathWaypointsList[i].position.latitude,
-            pathWaypointsList[i].position.longitude);
+            markersLatLng[i + 1].latitude,
+            markersLatLng[i + 1].longitude,
+            markersLatLng[i].latitude,
+            markersLatLng[i].longitude);
       }
     }
     return totalDistance;
@@ -561,9 +619,11 @@ class _AutoPageState extends State<AutoPage> {
                       setState(
                         () {
                           if (isWaypointsReady) {
-                            debugPrint("Will send data to Medium!!");
+                            showSnackBar(
+                                "Attempting to send to Medium...", context);
                           } else {
-                            debugPrint("Please confirm waypoints first!!");
+                            showSnackBar(
+                                "Please confirm waypoints first", context);
                           }
                         },
                       );
@@ -588,7 +648,9 @@ class _AutoPageState extends State<AutoPage> {
                     onPressed: () {
                       setState(
                         () {
-                          debugPrint("Cancelling ongoing operations!!");
+                          showSnackBar(
+                              "Attempting to cancel ongoing operations!",
+                              context);
                         },
                       );
                     },
@@ -633,10 +695,8 @@ class _AutoPageState extends State<AutoPage> {
       child: OutlinedButton(
         onPressed: () async {
           _getUserCurrentLocation().then((value) async {
-            debugPrint(
-                "User Current Location: ${value.latitude} , ${value.longitude}");
             currentUserLatLng = value; //update user current location
-            _addUserCircle(LatLng(value.latitude, value.longitude));
+            _addUserMarker(LatLng(value.latitude, value.longitude));
             _newCameraPosition(value);
           });
         },
@@ -653,36 +713,73 @@ class _AutoPageState extends State<AutoPage> {
     );
   }
 
-  void _addUserCircle(LatLng point) {
-    userCircle.clear();
+  void _addUserMarker(LatLng point) {
+    setState(
+      () {
+        userMarkerIndex = pathWaypoints.length;
+        // Create a new marker with a unique id and the given position
+        Marker marker = Marker(
+          markerId: const MarkerId("User"),
+          position: point,
+          //icon: BitmapDescriptor.fromBytes(iconDataToBytes(Icon(Icons.directions_boat_filled,))),
+          infoWindow: InfoWindow(
+              title: "Last updated user location",
+              snippet: "Lat: ${point.latitude}, Lng: ${point.longitude}"),
+          icon: BitmapDescriptor.fromBytes(userIcon),
+        );
+        // Add the marker to the set and update the state
+        setState(
+          () {
+            pathWaypoints.add(marker);
+          },
+        );
+      },
+    );
+  }
 
-    if (!isWaypointsReady) {
-      setState(
-        () {
-          Circle circles = Circle(
-            zIndex: 1000,
-            circleId: const CircleId('userCircle'),
-            center: LatLng(
-              point.latitude,
-              point.longitude,
-            ), // Replace with your current location
-            radius: 5, // Radius in meters
-            fillColor: Colors.black, // Blue fill color
-            strokeColor: Colors.red, // Black stroke color
-            strokeWidth: 4,
-          );
-
-          // Add the marker to the set and update the state
-          setState(
-            () {
-              userCircle.add(circles);
-            },
-          );
+  // created method for getting user current location
+  SizedBox _getBoatLocationButton() {
+    return SizedBox(
+      height: _safeVertical * 7,
+      width: _safeHorizontal * 20,
+      child: OutlinedButton(
+        onPressed: () async {
+          List<int> mssg = [0];
+          //do something in here
+          autoModeSendBLE(mssg, 0);
         },
-      );
-    } else {
-      debugPrint("Cannot add as waypoints confirmed!!");
-    }
+        style: OutlinedButton.styleFrom(
+          backgroundColor: Colors.black,
+          shape: const CircleBorder(),
+          side: const BorderSide(color: Colors.white),
+        ),
+        child: const Icon(
+          Icons.directions_boat_filled,
+          color: Colors.yellow,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _addBoatMarker(LatLng point) async {
+    boatMarkerIndex = pathWaypoints.length;
+
+    // Create a new marker with a unique id and the given position
+    Marker marker = Marker(
+      markerId: const MarkerId("Boatboat"),
+      position: point,
+      //icon: BitmapDescriptor.fromBytes(iconDataToBytes(Icon(Icons.directions_boat_filled,))),
+      infoWindow: InfoWindow(
+          title: "Last known Boatboat location",
+          snippet: "Lat: ${point.latitude}, Lng: ${point.longitude}"),
+      icon: BitmapDescriptor.fromBytes(boatIcon),
+    );
+    // Add the marker to the set and update the state
+    setState(
+      () {
+        pathWaypoints.add(marker);
+      },
+    );
   }
 
   Future<void> _newCameraPosition(Position value) async {
@@ -701,26 +798,23 @@ class _AutoPageState extends State<AutoPage> {
   }
 
   void _addMarkerToMap(LatLng point) {
-    //get how many markers have been dropped so far
-    int waypointNumber = pathWaypoints.length;
-
     if (!isWaypointsReady) {
       setState(
         () {
+          markerCounter++;
           // Create a new marker with a unique id and the given position
           Marker marker = Marker(
-            markerId: MarkerId("Waypoint No.${waypointNumber + 1}"),
+            markerId: MarkerId("Waypoint No.$markerCounter"),
             position: point,
             //icon: BitmapDescriptor.fromBytes(iconDataToBytes(Icon(Icons.directions_boat_filled,))),
             infoWindow: InfoWindow(
-                title: "Waypoint No.${waypointNumber + 1}",
+                title: "Waypoint No.$markerCounter",
                 snippet: "Lat: ${point.latitude}, Lng: ${point.longitude}"),
-            icon: waypointsIcon,
+            icon: BitmapDescriptor.fromBytes(markerIcon),
           );
           // Add the marker to the set and update the state
           setState(
             () {
-              debugPrint("Waypoint No.${waypointNumber + 1}");
               pathWaypoints.add(marker);
               markersLatLng.add(point);
             },
@@ -728,56 +822,28 @@ class _AutoPageState extends State<AutoPage> {
         },
       );
     } else {
-      debugPrint("Cannot add as waypoints confirmed!!");
+      showSnackBar("Cannot add as waypoints confirmed!", context);
     }
   }
 
   void _checkMarkerToUser(LatLng point) {
-    if (currentUserLatLng != null) {
-      //first marker can only be dropped about 1 km from user current location
-      //this is based on Medium's max comms range (1.1km)
-      //get the distance between user and the supposed first marker
-      double distance = Geolocator.distanceBetween(
-        currentUserLatLng!.latitude,
-        currentUserLatLng!.longitude,
-        point.latitude,
-        point.longitude,
-      );
-
-      //check the distance between the user and that supposed marker
-      //make sure the distance is less than or equals to 1 km
-      if (distance <= maxMarkerToUserDistance) {
-        //add that user marker to map
-        _addMarkerToMap(point);
-      } else {
-        debugPrint(
-            "Marker dropped further than $maxMarkerToUserDistance meters of user current location");
-      }
-    } else {
-      debugPrint("Unable to obtain user current location!!");
-    }
-  }
-
-  void _checkMarkerToMarker(LatLng point) {
-    //get the latest marker or the last marker
-    Marker lastMarker = pathWaypoints.last;
-
+    //first marker can only be dropped about 1 km from user current location
+    //this is based on Medium's max comms range (1.1km)
     //get the distance between user and the supposed first marker
     double distance = Geolocator.distanceBetween(
-      lastMarker.position.latitude,
-      lastMarker.position.longitude,
+      currentUserLatLng!.latitude,
+      currentUserLatLng!.longitude,
       point.latitude,
       point.longitude,
     );
 
     //check the distance between the user and that supposed marker
     //make sure the distance is less than or equals to 1 km
-    if (distance <= maxMarkerToMarkerDistance) {
+    if (distance <= maxMarkerToUserDistance) {
       //add that user marker to map
       _addMarkerToMap(point);
     } else {
-      debugPrint(
-          "Marker dropped further than $maxMarkerToMarkerDistance m than previous marker");
+      showSnackBar("Marker dropped further than 1 km of user", context);
     }
   }
 
@@ -794,13 +860,9 @@ class _AutoPageState extends State<AutoPage> {
               LatLng(currentUserLatLng!.latitude, currentUserLatLng!.longitude),
           zoom: 18),
       markers: pathWaypoints,
-      circles: userCircle,
       polygons: polygonArea,
-      onLongPress:
-          pathWaypoints.isEmpty ? _checkMarkerToUser : _checkMarkerToMarker,
+      onLongPress: _checkMarkerToUser,
       onMapCreated: (GoogleMapController controller) async {
-        debugPrint("Map initialized!");
-
         //assigning the controller
         _mapsController.complete(controller);
       },
@@ -883,7 +945,7 @@ class _AutoPageState extends State<AutoPage> {
                     polygonId: const PolygonId("Area of Measurement"),
                     points: markersLatLng,
                     fillColor: Colors.green.withOpacity(0.3),
-                    strokeColor: const Color.fromARGB(255, 96, 214, 99),
+                    strokeColor: Colors.red,
                     strokeWidth: 4,
                     geodesic: true,
                   ),
@@ -895,7 +957,7 @@ class _AutoPageState extends State<AutoPage> {
               }
             });
           } else {
-            debugPrint("Add at least 3 waypoints on map");
+            showSnackBar("Add at least 3 waypoints on map", context);
           }
         },
         style: OutlinedButton.styleFrom(
@@ -931,18 +993,21 @@ class _AutoPageState extends State<AutoPage> {
       child: OutlinedButton(
         onPressed: () {
           setState(() {
-            if (pathWaypoints.isNotEmpty && !isWaypointsReady) {
+            if (!isWaypointsReady) {
               pathWaypoints.clear();
+              markerCounter = 0;
+              markersLatLng.clear();
 
               //reset the toggle switch for waypoints
               waypointsReadyIndex = 1;
 
               //reset polygons to none
               if (polygonArea.isNotEmpty) {
-                markersLatLng.clear();
                 polygonArea.clear();
                 _changePolygonsButtonColor();
               }
+            } else {
+              showSnackBar("Cannot remove as waypoints confirmed!", context);
             }
           });
         },
