@@ -432,18 +432,30 @@ class RemotePageState extends State<RemotePage> {
       child: TextButton(
         style: TextButton.styleFrom(
           foregroundColor: Colors.black, // Text color
-          backgroundColor: Colors.purple, // Background color
+          backgroundColor: const Color(0xffC8D0C8), // Background color
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30), // Rounded corners
           ),
           // Add other properties as needed
         ),
-        onPressed: () {
-          // Send data through BLE
-          remoteModeSendBLE(bleStop);
-          updateLiveSettings("None", Colors.purple, "None", Colors.purple);
-          remoteModeSendBLE(bleMeasure);
-          showSnackBar("Initiating temperature measurement!", context);
+        onPressed: () async {
+          //Check if the boat has stopped or not
+          //If boat is still moving, it will instruct boat to stop first
+          //then send instruction to initiate temperature measurement
+          if (_liveMovement != 'None') {
+            remoteModeSendBLE(bleStop);
+            updateLiveSettings("None", Colors.purple, "None", Colors.purple);
+
+            //Have to add a 1 second delay before sending another instruction
+            Future.delayed(const Duration(microseconds: 1000), () {
+              remoteModeSendBLE(bleMeasure);
+              showSnackBar("Initiating temperature measurement!", context);
+            });
+          } else {
+            //Otherwise, boat already stopped so initiate temperature measurement
+            remoteModeSendBLE(bleMeasure);
+            showSnackBar("Initiating temperature measurement!", context);
+          }
         },
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -510,7 +522,7 @@ class RemotePageState extends State<RemotePage> {
       height: _safeVertical * 34,
       width: _safeHorizontal * 40,
       decoration: BoxDecoration(
-        color: const Color(0xffC8D0C8),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(30),
       ),
       child: Column(

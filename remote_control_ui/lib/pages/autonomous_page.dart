@@ -280,8 +280,7 @@ class _AutoPageState extends State<AutoPage> {
     setState(() {});
   }
 
-  Expanded _waypointListBuilder(
-      List<Marker> pathWaypointsList, BuildContext context) {
+  Expanded _waypointListBuilder(BuildContext context) {
     return Expanded(
       child: ListView.builder(
         itemCount: markersLatLng.length,
@@ -369,7 +368,6 @@ class _AutoPageState extends State<AutoPage> {
   }
 
   Container _waypointsListViewerSection(BuildContext context) {
-    List<Marker> pathWaypointsList = pathWaypoints.toList();
     return Container(
         height: _safeVertical * 31,
         width: _safeHorizontal * 90,
@@ -438,7 +436,7 @@ class _AutoPageState extends State<AutoPage> {
               ),
               SizedBox(
                 child: Text(
-                  "Number of waypoints: ${pathWaypointsList.length}",
+                  "Number of waypoints: ${markersLatLng.length}",
                   style: TextStyle(
                       fontSize: _safeHorizontal * 4, color: Colors.red),
                 ),
@@ -451,12 +449,12 @@ class _AutoPageState extends State<AutoPage> {
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                     color: Colors.black),
-                child: (pathWaypointsList.isNotEmpty)
+                child: (markersLatLng.isNotEmpty)
                     ? (!isWaypointsReady)
                         ? Flex(
                             direction: Axis.vertical,
                             children: [
-                              _waypointListBuilder(pathWaypointsList, context),
+                              _waypointListBuilder(context),
                             ],
                           )
                         : Center(
