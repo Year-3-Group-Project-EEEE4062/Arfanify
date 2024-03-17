@@ -43,6 +43,7 @@ class RemotePageState extends State<RemotePage> {
   ];
 
   List<int> bleStop = [0];
+  List<int> bleMeasure = [1];
 
   String _status = 'Slow';
   Color _statusColor = Colors.green;
@@ -140,7 +141,7 @@ class RemotePageState extends State<RemotePage> {
               Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  featuresLayout(),
+                  measureButton(),
                   SizedBox(height: _safeVertical * 2), //just empty space
                   stopButton(),
                 ],
@@ -155,155 +156,26 @@ class RemotePageState extends State<RemotePage> {
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  Container featuresLayout() {
-    return Container(
-      height: _safeVertical * 25,
-      width: _safeHorizontal * 40,
-      decoration: BoxDecoration(
-        color: const Color(0xffC8D0C8),
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                "Live Settings",
-                style: TextStyle(
-                    fontSize: _safeHorizontal * 6,
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          Container(
-            height: _safeVertical * 8,
-            width: _safeHorizontal * 35,
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10), color: Colors.black),
-            child: Padding(
-              padding: const EdgeInsets.all(5),
-              child: liveMotionBar(),
-            ),
-          ),
-          Container(
-            height: _safeVertical * 8,
-            width: _safeHorizontal * 35,
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10), color: Colors.black),
-            child: Padding(
-              padding: const EdgeInsets.all(5),
-              child: liveMovementBar(),
-            ),
-          ),
-          SizedBox(height: _safeVertical * 2), //just empty space
-        ],
-      ),
-    );
-  }
-
-  Column liveMotionBar() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            SizedBox(width: _safeHorizontal * 2),
-            Text(
-              'Motion: ',
-              style: TextStyle(
-                  fontSize: _safeHorizontal * 5,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
-            ),
-          ],
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            SizedBox(width: _safeHorizontal * 5),
-            Text(
-              _liveMotion,
-              style: TextStyle(
-                  fontSize: _safeHorizontal * 5, color: __liveMotionColor),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Column liveMovementBar() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            SizedBox(width: _safeHorizontal * 2),
-            Text(
-              'Movement: ',
-              style: TextStyle(
-                  fontSize: _safeHorizontal * 5,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white),
-            ),
-          ],
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            SizedBox(width: _safeHorizontal * 5),
-            Text(
-              _liveMovement,
-              style: TextStyle(
-                  fontSize: _safeHorizontal * 5, color: __liveMovementColor),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  SizedBox stopButton() {
+  SizedBox remotePageTitle() {
     return SizedBox(
-      height: _safeVertical * 15,
-      width: _safeHorizontal * 40,
-      child: TextButton(
-        style: TextButton.styleFrom(
-          foregroundColor: Colors.white, // Text color
-          backgroundColor: Colors.red, // Background color
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30), // Rounded corners
+      height: _safeVertical * 7,
+      width: _safeHorizontal * 35,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          ImageIcon(
+            const AssetImage('assets/icons/arfanify.png'),
+            color: Colors.white,
+            size: _safeVertical * 10,
           ),
-          // Add other properties as needed
-        ),
-        onPressed: () {
-          // Send data through BLE
-          remoteModeSendBLE(bleStop);
-          updateLiveSettings("None", Colors.purple, "None", Colors.purple);
-        },
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.remove_circle_outline, // Your desired icon
-              size: _safeVertical * 7,
+          Text(
+            '> Remote',
+            style: TextStyle(
+              fontSize: _safeVertical * 2,
+              color: Colors.white,
             ),
-            SizedBox(width: _safeHorizontal * 2),
-            Text(
-              'STOP', // Your label text
-              style: TextStyle(
-                  color: Colors.white,
-                  fontSize: _safeVertical * 4), // Customize label style
-            ),
-          ],
-        ),
+          )
+        ],
       ),
     );
   }
@@ -339,34 +211,9 @@ class RemotePageState extends State<RemotePage> {
   }
 
   //////////////////////////////////////////////////////////////////////////////
-  SizedBox remotePageTitle() {
-    return SizedBox(
-      height: _safeVertical * 7,
-      width: _safeHorizontal * 35,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Icon(
-            Icons.settings_remote_sharp,
-            color: Colors.white,
-            size: _safeVertical * 5,
-          ),
-          Text(
-            '> Remote',
-            style: TextStyle(
-              fontSize: _safeVertical * 2,
-              color: Colors.white,
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
   Container motionLayout() {
     return Container(
-      height: _safeVertical * 42,
+      height: _safeVertical * 51,
       width: _safeHorizontal * 84,
       decoration: BoxDecoration(
         color: const Color.fromARGB(255, 33, 33, 33),
@@ -381,6 +228,34 @@ class RemotePageState extends State<RemotePage> {
             modeGauge(),
             modeBar(),
             modeSetter(),
+            SizedBox(height: _safeVertical),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  height: _safeVertical * 8,
+                  width: _safeHorizontal * 35,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.black),
+                  child: Padding(
+                    padding: const EdgeInsets.all(5),
+                    child: liveMotionBar(),
+                  ),
+                ),
+                Container(
+                  height: _safeVertical * 8,
+                  width: _safeHorizontal * 35,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.black),
+                  child: Padding(
+                    padding: const EdgeInsets.all(5),
+                    child: liveMovementBar(),
+                  ),
+                ),
+              ],
+            )
           ],
         ),
       ),
@@ -389,7 +264,7 @@ class RemotePageState extends State<RemotePage> {
 
   SizedBox modeGauge() {
     return SizedBox(
-      height: _safeVertical * 27,
+      height: _safeVertical * 25,
       child: SfRadialGauge(
         axes: <RadialAxis>[
           RadialAxis(
@@ -415,7 +290,7 @@ class RemotePageState extends State<RemotePage> {
     return SliderTheme(
       data: const SliderThemeData(
         thumbColor: Colors.white,
-        thumbShape: RoundSliderThumbShape(enabledThumbRadius: 20),
+        thumbShape: RoundSliderThumbShape(enabledThumbRadius: 15),
         activeTrackColor: Color(0xff545454),
         inactiveTrackColor: Colors.grey,
         inactiveTickMarkColor: Colors.white,
@@ -485,10 +360,154 @@ class RemotePageState extends State<RemotePage> {
     );
   }
 
+  Column liveMotionBar() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            SizedBox(width: _safeHorizontal * 2),
+            Text(
+              'Motion: ',
+              style: TextStyle(
+                  fontSize: _safeHorizontal * 5,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
+            ),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            SizedBox(width: _safeHorizontal * 5),
+            Text(
+              _liveMotion,
+              style: TextStyle(
+                  fontSize: _safeHorizontal * 5, color: __liveMotionColor),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Column liveMovementBar() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            SizedBox(width: _safeHorizontal * 2),
+            Text(
+              'Movement: ',
+              style: TextStyle(
+                  fontSize: _safeHorizontal * 5,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
+            ),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            SizedBox(width: _safeHorizontal * 5),
+            Text(
+              _liveMovement,
+              style: TextStyle(
+                  fontSize: _safeHorizontal * 5, color: __liveMovementColor),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  SizedBox measureButton() {
+    return SizedBox(
+      height: _safeVertical * 16,
+      width: _safeHorizontal * 40,
+      child: TextButton(
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.black, // Text color
+          backgroundColor: Colors.purple, // Background color
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30), // Rounded corners
+          ),
+          // Add other properties as needed
+        ),
+        onPressed: () {
+          // Send data through BLE
+          remoteModeSendBLE(bleStop);
+          updateLiveSettings("None", Colors.purple, "None", Colors.purple);
+          remoteModeSendBLE(bleMeasure);
+          showSnackBar("Initiating temperature measurement!", context);
+        },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ImageIcon(
+              const AssetImage('assets/icons/temperature.png'),
+              size: _safeVertical * 10,
+            ),
+            Text(
+              'Measure', // Your label text
+              style: TextStyle(
+                  color: Colors.black,
+                  fontSize: _safeVertical * 3), // Customize label style
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  SizedBox stopButton() {
+    return SizedBox(
+      height: _safeVertical * 15,
+      width: _safeHorizontal * 40,
+      child: TextButton(
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.black, // Text color
+          backgroundColor: Colors.red, // Background color
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30), // Rounded corners
+          ),
+          // Add other properties as needed
+        ),
+        onPressed: () {
+          // Send data through BLE
+          remoteModeSendBLE(bleStop);
+          updateLiveSettings("None", Colors.purple, "None", Colors.purple);
+        },
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.remove_circle_outline, // Your desired icon
+              size: _safeVertical * 7,
+            ),
+            SizedBox(width: _safeHorizontal * 2),
+            Text(
+              'STOP', // Your label text
+              style: TextStyle(
+                  color: Colors.black,
+                  fontSize: _safeVertical * 4), // Customize label style
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   //////////////////////////////////////////////////////////////////////////////
   Container movementsLayout() {
     return Container(
-      height: _safeVertical * 42,
+      height: _safeVertical * 34,
       width: _safeHorizontal * 40,
       decoration: BoxDecoration(
         color: const Color(0xffC8D0C8),
@@ -552,7 +571,7 @@ class RemotePageState extends State<RemotePage> {
 
   SizedBox forwardMovement() {
     return SizedBox(
-      height: _safeVertical * 11,
+      height: _safeVertical * 9,
       width: _safeHorizontal * 15,
       child: FloatingActionButton(
         heroTag: null,
@@ -577,7 +596,7 @@ class RemotePageState extends State<RemotePage> {
 
   SizedBox backwardsMovement() {
     return SizedBox(
-      height: _safeVertical * 11,
+      height: _safeVertical * 9,
       width: _safeHorizontal * 15,
       child: FloatingActionButton(
         heroTag: null,
@@ -606,7 +625,7 @@ class RemotePageState extends State<RemotePage> {
 
   SizedBox rightMovement() {
     return SizedBox(
-      height: _safeVertical * 12,
+      height: _safeVertical * 9,
       width: _safeHorizontal * 15,
       child: FloatingActionButton(
         heroTag: null,
@@ -635,7 +654,7 @@ class RemotePageState extends State<RemotePage> {
 
   SizedBox leftMovement() {
     return SizedBox(
-      height: _safeVertical * 12,
+      height: _safeVertical * 9,
       width: _safeHorizontal * 15,
       child: FloatingActionButton(
         heroTag: null,

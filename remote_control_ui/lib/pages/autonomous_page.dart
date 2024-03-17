@@ -879,10 +879,10 @@ class _AutoPageState extends State<AutoPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          Icon(
-            Icons.map_outlined,
+          ImageIcon(
+            const AssetImage('assets/icons/arfanify.png'),
             color: Colors.white,
-            size: _safeVertical * 5,
+            size: _safeVertical * 10,
           ),
           Text(
             '> Auto',
