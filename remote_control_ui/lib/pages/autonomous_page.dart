@@ -12,21 +12,24 @@ import 'package:floating_snackbar/floating_snackbar.dart';
 import 'dart:ui' as ui;
 
 //controller for the BLE
-class autoModeController {
-  late void Function(Uint8List) notifyBLE;
+class AutoModeController {
+  late void Function(List<dynamic>) notifyBLE;
+  void Function(bool)? bleStat;
 }
 
 class AutoPage extends StatefulWidget {
   final double safeScreenHeight;
   final double safeScreenWidth;
+  final bool bleStat;
   final Function(List<int>) sendbLE;
-  final autoModeController notifyController;
+  final AutoModeController notifyController;
   const AutoPage({
     super.key,
     required this.safeScreenHeight,
     required this.safeScreenWidth,
     required this.sendbLE,
     required this.notifyController,
+    required this.bleStat,
   });
 
   @override
@@ -34,13 +37,16 @@ class AutoPage extends StatefulWidget {
 }
 
 class _AutoPageState extends State<AutoPage> {
-  _AutoPageState(autoModeController notifyController) {
+  _AutoPageState(AutoModeController notifyController) {
     notifyController.notifyBLE = autoModeNotifyBLE;
+    notifyController.bleStat = updateBLEStat;
   }
 
   // for better scaling of widgets with different screen sizes
   late double _safeVertical;
   late double _safeHorizontal;
+
+  late IconData bleStatLogo;
 
   //Boolean to determine user has confirmed parameters for auto mode
   bool isWaypointsReady = false;
@@ -96,6 +102,19 @@ class _AutoPageState extends State<AutoPage> {
     userIcon = await getBytesFromAsset('assets/icons/user.png', 150);
   }
 
+  void updateBLEStat(bool status) {
+    //first check if this widget mounted in widget tree or not
+    if (mounted) {
+      setState(() {
+        if (status) {
+          bleStatLogo = Icons.bluetooth_connected;
+        } else {
+          bleStatLogo = Icons.bluetooth_disabled;
+        }
+      });
+    }
+  }
+
   void autoModeSendBLE(var bLEAutoCommand, int dataType) {
     int autoModeIdentifier = 0x02;
 
@@ -118,8 +137,20 @@ class _AutoPageState extends State<AutoPage> {
     widget.sendbLE(byteCommand);
   }
 
-  void autoModeNotifyBLE(Uint8List bLEAutoCommand) async {
-    await _addBoatMarker(const LatLng(2.9448078, 101.8744417));
+  void autoModeNotifyBLE(List<dynamic> notifybLEAuto) async {
+    debugPrint("New data for auto page");
+    // await _addBoatMarker(const LatLng(2.9448078, 101.8744417));
+    // await _newCameraPosition(const LatLng(2.9448078, 101.8744417));
+    debugPrint("${notifybLEAuto[0]}");
+    debugPrint("Data type: ${notifybLEAuto[0].runtimeType}");
+    //Check what type of message is it
+    if (notifybLEAuto[0] == 0) {
+      List<double> boatCoordinates = notifybLEAuto[1];
+      LatLng boatLatLng = LatLng(boatCoordinates[0], boatCoordinates[1]);
+      //means it is the location of the boat
+      await _addBoatMarker(boatLatLng);
+      await _newCameraPosition(boatLatLng);
+    }
   }
 
   void showSnackBar(String snackMssg, BuildContext context) {
@@ -141,6 +172,13 @@ class _AutoPageState extends State<AutoPage> {
     // initialize the variables
     _safeVertical = widget.safeScreenHeight;
     _safeHorizontal = widget.safeScreenWidth;
+
+    //Set ble icon status
+    if (widget.bleStat) {
+      bleStatLogo = Icons.bluetooth_connected;
+    } else {
+      bleStatLogo = Icons.bluetooth_disabled;
+    }
 
     _loadMapStyles(); //load the dark mode map json file design
 
@@ -191,8 +229,18 @@ class _AutoPageState extends State<AutoPage> {
             right: _safeHorizontal * 1,
             child: SizedBox(
               height: _safeVertical * 7,
-              width: _safeHorizontal * 20,
-              child: homeButton(context),
+              width: _safeHorizontal * 48,
+              child: SizedBox(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    bleStatus(),
+                    SizedBox(width: _safeHorizontal * 3), //just empty space
+                    homeButton(context),
+                    SizedBox(width: _safeHorizontal * 1),
+                  ],
+                ),
+              ),
             ),
           ),
           //For positioning the title of the page
@@ -695,7 +743,7 @@ class _AutoPageState extends State<AutoPage> {
           _getUserCurrentLocation().then((value) async {
             currentUserLatLng = value; //update user current location
             _addUserMarker(LatLng(value.latitude, value.longitude));
-            _newCameraPosition(value);
+            _newCameraPosition(LatLng(value.latitude, value.longitude));
           });
         },
         style: OutlinedButton.styleFrom(
@@ -780,10 +828,10 @@ class _AutoPageState extends State<AutoPage> {
     );
   }
 
-  Future<void> _newCameraPosition(Position value) async {
+  Future<void> _newCameraPosition(LatLng value) async {
     // create a new camera position with respect to the user's location
     CameraPosition cameraPosition = CameraPosition(
-      target: LatLng(value.latitude, value.longitude),
+      target: value,
       zoom: 18,
     );
 
@@ -872,20 +920,18 @@ class _AutoPageState extends State<AutoPage> {
 //Title of the page
   SizedBox autoPageTitle() {
     return SizedBox(
-      height: _safeVertical * 7,
-      width: _safeHorizontal * 30,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           ImageIcon(
             const AssetImage('assets/icons/arfanify.png'),
             color: Colors.white,
-            size: _safeVertical * 10,
+            size: _safeVertical * 8,
           ),
           Text(
             '> Auto',
             style: TextStyle(
-              fontSize: _safeVertical * 2,
+              fontSize: _safeVertical * 3,
               color: Colors.white,
             ),
           )
@@ -896,6 +942,21 @@ class _AutoPageState extends State<AutoPage> {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  SizedBox bleStatus() {
+    return SizedBox(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Icon(
+            bleStatLogo,
+            color: Colors.white,
+            size: _safeVertical * 5,
+          ),
+        ],
+      ),
+    );
+  }
+
 //home button to return back to home page
   OutlinedButton homeButton(BuildContext context) {
     return OutlinedButton(

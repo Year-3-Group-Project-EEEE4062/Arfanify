@@ -5,21 +5,24 @@ import 'package:remote_control_ui/converter/data_converter.dart';
 import 'package:floating_snackbar/floating_snackbar.dart';
 
 //controller for the BLE
-class remoteModeController {
-  late void Function(Uint8List) notifyBLE;
+class RemoteModeController {
+  late void Function(List<dynamic>) notifyBLE;
+  void Function(bool)? bleStat;
 }
 
 class RemotePage extends StatefulWidget {
   final double safeScreenHeight;
   final double safeScreenWidth;
+  final bool bleStat;
   final Function(List<int>) sendbLE;
-  final remoteModeController notifyController;
+  final RemoteModeController notifyController;
   const RemotePage({
     super.key,
     required this.sendbLE,
     required this.safeScreenHeight,
     required this.safeScreenWidth,
     required this.notifyController,
+    required this.bleStat,
   });
 
   @override
@@ -27,8 +30,9 @@ class RemotePage extends StatefulWidget {
 }
 
 class RemotePageState extends State<RemotePage> {
-  RemotePageState(remoteModeController notifyController) {
+  RemotePageState(RemoteModeController notifyController) {
     notifyController.notifyBLE = remoteModeNotifyBLE;
+    notifyController.bleStat = updateBLEStat;
   }
 
   int _motion = 0;
@@ -54,6 +58,8 @@ class RemotePageState extends State<RemotePage> {
   String _liveMovement = 'None';
   Color __liveMovementColor = Colors.red;
 
+  late IconData bleStatLogo;
+
   // for better scaling of widgets with different screen sizes
   late double _safeVertical;
   late double _safeHorizontal;
@@ -75,7 +81,20 @@ class RemotePageState extends State<RemotePage> {
     widget.sendbLE(byteCommand);
   }
 
-  void remoteModeNotifyBLE(Uint8List bLEAutoCommand) {}
+  void remoteModeNotifyBLE(List<dynamic> notifybLERemote) {}
+
+  void updateBLEStat(bool status) {
+    //first check if this widget mounted in widget tree or not
+    if (mounted) {
+      setState(() {
+        if (status) {
+          bleStatLogo = Icons.bluetooth_connected;
+        } else {
+          bleStatLogo = Icons.bluetooth_disabled;
+        }
+      });
+    }
+  }
 
   void showSnackBar(String snackMssg, BuildContext context) {
     FloatingSnackBar(
@@ -94,6 +113,12 @@ class RemotePageState extends State<RemotePage> {
   @override
   void initState() {
     super.initState();
+
+    if (widget.bleStat) {
+      bleStatLogo = Icons.bluetooth_connected;
+    } else {
+      bleStatLogo = Icons.bluetooth_disabled;
+    }
 
     // initialize the variables
     _safeVertical = widget.safeScreenHeight;
@@ -124,13 +149,23 @@ class RemotePageState extends State<RemotePage> {
               remotePageTitle(),
               SizedBox(
                 height: _safeVertical * 7,
-                width: _safeHorizontal * 20,
-                child: homeButton(context),
+                width: _safeHorizontal * 48,
+                child: SizedBox(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      bleStatus(),
+                      SizedBox(width: _safeHorizontal * 3), //just empty space
+                      homeButton(context),
+                      SizedBox(width: _safeHorizontal * 1),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
           SizedBox(
-            height: _safeVertical * 3,
+            height: _safeVertical * 1,
           ),
           motionLayout(),
           SizedBox(height: _safeVertical * 2), //just empty space
@@ -158,23 +193,37 @@ class RemotePageState extends State<RemotePage> {
   //////////////////////////////////////////////////////////////////////////////
   SizedBox remotePageTitle() {
     return SizedBox(
-      height: _safeVertical * 7,
-      width: _safeHorizontal * 35,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           ImageIcon(
             const AssetImage('assets/icons/arfanify.png'),
             color: Colors.white,
-            size: _safeVertical * 10,
+            size: _safeVertical * 8,
           ),
           Text(
             '> Remote',
             style: TextStyle(
-              fontSize: _safeVertical * 2,
+              fontSize: _safeVertical * 3,
               color: Colors.white,
             ),
           )
+        ],
+      ),
+    );
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+  SizedBox bleStatus() {
+    return SizedBox(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Icon(
+            bleStatLogo,
+            color: Colors.white,
+            size: _safeVertical * 5,
+          ),
         ],
       ),
     );
@@ -597,6 +646,10 @@ class RemotePageState extends State<RemotePage> {
           ),
         ),
         onPressed: () {
+          // Change the bleModeMovement index
+          bleModeMovement[0] = 0;
+          bleModeMovement[1] = (_motion + 1) * 15;
+
           // Send data through BLE
           remoteModeSendBLE(bleModeMovement);
 

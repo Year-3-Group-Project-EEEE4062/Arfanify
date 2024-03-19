@@ -16,11 +16,18 @@ class AppBarBLE extends StatefulWidget {
   final BLEcontroller bleController;
   final double safeScreenHeight;
   final double safeScreenWidth;
-  const AppBarBLE(
-      {super.key,
-      required this.bleController,
-      required this.safeScreenHeight,
-      required this.safeScreenWidth});
+  final Function(bool) bleStat;
+  final Function(List<dynamic>) notifyRemoteCB;
+  final Function(List<dynamic>) notifyAutoCB;
+  const AppBarBLE({
+    super.key,
+    required this.bleController,
+    required this.safeScreenHeight,
+    required this.safeScreenWidth,
+    required this.bleStat,
+    required this.notifyRemoteCB,
+    required this.notifyAutoCB,
+  });
 
   @override
   State<AppBarBLE> createState() => AppBarBLEState(bleController);
@@ -77,20 +84,43 @@ class AppBarBLEState extends State<AppBarBLE> {
     _services.clear(); //reset services as Bluetooth state changes
     deviceFound = false; //reset back to medium not found
     deviceConnected = false; //reset back to medium not connected
+    updateHomePageBLEStat();
+  }
+
+  //update home page ble status
+  void updateHomePageBLEStat() {
+    widget.bleStat(deviceConnected);
   }
 
   //this function can only be called by main_page.dart
   //other pages have to go through main_page.dart to call this function to send data to Medium
-  void sendDataBLE(List<int> dataToBeSent) async {
+  void sendDataBLE(List<int> dataToBeSent) {
     if (deviceConnected) {
       writeCharacteristics(dataToBeSent);
       editActionMssg("Sent BLE\nmessage");
-      debugPrint("Sent: $dataToBeSent");
     }
   }
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  //Notify revelevant pages of new data
+  void notifyDataBLE(List<int> notifyMessage) {
+    //convert to uint
+    final Uint8List data = Uint8List.fromList(notifyMessage);
+    List<dynamic> decodedData = decodeData(data);
+
+    //give decoded data back to home page to send to revelant pages
+    if (data[0] == 0x01) {
+      debugPrint("It's remote mode!!");
+      widget.notifyRemoteCB(decodedData);
+    } else if (data[1] == 0x02) {
+      debugPrint("It's auto mode!!");
+      widget.notifyAutoCB(decodedData);
+    } else {
+      debugPrint("Invalid mode from boat");
+    }
+  }
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   bool checkAdapterState() {
     if (_adapterState == BluetoothAdapterState.on) {
       //this pass means bluetooth is ON
@@ -448,7 +478,9 @@ class AppBarBLEState extends State<AppBarBLE> {
       //   - anytime a notification arrives (if subscribed)
       //debug print what was notified by characteristic
       debugPrint("Notify Data type: ${value.runtimeType}");
+      debugPrint("${value.length}");
       debugPrint("Notify: $value");
+      notifyDataBLE(value);
     });
 
     // subscribe
@@ -526,6 +558,8 @@ class AppBarBLEState extends State<AppBarBLE> {
 
               //set that Medium has been found
               deviceConnected = true;
+
+              updateHomePageBLEStat();
             });
           }
           // listen for disconnection
