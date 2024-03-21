@@ -70,6 +70,8 @@ class _AutoPageState extends State<AutoPage> {
   Set<Polygon> polygonArea = HashSet<Polygon>();
   ValueNotifier<Color> polygonButtonColor = ValueNotifier<Color>(Colors.black);
   bool isPolygonsON = false;
+
+  Timer? sendTimer;
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Future _loadMapStyles() async {
@@ -138,18 +140,24 @@ class _AutoPageState extends State<AutoPage> {
   }
 
   void autoModeNotifyBLE(List<dynamic> notifybLEAuto) async {
-    debugPrint("New data for auto page");
-    // await _addBoatMarker(const LatLng(2.9448078, 101.8744417));
-    // await _newCameraPosition(const LatLng(2.9448078, 101.8744417));
-    debugPrint("${notifybLEAuto[0]}");
-    debugPrint("Data type: ${notifybLEAuto[0].runtimeType}");
-    //Check what type of message is it
-    if (notifybLEAuto[0] == 0) {
-      List<double> boatCoordinates = notifybLEAuto[1];
-      LatLng boatLatLng = LatLng(boatCoordinates[0], boatCoordinates[1]);
-      //means it is the location of the boat
-      await _addBoatMarker(boatLatLng);
-      await _newCameraPosition(boatLatLng);
+    // First check if auto page mounted or not
+    if (mounted) {
+      debugPrint("New data for auto page");
+      debugPrint("${notifybLEAuto[0]}");
+      debugPrint("Data type: ${notifybLEAuto[0].runtimeType}");
+
+      //Check what type of message is it
+      if (notifybLEAuto[0] == 0) {
+        List<double> boatCoordinates = notifybLEAuto[1];
+        LatLng boatLatLng = LatLng(boatCoordinates[0], boatCoordinates[1]);
+
+        //means it is the location of the boat
+        await _addBoatMarker(boatLatLng);
+        await _newCameraPosition(boatLatLng);
+      } else if (notifybLEAuto[0] == 1) {
+        List<int> current = notifybLEAuto[1];
+        showSnackBar("Succesfuly sent waypoint No.${current[0]}", context);
+      }
     }
   }
 
@@ -159,7 +167,7 @@ class _AutoPageState extends State<AutoPage> {
       context: context,
       textColor: Colors.black,
       // textStyle: const TextStyle(color: Colors.green),
-      duration: const Duration(milliseconds: 4000),
+      duration: const Duration(milliseconds: 2000),
       backgroundColor: const Color.fromARGB(255, 0, 221, 255),
     );
   }
@@ -285,7 +293,7 @@ class _AutoPageState extends State<AutoPage> {
   InteractiveBottomSheet autoBottomSheet(BuildContext context) {
     return InteractiveBottomSheet(
       options: InteractiveBottomSheetOptions(
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.white,
         maxSize: _safeVertical * 0.09,
         snapList: [0.25, _safeVertical * 0.09],
       ),
@@ -638,7 +646,7 @@ class _AutoPageState extends State<AutoPage> {
                     decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
                         color: Colors.black),
-                    child: (pathWaypoints.length >= 2)
+                    child: (markersLatLng.length >= 2)
                         ? _summaryContent()
                         : Center(
                             child: Text("Place at least 2 waypoints!",
@@ -657,65 +665,110 @@ class _AutoPageState extends State<AutoPage> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                SizedBox(
-                  height: _safeVertical * 5,
-                  width: _safeHorizontal * 35,
-                  child: OutlinedButton(
-                    onPressed: () {
-                      setState(
-                        () {
-                          if (isWaypointsReady) {
-                            showSnackBar(
-                                "Attempting to send to Medium...", context);
-                          } else {
-                            showSnackBar(
-                                "Please confirm waypoints first", context);
-                          }
-                        },
-                      );
-                    },
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: sendButtonColor(),
-                      side: const BorderSide(color: Colors.black),
-                    ),
-                    child: const Text(
-                      "Send",
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  height: _safeVertical * 5,
-                  width: _safeHorizontal * 35,
-                  child: OutlinedButton(
-                    onPressed: () {
-                      setState(
-                        () {
-                          showSnackBar(
-                              "Attempting to cancel ongoing operations!",
-                              context);
-                        },
-                      );
-                    },
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      side: const BorderSide(color: Colors.black),
-                    ),
-                    child: const Text(
-                      "Cancel",
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ),
-                ),
+                sendButton(context),
+                cancelButton(context),
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  SizedBox cancelButton(BuildContext context) {
+    return SizedBox(
+      height: _safeVertical * 5,
+      width: _safeHorizontal * 35,
+      child: OutlinedButton(
+        onPressed: () {
+          setState(
+            () {
+              showSnackBar("Attempting to cancel ongoing operations!", context);
+
+              // Cancel the timer that sends out waypoint periodically
+              sendTimer?.cancel();
+
+              // Send out cancel instruction to boat
+              //Send BLE to let user know how many
+              autoModeSendBLE([2], 0);
+            },
+          );
+        },
+        style: OutlinedButton.styleFrom(
+          backgroundColor: Colors.red,
+          side: const BorderSide(color: Colors.black),
+        ),
+        child: const Text(
+          "Cancel",
+          style: TextStyle(
+            fontSize: 15,
+            color: Colors.black,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> sendWaypoints(List<List<double>> doubleTypeWaypoint) async {
+    //Send BLE to let user know how many
+    autoModeSendBLE([1, doubleTypeWaypoint.length], 0);
+
+    // Add 2 second delay asynchronously before setting a periodic timer to send
+    // waypoints every 2 seconds
+    Future.delayed(const Duration(microseconds: 2000), () {
+      debugPrint("Started!!");
+      sendTimer = Timer.periodic(
+        const Duration(seconds: 3),
+        (timer) {
+          if (timer.tick <= doubleTypeWaypoint.length) {
+            debugPrint("Sending: ${doubleTypeWaypoint[timer.tick - 1]}");
+            autoModeSendBLE(doubleTypeWaypoint[timer.tick - 1], 1);
+          } else {
+            timer.cancel();
+          }
+        },
+      );
+    });
+  }
+
+  Future<List<List<double>>> packWaypoints() async {
+    List<List<double>> latLngList = [];
+
+    for (int i = 0; i < markersLatLng.length; i++) {
+      latLngList.add([markersLatLng[i].latitude, markersLatLng[i].longitude]);
+    }
+
+    return latLngList;
+  }
+
+  SizedBox sendButton(BuildContext context) {
+    return SizedBox(
+      height: _safeVertical * 5,
+      width: _safeHorizontal * 35,
+      child: OutlinedButton(
+        onPressed: () async {
+          if (isWaypointsReady) {
+            showSnackBar("Attempting to send to Medium...", context);
+
+            //pack the waypoints from LatLng to type of 2D double list
+            List<List<double>> doubleTypeWaypoint = await packWaypoints();
+
+            //function to send BLE data with 1 second delay in between
+            await sendWaypoints(doubleTypeWaypoint);
+          } else {
+            showSnackBar("Please confirm waypoints first", context);
+          }
+        },
+        style: OutlinedButton.styleFrom(
+          backgroundColor: sendButtonColor(),
+          side: const BorderSide(color: Colors.black),
+        ),
+        child: const Text(
+          "Send",
+          style: TextStyle(
+            fontSize: 15,
+            color: Colors.white,
+          ),
         ),
       ),
     );
@@ -793,6 +846,7 @@ class _AutoPageState extends State<AutoPage> {
           List<int> mssg = [0];
           //do something in here
           autoModeSendBLE(mssg, 0);
+          showSnackBar("Fetching boat location...", context);
         },
         style: OutlinedButton.styleFrom(
           backgroundColor: Colors.black,

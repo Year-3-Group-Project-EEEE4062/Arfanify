@@ -85,7 +85,7 @@ Uint8List integerToByteArray(int modeIdentifier, List<int> dataToBeSent) {
 
 List<dynamic> decodeData(Uint8List mssg) {
   // To store decoded data later
-  List<dynamic> decoded = [0];
+  List<dynamic> decoded = [];
   // data type identifier
   const int integerIdentifier = 0x01;
   const int doubleIdentifier = 0x02;

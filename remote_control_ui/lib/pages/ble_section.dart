@@ -111,7 +111,7 @@ class AppBarBLEState extends State<AppBarBLE> {
     if (data[0] == 0x01) {
       debugPrint("It's remote mode!!");
       widget.notifyRemoteCB(decodedData);
-    } else if (data[1] == 0x02) {
+    } else if (data[0] == 0x02) {
       debugPrint("It's auto mode!!");
       widget.notifyAutoCB(decodedData);
     } else {

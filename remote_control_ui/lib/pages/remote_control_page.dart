@@ -81,7 +81,12 @@ class RemotePageState extends State<RemotePage> {
     widget.sendbLE(byteCommand);
   }
 
-  void remoteModeNotifyBLE(List<dynamic> notifybLERemote) {}
+  void remoteModeNotifyBLE(List<dynamic> notifybLERemote) {
+    // Check if remote page mounted or not
+    if (mounted) {
+      debugPrint("Notified: $notifybLERemote");
+    }
+  }
 
   void updateBLEStat(bool status) {
     //first check if this widget mounted in widget tree or not
@@ -102,7 +107,7 @@ class RemotePageState extends State<RemotePage> {
       context: context,
       textColor: Colors.black,
       // textStyle: const TextStyle(color: Colors.green),
-      duration: const Duration(milliseconds: 4000),
+      duration: const Duration(milliseconds: 2000),
       backgroundColor: const Color.fromARGB(255, 0, 221, 255),
     );
   }
