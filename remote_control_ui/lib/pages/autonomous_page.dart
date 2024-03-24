@@ -131,7 +131,7 @@ class _AutoPageState extends State<AutoPage> {
       byteCommand = integerToByteArray(autoModeIdentifier, bLEAutoCommand);
     } else {
       // Convert int list command to byte array
-      byteCommand = doubleToByteArray(autoModeIdentifier, bLEAutoCommand);
+      byteCommand = floatToByteArray(autoModeIdentifier, bLEAutoCommand);
     }
 
     //remote control sends a list of integers
@@ -735,7 +735,10 @@ class _AutoPageState extends State<AutoPage> {
     List<List<double>> latLngList = [];
 
     for (int i = 0; i < markersLatLng.length; i++) {
-      latLngList.add([markersLatLng[i].latitude, markersLatLng[i].longitude]);
+      latLngList.add([
+        double.parse(markersLatLng[i].latitude.toStringAsFixed(6)),
+        double.parse(markersLatLng[i].longitude.toStringAsFixed(6)),
+      ]);
     }
 
     return latLngList;

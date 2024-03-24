@@ -2,10 +2,10 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
-Uint8List doubleToByteArray(int modeIdentifier, List<double> dataToBeSent) {
+Uint8List floatToByteArray(int modeIdentifier, List<double> dataToBeSent) {
   ByteData data = ByteData(0);
 
-  int doubleTypeIdentifier = 0x02;
+  int floatIdentifier = 0x02;
 
   // Allocate space for mode identifier, data type identifier and length
   int dataSize = 1 + 1 + 4;
@@ -20,7 +20,7 @@ Uint8List doubleToByteArray(int modeIdentifier, List<double> dataToBeSent) {
   data.setUint8(0, modeIdentifier);
 
   // data type identifier
-  data.setUint8(1, doubleTypeIdentifier);
+  data.setUint8(1, floatIdentifier);
 
   // how many data to extract
   data.setInt32(2, dataToBeSent.length, Endian.little);
@@ -30,8 +30,8 @@ Uint8List doubleToByteArray(int modeIdentifier, List<double> dataToBeSent) {
   int offset = 6;
 
   for (double value in dataToBeSent) {
-    data.setFloat64(offset, value, Endian.little);
-    offset += 8; // 8 bytes for a double
+    data.setFloat32(offset, value, Endian.little);
+    offset += 4; // 8 bytes for a double
   }
 
   // Convert ByteData to Uint8List
@@ -88,13 +88,13 @@ List<dynamic> decodeData(Uint8List mssg) {
   List<dynamic> decoded = [];
   // data type identifier
   const int integerIdentifier = 0x01;
-  const int doubleIdentifier = 0x02;
+  const int floatIdentifier = 0x02;
 
   // Essentials for decoding message
   const int mssgStartingIndex = 10;
   const int mssgTypeIndex = 6;
   const int intBufferSize = 4;
-  const int doubleBufferSize = 8;
+  const int floatBufferSize = 4;
 
   final int dataTypeIdentifier = mssg[1];
 
@@ -107,16 +107,16 @@ List<dynamic> decodeData(Uint8List mssg) {
       ByteData.sublistView(mssg, mssgTypeIndex, mssgStartingIndex - 1)
           .getInt8(0);
 
-  if (dataTypeIdentifier == doubleIdentifier ||
+  if (dataTypeIdentifier == floatIdentifier ||
       dataTypeIdentifier == integerIdentifier) {
-    if (dataTypeIdentifier == doubleIdentifier) {
+    if (dataTypeIdentifier == floatIdentifier) {
       final List<double> doubleValues = [];
       for (int i = 0; i < dataLength; i++) {
         final double doubleValue = ByteData.sublistView(
                 mssg,
-                mssgStartingIndex + (i * doubleBufferSize),
-                mssgStartingIndex + (i * doubleBufferSize) + doubleBufferSize)
-            .getFloat64(0, Endian.little);
+                mssgStartingIndex + (i * floatBufferSize),
+                mssgStartingIndex + (i * floatBufferSize) + floatBufferSize)
+            .getFloat32(0, Endian.little);
         doubleValues.add(doubleValue);
       }
       decoded = [mssgType, doubleValues];
