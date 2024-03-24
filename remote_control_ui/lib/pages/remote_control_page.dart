@@ -425,7 +425,7 @@ class RemotePageState extends State<RemotePage> {
             Text(
               'Motion: ',
               style: TextStyle(
-                  fontSize: _safeHorizontal * 5,
+                  fontSize: _safeHorizontal * 4,
                   fontWeight: FontWeight.bold,
                   color: Colors.white),
             ),
@@ -438,7 +438,7 @@ class RemotePageState extends State<RemotePage> {
             Text(
               _liveMotion,
               style: TextStyle(
-                  fontSize: _safeHorizontal * 5, color: __liveMotionColor),
+                  fontSize: _safeHorizontal * 4, color: __liveMotionColor),
             ),
           ],
         ),
@@ -457,7 +457,7 @@ class RemotePageState extends State<RemotePage> {
             Text(
               'Movement: ',
               style: TextStyle(
-                  fontSize: _safeHorizontal * 5,
+                  fontSize: _safeHorizontal * 4,
                   fontWeight: FontWeight.bold,
                   color: Colors.white),
             ),
@@ -470,7 +470,7 @@ class RemotePageState extends State<RemotePage> {
             Text(
               _liveMovement,
               style: TextStyle(
-                  fontSize: _safeHorizontal * 5, color: __liveMovementColor),
+                  fontSize: _safeHorizontal * 4, color: __liveMovementColor),
             ),
           ],
         ),
@@ -517,7 +517,7 @@ class RemotePageState extends State<RemotePage> {
           children: [
             ImageIcon(
               const AssetImage('assets/icons/temperature.png'),
-              size: _safeVertical * 10,
+              size: _safeVertical * 9,
             ),
             Text(
               'Measure', // Your label text
@@ -562,7 +562,7 @@ class RemotePageState extends State<RemotePage> {
               'STOP', // Your label text
               style: TextStyle(
                   color: Colors.black,
-                  fontSize: _safeVertical * 4), // Customize label style
+                  fontSize: _safeVertical * 3), // Customize label style
             ),
           ],
         ),

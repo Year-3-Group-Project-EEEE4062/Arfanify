@@ -17,8 +17,6 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> {
-  final PageStorageBucket _bucket = PageStorageBucket();
-
   //initialize controller for BLE widget
   final BLEcontroller myBLEController = BLEcontroller();
 
@@ -182,6 +180,7 @@ class HomePageState extends State<HomePage> {
           Navigator.push(
             context,
             MaterialPageRoute(
+              maintainState: true,
               builder: (context) => RemotePage(
                 safeScreenHeight: _safeVertical,
                 safeScreenWidth: _safeHorizontal,
@@ -199,7 +198,7 @@ class HomePageState extends State<HomePage> {
         ),
         label: Text(
           'Remote',
-          style: TextStyle(fontSize: _safeHorizontal * 4, color: Colors.white),
+          style: TextStyle(fontSize: _safeHorizontal * 3, color: Colors.white),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xff768a76),
@@ -221,15 +220,12 @@ class HomePageState extends State<HomePage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => PageStorage(
-                bucket: _bucket,
-                child: AutoPage(
-                  safeScreenHeight: _safeVertical,
-                  safeScreenWidth: _safeHorizontal,
-                  sendbLE: sendBLEwidget,
-                  notifyController: myAutoController,
-                  bleStat: bleStat,
-                ),
+              builder: (context) => AutoPage(
+                safeScreenHeight: _safeVertical,
+                safeScreenWidth: _safeHorizontal,
+                sendbLE: sendBLEwidget,
+                notifyController: myAutoController,
+                bleStat: bleStat,
               ),
             ),
           );
@@ -241,7 +237,7 @@ class HomePageState extends State<HomePage> {
         ),
         label: Text(
           'Auto',
-          style: TextStyle(fontSize: _safeHorizontal * 4, color: Colors.white),
+          style: TextStyle(fontSize: _safeHorizontal * 3, color: Colors.white),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xff768a76),

@@ -37,33 +37,15 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final List<double> sizes = SizeConfig().init(context);
+
     return MaterialApp(
       debugShowCheckedModeBanner: false, //remove the debug banner
       theme: ThemeData(fontFamily: 'TiltNeon'),
-      home: const MainPage(),
-    );
-  }
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class MainPage extends StatefulWidget {
-  const MainPage({super.key});
-
-  @override
-  State<MainPage> createState() => _MainPageState();
-}
-
-class _MainPageState extends State<MainPage> {
-  ////////////////////////Scaffold
-  @override
-  Widget build(BuildContext context) {
-    final List<double> sizes = SizeConfig().init(context);
-
-    return HomePage(
-      safeScreenHeight: sizes[0],
-      safeScreenWidth: sizes[1],
+      home: HomePage(
+        safeScreenHeight: sizes[0],
+        safeScreenWidth: sizes[1],
+      ),
     );
   }
 }
