@@ -180,7 +180,6 @@ class HomePageState extends State<HomePage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              maintainState: true,
               builder: (context) => RemotePage(
                 safeScreenHeight: _safeVertical,
                 safeScreenWidth: _safeHorizontal,

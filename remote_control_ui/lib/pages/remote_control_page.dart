@@ -128,6 +128,8 @@ class RemotePageState extends State<RemotePage> {
     // initialize the variables
     _safeVertical = widget.safeScreenHeight;
     _safeHorizontal = widget.safeScreenWidth;
+
+    debugPrint("Remote page rebuilds..");
   }
 
   @override
