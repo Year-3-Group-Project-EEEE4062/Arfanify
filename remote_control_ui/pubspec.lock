@@ -529,10 +529,10 @@ packages:
     dependency: "direct main"
     description:
       name: toggle_switch
-      sha256: "13171980ba0197b672ce1779186e89a3c0cc864b9e46bbcdb1e6729214f2691f"
+      sha256: dca04512d7c23ed320d6c5ede1211a404f177d54d353bf785b07d15546a86ce5
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.3"
+    version: "2.3.0"
   typed_data:
     dependency: transitive
     description:

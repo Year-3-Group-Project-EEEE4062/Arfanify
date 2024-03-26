@@ -690,7 +690,7 @@ class _AutoPageState extends State<AutoPage> {
 
               // Send out cancel instruction to boat
               //Send BLE to let user know how many
-              autoModeSendBLE([2], 0);
+              autoModeSendBLE([1], 0);
             },
           );
         },
@@ -710,25 +710,23 @@ class _AutoPageState extends State<AutoPage> {
   }
 
   Future<void> sendWaypoints(List<List<double>> doubleTypeWaypoint) async {
-    //Send BLE to let user know how many
-    autoModeSendBLE([1, doubleTypeWaypoint.length], 0);
+    debugPrint("Started!!");
 
     // Add 2 second delay asynchronously before setting a periodic timer to send
     // waypoints every 2 seconds
-    Future.delayed(const Duration(microseconds: 2000), () {
-      debugPrint("Started!!");
-      sendTimer = Timer.periodic(
-        const Duration(seconds: 3),
-        (timer) {
-          if (timer.tick <= doubleTypeWaypoint.length) {
-            debugPrint("Sending: ${doubleTypeWaypoint[timer.tick - 1]}");
-            autoModeSendBLE(doubleTypeWaypoint[timer.tick - 1], 1);
-          } else {
-            timer.cancel();
-          }
-        },
-      );
-    });
+    sendTimer = Timer.periodic(
+      const Duration(seconds: 2),
+      (timer) {
+        if (timer.tick <= doubleTypeWaypoint.length) {
+          debugPrint("Sending: ${doubleTypeWaypoint[timer.tick - 1]}");
+          autoModeSendBLE(doubleTypeWaypoint[timer.tick - 1], 1);
+        } else {
+          timer.cancel();
+          //Send BLE to let boat know how many waypoints it should have gotten
+          autoModeSendBLE([3, doubleTypeWaypoint.length], 0);
+        }
+      },
+    );
   }
 
   Future<List<List<double>>> packWaypoints() async {
@@ -736,6 +734,7 @@ class _AutoPageState extends State<AutoPage> {
 
     for (int i = 0; i < markersLatLng.length; i++) {
       latLngList.add([
+        double.parse('2'),
         double.parse(markersLatLng[i].latitude.toStringAsFixed(6)),
         double.parse(markersLatLng[i].longitude.toStringAsFixed(6)),
       ]);
