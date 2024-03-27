@@ -425,7 +425,7 @@ class _AutoPageState extends State<AutoPage> {
 
   Container _waypointsListViewerSection(BuildContext context) {
     return Container(
-        height: _safeVertical * 31,
+        height: _safeVertical * 33,
         width: _safeHorizontal * 90,
         decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
@@ -613,7 +613,7 @@ class _AutoPageState extends State<AutoPage> {
 
   Container _summaryViewerPopUp(BuildContext context) {
     return Container(
-      height: _safeVertical * 31,
+      height: _safeVertical * 33,
       width: _safeHorizontal * 90,
       decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
