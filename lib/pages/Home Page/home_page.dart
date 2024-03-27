@@ -1,62 +1,56 @@
 import 'package:flutter/material.dart';
-import 'package:remote_control_ui/pages/ble_section.dart';
-import 'package:remote_control_ui/pages/remote_control_page.dart';
-import 'package:remote_control_ui/pages/autonomous_page.dart';
+import 'package:remote_control_ui/pages/Home%20Page/ble_section.dart';
+
+//controller for the BLE
+class HomePagecontroller {
+  late void Function(List<int>) sendDataBLE;
+}
 
 class HomePage extends StatefulWidget {
   final double safeScreenHeight;
   final double safeScreenWidth;
+  final Function(int) updatePageIndex;
+  final Function(bool) updateTreeBLEStat;
+  final Function(List<dynamic>) notifyRemoteNewBLE;
+  final Function(List<dynamic>) notifyAutoNewBLE;
+  final HomePagecontroller homeController;
   const HomePage({
     super.key,
     required this.safeScreenHeight,
     required this.safeScreenWidth,
+    required this.updatePageIndex,
+    required this.updateTreeBLEStat,
+    required this.notifyRemoteNewBLE,
+    required this.notifyAutoNewBLE,
+    required this.homeController,
   });
 
   @override
-  HomePageState createState() => HomePageState();
+  HomePageState createState() => HomePageState(homeController);
 }
 
 class HomePageState extends State<HomePage> {
+  HomePageState(HomePagecontroller homeController) {
+    homeController.sendDataBLE = sendBLEwidget;
+  }
+
   //initialize controller for BLE widget
   final BLEcontroller myBLEController = BLEcontroller();
-
-  final RemoteModeController myRemoteController = RemoteModeController();
-
-  final AutoModeController myAutoController = AutoModeController();
-
-  //store ble status
-  //initially false to indicate not connected
-  bool bleStat = false;
 
   // for better scaling of widgets with different screen sizes
   late double _safeVertical;
   late double _safeHorizontal;
 
-  //To update bleStat in homepage
-  void updateHomePageBLEStat(bool stat) {
-    bleStat = stat;
-
-    if (myRemoteController.bleStat != null) {
-      myRemoteController.bleStat!(bleStat);
-    }
-
-    if (myAutoController.bleStat != null) {
-      myAutoController.bleStat!(bleStat);
-    }
+  //function to change page back to home page
+  void changePage(int index) {
+    // home page index is 0
+    widget.updatePageIndex(index);
   }
 
   //Use BLE widget controller to send data to BLE widget
   void sendBLEwidget(List<int> message) {
     //Send message to BLE widget
     myBLEController.sendDataBLE(message);
-  }
-
-  void notifyRemoteNewBLE(List<dynamic> remoteNotifyMssg) {
-    myRemoteController.notifyBLE(remoteNotifyMssg);
-  }
-
-  void notifyAutoNewBLE(List<dynamic> autoNotifyMssg) {
-    myAutoController.notifyBLE(autoNotifyMssg);
   }
 
   @override
@@ -175,20 +169,8 @@ class HomePageState extends State<HomePage> {
       width: _safeHorizontal * 40,
       child: ElevatedButton.icon(
         onPressed: () {
-          //navigate to a remote page
-          //navigate to the auto page
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => RemotePage(
-                safeScreenHeight: _safeVertical,
-                safeScreenWidth: _safeHorizontal,
-                bleStat: bleStat,
-                sendbLE: sendBLEwidget,
-                notifyController: myRemoteController,
-              ),
-            ),
-          );
+          // In indexed stack, remote page is index 1
+          changePage(1);
         },
         icon: Icon(
           Icons.settings_remote_sharp,
@@ -215,19 +197,8 @@ class HomePageState extends State<HomePage> {
       width: _safeHorizontal * 40,
       child: ElevatedButton.icon(
         onPressed: () {
-          //navigate to the auto page
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AutoPage(
-                safeScreenHeight: _safeVertical,
-                safeScreenWidth: _safeHorizontal,
-                sendbLE: sendBLEwidget,
-                notifyController: myAutoController,
-                bleStat: bleStat,
-              ),
-            ),
-          );
+          // In indexed stack, remote page is index 2
+          changePage(2);
         },
         icon: Icon(
           Icons.map_outlined,
@@ -286,9 +257,9 @@ class HomePageState extends State<HomePage> {
             bleController: myBLEController,
             safeScreenHeight: _safeVertical,
             safeScreenWidth: _safeHorizontal,
-            bleStat: updateHomePageBLEStat,
-            notifyRemoteCB: notifyRemoteNewBLE,
-            notifyAutoCB: notifyAutoNewBLE,
+            bleStat: widget.updateTreeBLEStat,
+            notifyRemoteCB: widget.notifyRemoteNewBLE,
+            notifyAutoCB: widget.notifyAutoNewBLE,
           ),
         ],
       ),

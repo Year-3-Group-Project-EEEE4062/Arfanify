@@ -20,6 +20,7 @@ class AutoModeController {
 class AutoPage extends StatefulWidget {
   final double safeScreenHeight;
   final double safeScreenWidth;
+  final Function(int) updatePageIndex;
   final bool bleStat;
   final Function(List<int>) sendbLE;
   final AutoModeController notifyController;
@@ -27,9 +28,10 @@ class AutoPage extends StatefulWidget {
     super.key,
     required this.safeScreenHeight,
     required this.safeScreenWidth,
+    required this.updatePageIndex,
+    required this.bleStat,
     required this.sendbLE,
     required this.notifyController,
-    required this.bleStat,
   });
 
   @override
@@ -74,34 +76,10 @@ class _AutoPageState extends State<AutoPage> {
   Timer? sendTimer;
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  Future _loadMapStyles() async {
-    _darkMapStyle = await rootBundle.loadString('assets/json/map_style.json');
-  }
-
-  Future<Position> _getUserCurrentLocation() async {
-    await Geolocator.requestPermission()
-        .then((value) {})
-        .onError((error, stackTrace) async {
-      await Geolocator.requestPermission();
-      debugPrint("ERROR: $error");
-    });
-    return await Geolocator.getCurrentPosition();
-  }
-
-  Future<Uint8List> getBytesFromAsset(String path, int width) async {
-    ByteData data = await rootBundle.load(path);
-    ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(),
-        targetWidth: width);
-    ui.FrameInfo fi = await codec.getNextFrame();
-    return (await fi.image.toByteData(format: ui.ImageByteFormat.png))!
-        .buffer
-        .asUint8List();
-  }
-
-  Future<void> setCustomMarkerIcon() async {
-    markerIcon = await getBytesFromAsset('assets/icons/pin.png', 200);
-    boatIcon = await getBytesFromAsset('assets/icons/boatboat.png', 150);
-    userIcon = await getBytesFromAsset('assets/icons/user.png', 150);
+  //function to change page back to home page
+  void changeToHomePage() {
+    // home page index is 0
+    widget.updatePageIndex(0);
   }
 
   void updateBLEStat(bool status) {
@@ -172,6 +150,36 @@ class _AutoPageState extends State<AutoPage> {
     );
   }
 
+  Future _loadMapStyles() async {
+    _darkMapStyle = await rootBundle.loadString('assets/json/map_style.json');
+  }
+
+  Future<Position> _getUserCurrentLocation() async {
+    await Geolocator.requestPermission()
+        .then((value) {})
+        .onError((error, stackTrace) async {
+      await Geolocator.requestPermission();
+      debugPrint("ERROR: $error");
+    });
+    return await Geolocator.getCurrentPosition();
+  }
+
+  Future<Uint8List> getBytesFromAsset(String path, int width) async {
+    ByteData data = await rootBundle.load(path);
+    ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(),
+        targetWidth: width);
+    ui.FrameInfo fi = await codec.getNextFrame();
+    return (await fi.image.toByteData(format: ui.ImageByteFormat.png))!
+        .buffer
+        .asUint8List();
+  }
+
+  Future<void> setCustomMarkerIcon() async {
+    markerIcon = await getBytesFromAsset('assets/icons/pin.png', 200);
+    boatIcon = await getBytesFromAsset('assets/icons/boatboat.png', 150);
+    userIcon = await getBytesFromAsset('assets/icons/user.png', 150);
+  }
+
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   @override
@@ -202,7 +210,6 @@ class _AutoPageState extends State<AutoPage> {
 
   @override
   void dispose() {
-    debugPrint("Auto page disposed!");
     //Dispose the controller after everytime user navigates to a different page
     _mapsController.future.then((controller) {
       controller.dispose();
@@ -1020,8 +1027,7 @@ class _AutoPageState extends State<AutoPage> {
   OutlinedButton homeButton(BuildContext context) {
     return OutlinedButton(
       onPressed: () {
-        // Pop context to return back to the home page
-        Navigator.pop(context);
+        changeToHomePage();
       },
       style: OutlinedButton.styleFrom(
         side: const BorderSide(
