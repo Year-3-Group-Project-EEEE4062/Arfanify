@@ -73,6 +73,11 @@ class RemotePageState extends State<RemotePage> {
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //function to change page back to home page
   void changeToHomePage() {
+    if (_liveMovement != 'None') {
+      // Send data through BLE
+      remoteModeSendBLE(bleStop);
+    }
+
     // home page index is 0
     widget.updatePageIndex(0);
   }
