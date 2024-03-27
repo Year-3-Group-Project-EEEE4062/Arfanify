@@ -640,7 +640,7 @@ class RemotePageState extends State<RemotePage> {
               Text(
                 "Movements",
                 style: TextStyle(
-                    fontSize: _safeHorizontal * 6,
+                    fontSize: _safeHorizontal * 4,
                     color: Colors.black,
                     fontWeight: FontWeight.bold),
               ),
