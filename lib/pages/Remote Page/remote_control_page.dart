@@ -76,6 +76,7 @@ class RemotePageState extends State<RemotePage> {
     if (_liveMovement != 'None') {
       // Send data through BLE
       remoteModeSendBLE(bleStop);
+      updateLiveSettings("None", Colors.purple, "None", Colors.purple);
     }
 
     // home page index is 0
