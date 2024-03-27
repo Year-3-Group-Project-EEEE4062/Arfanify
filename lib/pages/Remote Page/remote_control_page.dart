@@ -13,16 +13,18 @@ class RemoteModeController {
 class RemotePage extends StatefulWidget {
   final double safeScreenHeight;
   final double safeScreenWidth;
+  final Function(int) updatePageIndex;
   final bool bleStat;
   final Function(List<int>) sendbLE;
   final RemoteModeController notifyController;
   const RemotePage({
     super.key,
-    required this.sendbLE,
     required this.safeScreenHeight,
     required this.safeScreenWidth,
-    required this.notifyController,
+    required this.updatePageIndex,
     required this.bleStat,
+    required this.sendbLE,
+    required this.notifyController,
   });
 
   @override
@@ -69,6 +71,18 @@ class RemotePageState extends State<RemotePage> {
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //function to change page back to home page
+  void changeToHomePage() {
+    if (_liveMovement != 'None') {
+      // Send data through BLE
+      remoteModeSendBLE(bleStop);
+      updateLiveSettings("None", Colors.purple, "None", Colors.purple);
+    }
+
+    // home page index is 0
+    widget.updatePageIndex(0);
+  }
+
   //callback to goes back to main_page.dart to send data through BLE
   void remoteModeSendBLE(List<int> bLERemoteCommand) {
     int remoteModeIdentifier = 0x01;
@@ -244,8 +258,7 @@ class RemotePageState extends State<RemotePage> {
   OutlinedButton homeButton(BuildContext context) {
     return OutlinedButton(
       onPressed: () {
-        // Pop context to return back to the home page
-        Navigator.pop(context);
+        changeToHomePage();
       },
       style: OutlinedButton.styleFrom(
         side: const BorderSide(
