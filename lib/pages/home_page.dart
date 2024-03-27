@@ -64,7 +64,7 @@ class HomePageState extends State<HomePage> {
                 size: 60), // Adjust the size as needed
             Text(
               'Remote Control',
-              style: TextStyle(fontSize: 18),
+              style: TextStyle(fontSize: 10),
             ),
           ],
         ),

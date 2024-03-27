@@ -17,6 +17,7 @@ class _MainPageState extends State<MainPage> {
 
   ////////////////////////variables
   int _selectedIndex = 0;
+  late List<Widget> _pages;
 
   //update the selected index based on which page user wants to go to
   _onItemTapped(int index) {
@@ -30,32 +31,29 @@ class _MainPageState extends State<MainPage> {
     myController.sendDataBLE(command);
   }
 
-  //return widget based on what user wants
-  Widget goToPage() {
-    if (_selectedIndex == 0) {
-      return HomePage(updateScaffoldBody: _onItemTapped);
-    } else if (_selectedIndex == 1) {
-      return RemoteControlPage(bLE: _updateMediumBLE);
-    } else if (_selectedIndex == 2) {
-      return const AutonomousPagee();
-    } else if (_selectedIndex == 3) {
-      return const CloudBackupPage();
-    } else {
-      //to prevent return of null
-      //if selected Index ever invalid, body is just homePage
-      debugPrint("Selected Index is invalid");
-      return HomePage(updateScaffoldBody: _onItemTapped);
-    }
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      HomePage(updateScaffoldBody: _onItemTapped),
+      RemoteControlPage(bLE: _updateMediumBLE),
+      const AutonomousPagee(),
+      const CloudBackupPage(),
+    ];
   }
 
   ////////////////////////Scaffold
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Colors.black,
-        appBar: bar(context),
-        drawer: drawerPage(context),
-        body: goToPage());
+      backgroundColor: Colors.black,
+      appBar: bar(context),
+      drawer: drawerPage(context),
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      ),
+    );
   }
 
   //////////////////////////////////////////////////////////////////////////////

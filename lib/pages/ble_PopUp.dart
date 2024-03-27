@@ -222,10 +222,6 @@ class AppBarBLEState extends State<AppBarBLE> {
                 children: [
                   //show connection status to Medium
                   bleStatusRow(context),
-
-                  //allow user to test connection if connected
-                  //if not connected ContextBox would alert the user
-                  bleTestButton(context),
                 ],
               ),
               const SizedBox(height: 10),
@@ -565,7 +561,7 @@ class AppBarBLEState extends State<AppBarBLE> {
   Row bleTestButton(BuildContext context) {
     return Row(
       children: [
-        const SizedBox(width: 14),
+        const SizedBox(width: 5),
         OutlinedButton(
           style: OutlinedButton.styleFrom(
             textStyle: Theme.of(context).textTheme.labelLarge,

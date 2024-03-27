@@ -29,18 +29,6 @@ class RemoteControlState extends State<RemoteControlPage> {
   }
 
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  //when remote control page closed, it will dispose of the variables
-  void dispose() {
-    // Clean up any resources here.
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
