@@ -48,6 +48,7 @@ class RemotePageState extends State<RemotePage> {
 
   List<int> bleStop = [0];
   List<int> bleMeasure = [1];
+  List<int> bleCancel = [2];
 
   String _status = 'Slow';
   Color _statusColor = Colors.green;
@@ -63,6 +64,8 @@ class RemotePageState extends State<RemotePage> {
   // for better scaling of widgets with different screen sizes
   late double _safeVertical;
   late double _safeHorizontal;
+
+  bool isTemperatureMeasurement = false;
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -183,7 +186,7 @@ class RemotePageState extends State<RemotePage> {
               Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  measureButton(),
+                  (isTemperatureMeasurement) ? cancelButton() : measureButton(),
                   SizedBox(height: _safeVertical * 2), //just empty space
                   stopButton(),
                 ],
@@ -506,12 +509,16 @@ class RemotePageState extends State<RemotePage> {
             Future.delayed(const Duration(microseconds: 1000), () {
               remoteModeSendBLE(bleMeasure);
               showSnackBar("Initiating temperature measurement!", context);
+              isTemperatureMeasurement = true;
             });
           } else {
             //Otherwise, boat already stopped so initiate temperature measurement
             remoteModeSendBLE(bleMeasure);
             showSnackBar("Initiating temperature measurement!", context);
+            isTemperatureMeasurement = true;
           }
+
+          setState(() {});
         },
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -525,7 +532,48 @@ class RemotePageState extends State<RemotePage> {
               'Measure', // Your label text
               style: TextStyle(
                   color: Colors.black,
-                  fontSize: _safeVertical * 3), // Customize label style
+                  fontSize: _safeVertical * 2), // Customize label style
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  SizedBox cancelButton() {
+    return SizedBox(
+      height: _safeVertical * 16,
+      width: _safeHorizontal * 40,
+      child: TextButton(
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.white, // Text color
+          backgroundColor: Colors.red, // Background color
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30), // Rounded corners
+          ),
+          // Add other properties as needed
+        ),
+        onPressed: () async {
+          remoteModeSendBLE(bleCancel);
+          isTemperatureMeasurement = false;
+          showSnackBar("Cancelling temperature measurement", context);
+
+          setState(() {});
+        },
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.cancel_outlined, // Your desired icon
+              size: _safeVertical * 7,
+            ),
+            SizedBox(width: _safeHorizontal * 2),
+            Text(
+              'CANCEL', // Your label text
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: _safeVertical * 2), // Customize label style
             ),
           ],
         ),
@@ -564,7 +612,7 @@ class RemotePageState extends State<RemotePage> {
               'STOP', // Your label text
               style: TextStyle(
                   color: Colors.black,
-                  fontSize: _safeVertical * 3), // Customize label style
+                  fontSize: _safeVertical * 2), // Customize label style
             ),
           ],
         ),
