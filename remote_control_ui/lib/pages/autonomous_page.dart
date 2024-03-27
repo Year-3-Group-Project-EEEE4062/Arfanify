@@ -400,15 +400,18 @@ class _AutoPageState extends State<AutoPage> {
                 Padding(
                   padding: const EdgeInsets.all(4),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [
                       Text(
-                        "Latitude:\n${marker.latitude}",
+                        "Latitude:\n${marker.latitude.toStringAsFixed(6)}",
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, color: Colors.white),
                       ),
+                      SizedBox(
+                        width: _safeHorizontal * 15,
+                      ),
                       Text(
-                        "Longitude:\n${marker.longitude}",
+                        "Longitude:\n${marker.longitude.toStringAsFixed(6)}",
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, color: Colors.white),
                       ),
