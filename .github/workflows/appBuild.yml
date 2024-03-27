@@ -1,10 +1,10 @@
-name: Build Arfanify App
+name: Build Flutter APK's and App bundle
 
 # Controls when the workflow will run
 on:
   # Triggers the workflow on push or pull request events but only for the "develop" branch
   push:
-    branches: ["main"]
+    # branches: ["main"]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -32,9 +32,9 @@ jobs:
 
       - name: Build APK
         run: flutter build apk --split-per-abi --release
-      
-      - name: Build APP BUNDLE
-        uses: actions/upload-artifact@v1
+
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v3.1.0
         with:
           name: Arfanify-apk
           path: build/app/outputs/apk/release/app-release.apk
