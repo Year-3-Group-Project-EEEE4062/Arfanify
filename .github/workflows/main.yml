@@ -32,9 +32,6 @@ jobs:
 
       - name: Build APK
         run: flutter build apk --split-per-abi --release
-
-      - name: Build APP BUNDLE
-        run: flutter build appbundle
       
       - name: Build APP BUNDLE
         uses: actions/upload-artifact@v1
