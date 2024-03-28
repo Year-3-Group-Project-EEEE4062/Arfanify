@@ -1,4 +1,3 @@
-import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math';
@@ -6,8 +5,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:interactive_bottom_sheet/interactive_bottom_sheet.dart';
 import 'package:flutter/services.dart' show ByteData, Uint8List, rootBundle;
-import 'package:kumi_popup_window/kumi_popup_window.dart';
-import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:remote_control_ui/converter/data_converter.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 import 'package:floating_snackbar/floating_snackbar.dart';
@@ -71,13 +68,12 @@ class _AutoPageState extends State<AutoPage> {
   late int boatMarkerIndex;
 
   List<LatLng> markersLatLng = [];
-  Set<Polygon> polygonArea = HashSet<Polygon>();
-  ValueNotifier<Color> polygonButtonColor = ValueNotifier<Color>(Colors.black);
-  bool isPolygonsON = false;
+
+  Set<Polyline> pathPolylines = {};
+  ValueNotifier<Color> polylineButtonColor = ValueNotifier<Color>(Colors.black);
+  bool isPolylinesON = false;
 
   Timer? sendTimer;
-  final ValueNotifier<bool> boatStartAuto = ValueNotifier<bool>(false);
-  final ValueNotifier<int> sentCounter = ValueNotifier<int>(0);
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //function to change page back to home page
@@ -139,10 +135,12 @@ class _AutoPageState extends State<AutoPage> {
         await _newCameraPosition(boatLatLng);
       } else if (notifybLEAuto[0] == 1) {
         // Message contains how many waypoints boat has gotten so far
-        sentCounter.value++;
+        List<int> current = notifybLEAuto[1];
+        showSnackBar("Succesfuly sent waypoint No.${current[0]}", context);
       } else if (notifybLEAuto[0] == 2) {
         // Message contains the boat alerting user that all waypoints have been received
         // And the boat will start autonomous operation
+        showSnackBar("Boat will start auto operation", context);
       }
     }
   }
@@ -289,7 +287,7 @@ class _AutoPageState extends State<AutoPage> {
           Positioned(
             top: _safeVertical * 61,
             right: _safeHorizontal * 2,
-            child: _addPolygonsButton(),
+            child: _generatePolylineButton(),
           ),
 
           Positioned(
@@ -375,7 +373,8 @@ class _AutoPageState extends State<AutoPage> {
           //icon: BitmapDescriptor.fromBytes(iconDataToBytes(Icon(Icons.directions_boat_filled,))),
           infoWindow: InfoWindow(
               title: "Last updated user location",
-              snippet: "Lat: ${point.latitude}, Lng: ${point.longitude}"),
+              snippet:
+                  "Lat: ${point.latitude.toStringAsFixed(6)}, Lng: ${point.longitude.toStringAsFixed(6)}"),
           icon: BitmapDescriptor.fromBytes(userIcon),
         );
         // Add the marker to the set and update the state
@@ -423,7 +422,8 @@ class _AutoPageState extends State<AutoPage> {
       //icon: BitmapDescriptor.fromBytes(iconDataToBytes(Icon(Icons.directions_boat_filled,))),
       infoWindow: InfoWindow(
           title: "Last known Boatboat location",
-          snippet: "Lat: ${point.latitude}, Lng: ${point.longitude}"),
+          snippet:
+              "Lat: ${point.latitude.toStringAsFixed(6)}, Lng: ${point.longitude.toStringAsFixed(6)}"),
       icon: BitmapDescriptor.fromBytes(boatIcon),
     );
     // Add the marker to the set and update the state
@@ -461,7 +461,8 @@ class _AutoPageState extends State<AutoPage> {
             //icon: BitmapDescriptor.fromBytes(iconDataToBytes(Icon(Icons.directions_boat_filled,))),
             infoWindow: InfoWindow(
                 title: "Waypoint No.$markerCounter",
-                snippet: "Lat: ${point.latitude}, Lng: ${point.longitude}"),
+                snippet:
+                    "Lat: ${point.latitude.toStringAsFixed(6)}, Lng: ${point.longitude.toStringAsFixed(6)}"),
             icon: BitmapDescriptor.fromBytes(markerIcon),
           );
           // Add the marker to the set and update the state
@@ -512,7 +513,7 @@ class _AutoPageState extends State<AutoPage> {
               LatLng(currentUserLatLng!.latitude, currentUserLatLng!.longitude),
           zoom: 18),
       markers: pathWaypoints,
-      polygons: polygonArea,
+      polylines: pathPolylines,
       onLongPress: _checkMarkerToUser,
       onMapCreated: (GoogleMapController controller) async {
         //assigning the controller
@@ -593,57 +594,54 @@ class _AutoPageState extends State<AutoPage> {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///remove all marker widget related
-  SizedBox _addPolygonsButton() {
+  SizedBox _generatePolylineButton() {
     return SizedBox(
       height: _safeVertical * 7,
       width: _safeHorizontal * 20,
       child: OutlinedButton(
         onPressed: () {
-          if (pathWaypoints.length >= 3) {
+          if (pathWaypoints.length >= 2) {
             setState(() {
-              if (!isPolygonsON) {
-                polygonArea.clear();
-                polygonArea.add(
-                  Polygon(
-                    polygonId: const PolygonId("Area of Measurement"),
+              if (!isPolylinesON) {
+                pathPolylines.clear();
+                pathPolylines.add(
+                  Polyline(
+                    polylineId: const PolylineId('user'),
                     points: markersLatLng,
-                    fillColor: Colors.green.withOpacity(0.3),
-                    strokeColor: Colors.red,
-                    strokeWidth: 4,
-                    geodesic: true,
+                    width: 2,
+                    color: const Color.fromARGB(255, 96, 214, 99),
                   ),
                 );
-                _changePolygonsButtonColor();
+                _changePolylineButtonColor();
               } else {
-                polygonArea.clear();
-                _changePolygonsButtonColor();
+                pathPolylines.clear();
+                _changePolylineButtonColor();
               }
             });
           } else {
-            showSnackBar("Add at least 3 waypoints on map", context);
+            showSnackBar("Add at least 2 waypoints on map", context);
           }
         },
         style: OutlinedButton.styleFrom(
-          backgroundColor: polygonButtonColor.value,
+          backgroundColor: polylineButtonColor.value,
           shape: const CircleBorder(),
           side: const BorderSide(color: Colors.white),
         ),
         child: const Icon(
-          Icons.format_shapes,
+          Icons.polyline,
           color: Colors.orange,
         ),
       ),
     );
   }
 
-  void _changePolygonsButtonColor() {
-    if (!isPolygonsON) {
-      polygonButtonColor.value = const Color.fromARGB(255, 96, 214, 99);
-      isPolygonsON = true;
-    } else if (isPolygonsON) {
-      polygonButtonColor.value = Colors.black;
-      isPolygonsON = false;
+  void _changePolylineButtonColor() {
+    if (!isPolylinesON) {
+      polylineButtonColor.value = const Color.fromARGB(255, 96, 214, 99);
+      isPolylinesON = true;
+    } else if (isPolylinesON) {
+      polylineButtonColor.value = Colors.black;
+      isPolylinesON = false;
     }
   }
 
@@ -665,10 +663,10 @@ class _AutoPageState extends State<AutoPage> {
               //reset the toggle switch for waypoints
               waypointsReadyIndex = 1;
 
-              //reset polygons to none
-              if (polygonArea.isNotEmpty) {
-                polygonArea.clear();
-                _changePolygonsButtonColor();
+              //reset polylines to none
+              if (pathPolylines.isNotEmpty && !isPolylinesON) {
+                pathPolylines.clear();
+                _changePolylineButtonColor();
               }
             } else {
               showSnackBar("Cannot remove as waypoints confirmed!", context);
@@ -906,50 +904,6 @@ class _AutoPageState extends State<AutoPage> {
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  Padding _summaryContent() {
-    return Padding(
-      padding: const EdgeInsets.all(10),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          _totalDistance(),
-        ],
-      ),
-    );
-  }
-
-  Container _totalDistance() {
-    //get the estimated total distance travel
-    double totalEstimatedDistance = _calculateDistance();
-
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: const Color(0xff171717),
-      ),
-      padding: const EdgeInsets.all(10),
-      child: Row(
-        children: [
-          const Text(
-            "Estimated Total Distance: ",
-            style: TextStyle(
-              fontSize: 15,
-              color: Colors.white,
-            ),
-          ),
-          Text(
-            "${totalEstimatedDistance.toStringAsFixed(2)} m",
-            style: const TextStyle(
-              fontSize: 15,
-              color: Colors.white,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   double _calculateDistance() {
     double totalDistance = 0;
     for (int i = 0; i < markersLatLng.length; i++) {
@@ -982,6 +936,82 @@ class _AutoPageState extends State<AutoPage> {
 
   dynamic _deg2rad(deg) {
     return deg * (pi / 180);
+  }
+
+  Container _totalDistance() {
+    //get the estimated total distance travel
+    double totalEstimatedDistance = _calculateDistance();
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: const Color(0xff171717),
+      ),
+      padding: const EdgeInsets.all(10),
+      child: Row(
+        children: [
+          const Text(
+            "Estimated Total Distance: ",
+            style: TextStyle(
+              fontSize: 15,
+              color: Colors.white,
+            ),
+          ),
+          Text(
+            "${totalEstimatedDistance.toStringAsFixed(2)} m",
+            style: const TextStyle(
+              fontSize: 15,
+              color: Colors.red,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Container _waypointFrequency() {
+    //get the estimated total distance travel
+    double frequency = _calculateDistance() / markerCounter;
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: const Color(0xff171717),
+      ),
+      padding: const EdgeInsets.all(10),
+      child: Row(
+        children: [
+          const Text(
+            "Waypoint every: ",
+            style: TextStyle(
+              fontSize: 15,
+              color: Colors.white,
+            ),
+          ),
+          Text(
+            "${frequency.toStringAsFixed(2)} m",
+            style: const TextStyle(
+              fontSize: 15,
+              color: Colors.red,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Padding _summaryContent() {
+    return Padding(
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          _totalDistance(),
+          _waypointFrequency(),
+        ],
+      ),
+    );
   }
 
   Container _summaryViewerPopUp(BuildContext context) {
@@ -1119,15 +1149,13 @@ class _AutoPageState extends State<AutoPage> {
       child: OutlinedButton(
         onPressed: () async {
           if (isWaypointsReady) {
-            // showSnackBar("Attempting to send to Medium...", context);
+            showSnackBar("Attempting to send to Medium...", context);
 
-            // //pack the waypoints from LatLng to type of 2D double list
-            // List<List<double>> doubleTypeWaypoint = await packWaypoints();
+            //pack the waypoints from LatLng to type of 2D double list
+            List<List<double>> doubleTypeWaypoint = await packWaypoints();
 
-            // //function to send BLE data with 1 second delay in between
-            // await sendWaypoints(doubleTypeWaypoint);
-
-            sendingPopUp(_safeVertical, _safeHorizontal, context);
+            //function to send BLE data with 1 second delay in between
+            await sendWaypoints(doubleTypeWaypoint);
           } else {
             showSnackBar("Please confirm waypoints first", context);
           }
@@ -1153,131 +1181,5 @@ class _AutoPageState extends State<AutoPage> {
     } else {
       return const Color.fromARGB(255, 33, 33, 33);
     }
-  }
-
-  KumiPopupWindow sendingPopUp(
-      double safeVertical, double safeHorizontal, BuildContext context) {
-    return showPopupWindow(
-      context,
-      gravity: KumiPopupGravity.center,
-      bgColor: Colors.black.withOpacity(0.9),
-      clickOutDismiss: false,
-      clickBackDismiss: false,
-      customAnimation: false,
-      customPop: false,
-      customPage: false,
-      needSafeDisplay: true,
-      underStatusBar: false,
-      underAppBar: false,
-      offsetX: 0,
-      offsetY: 0,
-      duration: const Duration(milliseconds: 200),
-      childFun: (pop) {
-        return Container(
-          key: GlobalKey(),
-          padding: const EdgeInsets.all(10),
-          height: safeVertical * 20,
-          width: safeHorizontal * 50,
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10), color: Colors.white),
-          child: ValueListenableBuilder(
-            valueListenable: boatStartAuto,
-            builder: (context, value, _) {
-              return (boatStartAuto.value)
-                  ? sendingComplete(context)
-                  : sendingProgress(context);
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  Column sendingComplete(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              "Sent",
-              style: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                  fontSize: _safeHorizontal * 5),
-            ),
-            SizedBox(
-              width: _safeHorizontal * 3,
-            ),
-            Icon(
-              Icons.check,
-              color: Colors.green,
-              size: _safeHorizontal * 6,
-            ),
-          ],
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text(
-                "Close",
-                style: TextStyle(color: Colors.black),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Column sendingProgress(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              "Sending",
-              style: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                  fontSize: _safeHorizontal * 5),
-            ),
-            SizedBox(
-              width: _safeHorizontal * 3,
-            ),
-            LoadingAnimationWidget.prograssiveDots(
-              color: Colors.black,
-              size: _safeHorizontal * 6,
-            ),
-          ],
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextButton(
-              onPressed: () {
-                // Cancel the timer that sends out waypoint periodically
-                sendTimer?.cancel();
-
-                // Send out cancel instruction to boat
-                autoModeSendBLE([1], 0);
-
-                sentCounter.value = 0; //reset sent counter
-                Navigator.pop(context);
-              },
-              child: const Text(
-                "Cancel",
-                style: TextStyle(color: Colors.red),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
   }
 }
