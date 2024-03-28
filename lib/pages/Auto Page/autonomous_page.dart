@@ -143,6 +143,10 @@ class _AutoPageState extends State<AutoPage> {
         // Message contains the boat alerting user that all waypoints have been received
         // And the boat will start autonomous operation
         showSnackBar("Boat will start auto operation", context);
+      } else if (notifybLEAuto[0] == 3) {
+        // Message contains the boat alerting user that all waypoints have been received
+        // And the boat will start autonomous operation
+        showSnackBar("Boat failed to received all waypoints", context);
       }
     }
   }
