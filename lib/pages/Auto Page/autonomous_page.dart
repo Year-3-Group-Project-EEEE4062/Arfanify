@@ -6,6 +6,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:interactive_bottom_sheet/interactive_bottom_sheet.dart';
 import 'package:flutter/services.dart' show ByteData, Uint8List, rootBundle;
+import 'package:kumi_popup_window/kumi_popup_window.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:remote_control_ui/converter/data_converter.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 import 'package:floating_snackbar/floating_snackbar.dart';
@@ -74,6 +76,8 @@ class _AutoPageState extends State<AutoPage> {
   bool isPolygonsON = false;
 
   Timer? sendTimer;
+  final ValueNotifier<bool> boatStartAuto = ValueNotifier<bool>(false);
+  final ValueNotifier<int> sentCounter = ValueNotifier<int>(0);
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //function to change page back to home page
@@ -126,6 +130,7 @@ class _AutoPageState extends State<AutoPage> {
 
       //Check what type of message is it
       if (notifybLEAuto[0] == 0) {
+        // Message contains boat's location
         List<double> boatCoordinates = notifybLEAuto[1];
         LatLng boatLatLng = LatLng(boatCoordinates[0], boatCoordinates[1]);
 
@@ -133,8 +138,11 @@ class _AutoPageState extends State<AutoPage> {
         await _addBoatMarker(boatLatLng);
         await _newCameraPosition(boatLatLng);
       } else if (notifybLEAuto[0] == 1) {
-        List<int> current = notifybLEAuto[1];
-        showSnackBar("Succesfuly sent waypoint No.${current[0]}", context);
+        // Message contains how many waypoints boat has gotten so far
+        sentCounter.value++;
+      } else if (notifybLEAuto[0] == 2) {
+        // Message contains the boat alerting user that all waypoints have been received
+        // And the boat will start autonomous operation
       }
     }
   }
@@ -326,6 +334,361 @@ class _AutoPageState extends State<AutoPage> {
     );
   }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///Map related features
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// created method for getting user current location
+  SizedBox _getUserLocationButton() {
+    return SizedBox(
+      height: _safeVertical * 7,
+      width: _safeHorizontal * 20,
+      child: OutlinedButton(
+        onPressed: () async {
+          _getUserCurrentLocation().then((value) async {
+            currentUserLatLng = value; //update user current location
+            _addUserMarker(LatLng(value.latitude, value.longitude));
+            _newCameraPosition(LatLng(value.latitude, value.longitude));
+          });
+        },
+        style: OutlinedButton.styleFrom(
+          backgroundColor: Colors.black,
+          shape: const CircleBorder(),
+          side: const BorderSide(color: Colors.white),
+        ),
+        child: const Icon(
+          Icons.my_location,
+          color: Colors.blue,
+        ),
+      ),
+    );
+  }
+
+  void _addUserMarker(LatLng point) {
+    setState(
+      () {
+        userMarkerIndex = pathWaypoints.length;
+        // Create a new marker with a unique id and the given position
+        Marker marker = Marker(
+          markerId: const MarkerId("User"),
+          position: point,
+          //icon: BitmapDescriptor.fromBytes(iconDataToBytes(Icon(Icons.directions_boat_filled,))),
+          infoWindow: InfoWindow(
+              title: "Last updated user location",
+              snippet: "Lat: ${point.latitude}, Lng: ${point.longitude}"),
+          icon: BitmapDescriptor.fromBytes(userIcon),
+        );
+        // Add the marker to the set and update the state
+        setState(
+          () {
+            pathWaypoints.add(marker);
+          },
+        );
+      },
+    );
+  }
+
+  // created method for getting user current location
+  SizedBox _getBoatLocationButton() {
+    return SizedBox(
+      height: _safeVertical * 7,
+      width: _safeHorizontal * 20,
+      child: OutlinedButton(
+        onPressed: () async {
+          List<int> mssg = [0];
+          //do something in here
+          autoModeSendBLE(mssg, 0);
+          showSnackBar("Fetching boat location...", context);
+        },
+        style: OutlinedButton.styleFrom(
+          backgroundColor: Colors.black,
+          shape: const CircleBorder(),
+          side: const BorderSide(color: Colors.white),
+        ),
+        child: const Icon(
+          Icons.directions_boat_filled,
+          color: Colors.yellow,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _addBoatMarker(LatLng point) async {
+    boatMarkerIndex = pathWaypoints.length;
+
+    // Create a new marker with a unique id and the given position
+    Marker marker = Marker(
+      markerId: const MarkerId("Boatboat"),
+      position: point,
+      //icon: BitmapDescriptor.fromBytes(iconDataToBytes(Icon(Icons.directions_boat_filled,))),
+      infoWindow: InfoWindow(
+          title: "Last known Boatboat location",
+          snippet: "Lat: ${point.latitude}, Lng: ${point.longitude}"),
+      icon: BitmapDescriptor.fromBytes(boatIcon),
+    );
+    // Add the marker to the set and update the state
+    setState(
+      () {
+        pathWaypoints.add(marker);
+      },
+    );
+  }
+
+  Future<void> _newCameraPosition(LatLng value) async {
+    // create a new camera position with respect to the user's location
+    CameraPosition cameraPosition = CameraPosition(
+      target: value,
+      zoom: 18,
+    );
+
+    //use future to get the object of the _mapsController to change its properties
+    final GoogleMapController controller = await _mapsController.future;
+
+    //animate the map panning to the user's current location
+    controller.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+    setState(() {});
+  }
+
+  void _addMarkerToMap(LatLng point) {
+    if (!isWaypointsReady) {
+      setState(
+        () {
+          markerCounter++;
+          // Create a new marker with a unique id and the given position
+          Marker marker = Marker(
+            markerId: MarkerId("Waypoint No.$markerCounter"),
+            position: point,
+            //icon: BitmapDescriptor.fromBytes(iconDataToBytes(Icon(Icons.directions_boat_filled,))),
+            infoWindow: InfoWindow(
+                title: "Waypoint No.$markerCounter",
+                snippet: "Lat: ${point.latitude}, Lng: ${point.longitude}"),
+            icon: BitmapDescriptor.fromBytes(markerIcon),
+          );
+          // Add the marker to the set and update the state
+          setState(
+            () {
+              pathWaypoints.add(marker);
+              markersLatLng.add(point);
+            },
+          );
+        },
+      );
+    } else {
+      showSnackBar("Cannot add as waypoints confirmed!", context);
+    }
+  }
+
+  void _checkMarkerToUser(LatLng point) {
+    //first marker can only be dropped about 1 km from user current location
+    //this is based on Medium's max comms range (1.1km)
+    //get the distance between user and the supposed first marker
+    double distance = Geolocator.distanceBetween(
+      currentUserLatLng!.latitude,
+      currentUserLatLng!.longitude,
+      point.latitude,
+      point.longitude,
+    );
+
+    //check the distance between the user and that supposed marker
+    //make sure the distance is less than or equals to 1 km
+    if (distance <= maxMarkerToUserDistance) {
+      //add that user marker to map
+      _addMarkerToMap(point);
+    } else {
+      showSnackBar("Marker dropped further than 1 km of user", context);
+    }
+  }
+
+  GoogleMap theMap() {
+    return GoogleMap(
+      style: _darkMapStyle,
+      buildingsEnabled: false,
+      mapType: MapType.normal,
+      zoomControlsEnabled: false,
+      compassEnabled: true,
+      initialCameraPosition: CameraPosition(
+          target:
+              //add a nullcheck for each lattitude and longitude
+              LatLng(currentUserLatLng!.latitude, currentUserLatLng!.longitude),
+          zoom: 18),
+      markers: pathWaypoints,
+      polygons: polygonArea,
+      onLongPress: _checkMarkerToUser,
+      onMapCreated: (GoogleMapController controller) async {
+        //assigning the controller
+        _mapsController.complete(controller);
+      },
+    );
+  }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Title of the page
+  SizedBox autoPageTitle() {
+    return SizedBox(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          ImageIcon(
+            const AssetImage('assets/icons/arfanify.png'),
+            color: Colors.white,
+            size: _safeVertical * 8,
+          ),
+          Text(
+            '> Auto',
+            style: TextStyle(
+              fontSize: _safeVertical * 3,
+              color: Colors.white,
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  SizedBox bleStatus() {
+    return SizedBox(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Icon(
+            bleStatLogo,
+            color: Colors.white,
+            size: _safeVertical * 5,
+          ),
+        ],
+      ),
+    );
+  }
+
+//home button to return back to home page
+  OutlinedButton homeButton(BuildContext context) {
+    return OutlinedButton(
+      onPressed: () {
+        changeToHomePage();
+      },
+      style: OutlinedButton.styleFrom(
+        side: const BorderSide(
+          width: 3,
+          color: Colors.white,
+          style: BorderStyle.solid,
+        ),
+        backgroundColor: const Color(0xff768a76), // Outline color
+        shape: RoundedRectangleBorder(
+          borderRadius:
+              BorderRadius.circular(30), // Adjust the border radius as needed
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          Icons.home_filled,
+          color: Colors.white,
+          size: _safeVertical * 4,
+        ),
+      ),
+    );
+  }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///remove all marker widget related
+  SizedBox _addPolygonsButton() {
+    return SizedBox(
+      height: _safeVertical * 7,
+      width: _safeHorizontal * 20,
+      child: OutlinedButton(
+        onPressed: () {
+          if (pathWaypoints.length >= 3) {
+            setState(() {
+              if (!isPolygonsON) {
+                polygonArea.clear();
+                polygonArea.add(
+                  Polygon(
+                    polygonId: const PolygonId("Area of Measurement"),
+                    points: markersLatLng,
+                    fillColor: Colors.green.withOpacity(0.3),
+                    strokeColor: Colors.red,
+                    strokeWidth: 4,
+                    geodesic: true,
+                  ),
+                );
+                _changePolygonsButtonColor();
+              } else {
+                polygonArea.clear();
+                _changePolygonsButtonColor();
+              }
+            });
+          } else {
+            showSnackBar("Add at least 3 waypoints on map", context);
+          }
+        },
+        style: OutlinedButton.styleFrom(
+          backgroundColor: polygonButtonColor.value,
+          shape: const CircleBorder(),
+          side: const BorderSide(color: Colors.white),
+        ),
+        child: const Icon(
+          Icons.format_shapes,
+          color: Colors.orange,
+        ),
+      ),
+    );
+  }
+
+  void _changePolygonsButtonColor() {
+    if (!isPolygonsON) {
+      polygonButtonColor.value = const Color.fromARGB(255, 96, 214, 99);
+      isPolygonsON = true;
+    } else if (isPolygonsON) {
+      polygonButtonColor.value = Colors.black;
+      isPolygonsON = false;
+    }
+  }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///remove all marker widget related
+  SizedBox _removeAllMarkers() {
+    return SizedBox(
+      height: _safeVertical * 7,
+      width: _safeHorizontal * 20,
+      child: OutlinedButton(
+        onPressed: () {
+          setState(() {
+            if (!isWaypointsReady) {
+              pathWaypoints.clear();
+              markerCounter = 0;
+              markersLatLng.clear();
+
+              //reset the toggle switch for waypoints
+              waypointsReadyIndex = 1;
+
+              //reset polygons to none
+              if (polygonArea.isNotEmpty) {
+                polygonArea.clear();
+                _changePolygonsButtonColor();
+              }
+            } else {
+              showSnackBar("Cannot remove as waypoints confirmed!", context);
+            }
+          });
+        },
+        style: OutlinedButton.styleFrom(
+          backgroundColor: Colors.black,
+          shape: const CircleBorder(),
+          side: const BorderSide(color: Colors.white),
+        ),
+        child: const Icon(
+          Icons.location_off,
+          color: Colors.red,
+        ),
+      ),
+    );
+  }
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///for waypoint checker to work
   Future<void> _locateMarker(LatLng markerLocation) async {
@@ -695,11 +1058,7 @@ class _AutoPageState extends State<AutoPage> {
             () {
               showSnackBar("Attempting to cancel ongoing operations!", context);
 
-              // Cancel the timer that sends out waypoint periodically
-              sendTimer?.cancel();
-
               // Send out cancel instruction to boat
-              //Send BLE to let user know how many
               autoModeSendBLE([1], 0);
             },
           );
@@ -760,13 +1119,15 @@ class _AutoPageState extends State<AutoPage> {
       child: OutlinedButton(
         onPressed: () async {
           if (isWaypointsReady) {
-            showSnackBar("Attempting to send to Medium...", context);
+            // showSnackBar("Attempting to send to Medium...", context);
 
-            //pack the waypoints from LatLng to type of 2D double list
-            List<List<double>> doubleTypeWaypoint = await packWaypoints();
+            // //pack the waypoints from LatLng to type of 2D double list
+            // List<List<double>> doubleTypeWaypoint = await packWaypoints();
 
-            //function to send BLE data with 1 second delay in between
-            await sendWaypoints(doubleTypeWaypoint);
+            // //function to send BLE data with 1 second delay in between
+            // await sendWaypoints(doubleTypeWaypoint);
+
+            sendingPopUp(_safeVertical, _safeHorizontal, context);
           } else {
             showSnackBar("Please confirm waypoints first", context);
           }
@@ -794,357 +1155,129 @@ class _AutoPageState extends State<AutoPage> {
     }
   }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///Map related features
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// created method for getting user current location
-  SizedBox _getUserLocationButton() {
-    return SizedBox(
-      height: _safeVertical * 7,
-      width: _safeHorizontal * 20,
-      child: OutlinedButton(
-        onPressed: () async {
-          _getUserCurrentLocation().then((value) async {
-            currentUserLatLng = value; //update user current location
-            _addUserMarker(LatLng(value.latitude, value.longitude));
-            _newCameraPosition(LatLng(value.latitude, value.longitude));
-          });
-        },
-        style: OutlinedButton.styleFrom(
-          backgroundColor: Colors.black,
-          shape: const CircleBorder(),
-          side: const BorderSide(color: Colors.white),
-        ),
-        child: const Icon(
-          Icons.my_location,
-          color: Colors.blue,
-        ),
-      ),
-    );
-  }
-
-  void _addUserMarker(LatLng point) {
-    setState(
-      () {
-        userMarkerIndex = pathWaypoints.length;
-        // Create a new marker with a unique id and the given position
-        Marker marker = Marker(
-          markerId: const MarkerId("User"),
-          position: point,
-          //icon: BitmapDescriptor.fromBytes(iconDataToBytes(Icon(Icons.directions_boat_filled,))),
-          infoWindow: InfoWindow(
-              title: "Last updated user location",
-              snippet: "Lat: ${point.latitude}, Lng: ${point.longitude}"),
-          icon: BitmapDescriptor.fromBytes(userIcon),
-        );
-        // Add the marker to the set and update the state
-        setState(
-          () {
-            pathWaypoints.add(marker);
-          },
-        );
-      },
-    );
-  }
-
-  // created method for getting user current location
-  SizedBox _getBoatLocationButton() {
-    return SizedBox(
-      height: _safeVertical * 7,
-      width: _safeHorizontal * 20,
-      child: OutlinedButton(
-        onPressed: () async {
-          List<int> mssg = [0];
-          //do something in here
-          autoModeSendBLE(mssg, 0);
-          showSnackBar("Fetching boat location...", context);
-        },
-        style: OutlinedButton.styleFrom(
-          backgroundColor: Colors.black,
-          shape: const CircleBorder(),
-          side: const BorderSide(color: Colors.white),
-        ),
-        child: const Icon(
-          Icons.directions_boat_filled,
-          color: Colors.yellow,
-        ),
-      ),
-    );
-  }
-
-  Future<void> _addBoatMarker(LatLng point) async {
-    boatMarkerIndex = pathWaypoints.length;
-
-    // Create a new marker with a unique id and the given position
-    Marker marker = Marker(
-      markerId: const MarkerId("Boatboat"),
-      position: point,
-      //icon: BitmapDescriptor.fromBytes(iconDataToBytes(Icon(Icons.directions_boat_filled,))),
-      infoWindow: InfoWindow(
-          title: "Last known Boatboat location",
-          snippet: "Lat: ${point.latitude}, Lng: ${point.longitude}"),
-      icon: BitmapDescriptor.fromBytes(boatIcon),
-    );
-    // Add the marker to the set and update the state
-    setState(
-      () {
-        pathWaypoints.add(marker);
-      },
-    );
-  }
-
-  Future<void> _newCameraPosition(LatLng value) async {
-    // create a new camera position with respect to the user's location
-    CameraPosition cameraPosition = CameraPosition(
-      target: value,
-      zoom: 18,
-    );
-
-    //use future to get the object of the _mapsController to change its properties
-    final GoogleMapController controller = await _mapsController.future;
-
-    //animate the map panning to the user's current location
-    controller.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
-    setState(() {});
-  }
-
-  void _addMarkerToMap(LatLng point) {
-    if (!isWaypointsReady) {
-      setState(
-        () {
-          markerCounter++;
-          // Create a new marker with a unique id and the given position
-          Marker marker = Marker(
-            markerId: MarkerId("Waypoint No.$markerCounter"),
-            position: point,
-            //icon: BitmapDescriptor.fromBytes(iconDataToBytes(Icon(Icons.directions_boat_filled,))),
-            infoWindow: InfoWindow(
-                title: "Waypoint No.$markerCounter",
-                snippet: "Lat: ${point.latitude}, Lng: ${point.longitude}"),
-            icon: BitmapDescriptor.fromBytes(markerIcon),
-          );
-          // Add the marker to the set and update the state
-          setState(
-            () {
-              pathWaypoints.add(marker);
-              markersLatLng.add(point);
+  KumiPopupWindow sendingPopUp(
+      double safeVertical, double safeHorizontal, BuildContext context) {
+    return showPopupWindow(
+      context,
+      gravity: KumiPopupGravity.center,
+      bgColor: Colors.black.withOpacity(0.9),
+      clickOutDismiss: false,
+      clickBackDismiss: false,
+      customAnimation: false,
+      customPop: false,
+      customPage: false,
+      needSafeDisplay: true,
+      underStatusBar: false,
+      underAppBar: false,
+      offsetX: 0,
+      offsetY: 0,
+      duration: const Duration(milliseconds: 200),
+      childFun: (pop) {
+        return Container(
+          key: GlobalKey(),
+          padding: const EdgeInsets.all(10),
+          height: safeVertical * 20,
+          width: safeHorizontal * 50,
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10), color: Colors.white),
+          child: ValueListenableBuilder(
+            valueListenable: boatStartAuto,
+            builder: (context, value, _) {
+              return (boatStartAuto.value)
+                  ? sendingComplete(context)
+                  : sendingProgress(context);
             },
-          );
-        },
-      );
-    } else {
-      showSnackBar("Cannot add as waypoints confirmed!", context);
-    }
-  }
-
-  void _checkMarkerToUser(LatLng point) {
-    //first marker can only be dropped about 1 km from user current location
-    //this is based on Medium's max comms range (1.1km)
-    //get the distance between user and the supposed first marker
-    double distance = Geolocator.distanceBetween(
-      currentUserLatLng!.latitude,
-      currentUserLatLng!.longitude,
-      point.latitude,
-      point.longitude,
-    );
-
-    //check the distance between the user and that supposed marker
-    //make sure the distance is less than or equals to 1 km
-    if (distance <= maxMarkerToUserDistance) {
-      //add that user marker to map
-      _addMarkerToMap(point);
-    } else {
-      showSnackBar("Marker dropped further than 1 km of user", context);
-    }
-  }
-
-  GoogleMap theMap() {
-    return GoogleMap(
-      style: _darkMapStyle,
-      buildingsEnabled: false,
-      mapType: MapType.normal,
-      zoomControlsEnabled: false,
-      compassEnabled: true,
-      initialCameraPosition: CameraPosition(
-          target:
-              //add a nullcheck for each lattitude and longitude
-              LatLng(currentUserLatLng!.latitude, currentUserLatLng!.longitude),
-          zoom: 18),
-      markers: pathWaypoints,
-      polygons: polygonArea,
-      onLongPress: _checkMarkerToUser,
-      onMapCreated: (GoogleMapController controller) async {
-        //assigning the controller
-        _mapsController.complete(controller);
+          ),
+        );
       },
     );
   }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Title of the page
-  SizedBox autoPageTitle() {
-    return SizedBox(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          ImageIcon(
-            const AssetImage('assets/icons/arfanify.png'),
-            color: Colors.white,
-            size: _safeVertical * 8,
-          ),
-          Text(
-            '> Auto',
-            style: TextStyle(
-              fontSize: _safeVertical * 3,
-              color: Colors.white,
+  Column sendingComplete(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              "Sent",
+              style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: _safeHorizontal * 5),
             ),
-          )
-        ],
-      ),
+            SizedBox(
+              width: _safeHorizontal * 3,
+            ),
+            Icon(
+              Icons.check,
+              color: Colors.green,
+              size: _safeHorizontal * 6,
+            ),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text(
+                "Close",
+                style: TextStyle(color: Colors.black),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  SizedBox bleStatus() {
-    return SizedBox(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Icon(
-            bleStatLogo,
-            color: Colors.white,
-            size: _safeVertical * 5,
-          ),
-        ],
-      ),
-    );
-  }
+  Column sendingProgress(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              "Sending",
+              style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: _safeHorizontal * 5),
+            ),
+            SizedBox(
+              width: _safeHorizontal * 3,
+            ),
+            LoadingAnimationWidget.prograssiveDots(
+              color: Colors.black,
+              size: _safeHorizontal * 6,
+            ),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton(
+              onPressed: () {
+                // Cancel the timer that sends out waypoint periodically
+                sendTimer?.cancel();
 
-//home button to return back to home page
-  OutlinedButton homeButton(BuildContext context) {
-    return OutlinedButton(
-      onPressed: () {
-        changeToHomePage();
-      },
-      style: OutlinedButton.styleFrom(
-        side: const BorderSide(
-          width: 3,
-          color: Colors.white,
-          style: BorderStyle.solid,
-        ),
-        backgroundColor: const Color(0xff768a76), // Outline color
-        shape: RoundedRectangleBorder(
-          borderRadius:
-              BorderRadius.circular(30), // Adjust the border radius as needed
-        ),
-      ),
-      child: Center(
-        child: Icon(
-          Icons.home_filled,
-          color: Colors.white,
-          size: _safeVertical * 4,
-        ),
-      ),
-    );
-  }
+                // Send out cancel instruction to boat
+                autoModeSendBLE([1], 0);
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///remove all marker widget related
-  SizedBox _addPolygonsButton() {
-    return SizedBox(
-      height: _safeVertical * 7,
-      width: _safeHorizontal * 20,
-      child: OutlinedButton(
-        onPressed: () {
-          if (pathWaypoints.length >= 3) {
-            setState(() {
-              if (!isPolygonsON) {
-                polygonArea.clear();
-                polygonArea.add(
-                  Polygon(
-                    polygonId: const PolygonId("Area of Measurement"),
-                    points: markersLatLng,
-                    fillColor: Colors.green.withOpacity(0.3),
-                    strokeColor: Colors.red,
-                    strokeWidth: 4,
-                    geodesic: true,
-                  ),
-                );
-                _changePolygonsButtonColor();
-              } else {
-                polygonArea.clear();
-                _changePolygonsButtonColor();
-              }
-            });
-          } else {
-            showSnackBar("Add at least 3 waypoints on map", context);
-          }
-        },
-        style: OutlinedButton.styleFrom(
-          backgroundColor: polygonButtonColor.value,
-          shape: const CircleBorder(),
-          side: const BorderSide(color: Colors.white),
+                sentCounter.value = 0; //reset sent counter
+                Navigator.pop(context);
+              },
+              child: const Text(
+                "Cancel",
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
         ),
-        child: const Icon(
-          Icons.format_shapes,
-          color: Colors.orange,
-        ),
-      ),
-    );
-  }
-
-  void _changePolygonsButtonColor() {
-    if (!isPolygonsON) {
-      polygonButtonColor.value = const Color.fromARGB(255, 96, 214, 99);
-      isPolygonsON = true;
-    } else if (isPolygonsON) {
-      polygonButtonColor.value = Colors.black;
-      isPolygonsON = false;
-    }
-  }
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///remove all marker widget related
-  SizedBox _removeAllMarkers() {
-    return SizedBox(
-      height: _safeVertical * 7,
-      width: _safeHorizontal * 20,
-      child: OutlinedButton(
-        onPressed: () {
-          setState(() {
-            if (!isWaypointsReady) {
-              pathWaypoints.clear();
-              markerCounter = 0;
-              markersLatLng.clear();
-
-              //reset the toggle switch for waypoints
-              waypointsReadyIndex = 1;
-
-              //reset polygons to none
-              if (polygonArea.isNotEmpty) {
-                polygonArea.clear();
-                _changePolygonsButtonColor();
-              }
-            } else {
-              showSnackBar("Cannot remove as waypoints confirmed!", context);
-            }
-          });
-        },
-        style: OutlinedButton.styleFrom(
-          backgroundColor: Colors.black,
-          shape: const CircleBorder(),
-          side: const BorderSide(color: Colors.white),
-        ),
-        child: const Icon(
-          Icons.location_off,
-          color: Colors.red,
-        ),
-      ),
+      ],
     );
   }
 }
