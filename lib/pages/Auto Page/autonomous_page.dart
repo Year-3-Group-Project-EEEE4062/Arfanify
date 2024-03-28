@@ -69,6 +69,8 @@ class _AutoPageState extends State<AutoPage> {
 
   List<LatLng> markersLatLng = [];
 
+  List<LatLng> boatpathLatLng = [];
+
   Set<Polyline> pathPolylines = {};
   ValueNotifier<Color> polylineButtonColor = ValueNotifier<Color>(Colors.black);
   bool isPolylinesON = false;
@@ -122,13 +124,13 @@ class _AutoPageState extends State<AutoPage> {
     if (mounted) {
       debugPrint("New data for auto page");
       debugPrint("${notifybLEAuto[0]}");
-      debugPrint("Data type: ${notifybLEAuto[0].runtimeType}");
 
       //Check what type of message is it
       if (notifybLEAuto[0] == 0) {
         // Message contains boat's location
         List<double> boatCoordinates = notifybLEAuto[1];
         LatLng boatLatLng = LatLng(boatCoordinates[0], boatCoordinates[1]);
+        boatpathLatLng.add(boatLatLng);
 
         //means it is the location of the boat
         await _addBoatMarker(boatLatLng);
@@ -600,27 +602,31 @@ class _AutoPageState extends State<AutoPage> {
       width: _safeHorizontal * 20,
       child: OutlinedButton(
         onPressed: () {
-          if (pathWaypoints.length >= 2) {
-            setState(() {
-              if (!isPolylinesON) {
-                pathPolylines.clear();
-                pathPolylines.add(
-                  Polyline(
-                    polylineId: const PolylineId('user'),
-                    points: markersLatLng,
-                    width: 2,
-                    color: const Color.fromARGB(255, 96, 214, 99),
-                  ),
-                );
-                _changePolylineButtonColor();
-              } else {
-                pathPolylines.clear();
-                _changePolylineButtonColor();
-              }
-            });
-          } else {
-            showSnackBar("Add at least 2 waypoints on map", context);
-          }
+          setState(() {
+            if (!isPolylinesON) {
+              pathPolylines.clear();
+              pathPolylines.add(
+                Polyline(
+                  polylineId: const PolylineId('user'),
+                  points: markersLatLng,
+                  width: 2,
+                  color: const Color.fromARGB(255, 96, 214, 99),
+                ),
+              );
+              pathPolylines.add(
+                Polyline(
+                  polylineId: const PolylineId('boat'),
+                  points: boatpathLatLng,
+                  width: 2,
+                  color: const Color.fromARGB(255, 84, 246, 255),
+                ),
+              );
+              _changePolylineButtonColor();
+            } else {
+              pathPolylines.clear();
+              _changePolylineButtonColor();
+            }
+          });
         },
         style: OutlinedButton.styleFrom(
           backgroundColor: polylineButtonColor.value,
@@ -659,6 +665,7 @@ class _AutoPageState extends State<AutoPage> {
               pathWaypoints.clear();
               markerCounter = 0;
               markersLatLng.clear();
+              boatpathLatLng.clear();
 
               //reset the toggle switch for waypoints
               waypointsReadyIndex = 1;
