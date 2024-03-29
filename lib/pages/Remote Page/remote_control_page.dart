@@ -167,48 +167,65 @@ class RemotePageState extends State<RemotePage> {
           SizedBox(
             height: _safeVertical * 5,
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              remotePageTitle(),
-              SizedBox(
-                height: _safeVertical * 7,
-                width: _safeHorizontal * 48,
-                child: SizedBox(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      bleStatus(),
-                      SizedBox(width: _safeHorizontal * 3), //just empty space
-                      homeButton(context),
-                      SizedBox(width: _safeHorizontal * 1),
-                    ],
+          Padding(
+            padding: const EdgeInsets.only(left: 20, right: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                remotePageTitle(),
+                SizedBox(
+                  height: _safeVertical * 7,
+                  width: _safeHorizontal * 48,
+                  child: SizedBox(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        bleStatus(),
+                        SizedBox(width: _safeHorizontal * 3), //just empty space
+                        homeButton(context),
+                        SizedBox(width: _safeHorizontal * 1),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           SizedBox(
             height: _safeVertical * 1,
           ),
-          motionLayout(),
-          SizedBox(height: _safeVertical * 2), //just empty space
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              SizedBox(width: _safeHorizontal * 2),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  (isTemperatureMeasurement) ? cancelButton() : measureButton(),
-                  SizedBox(height: _safeVertical * 2), //just empty space
-                  stopButton(),
-                ],
-              ),
-              movementsLayout(),
-              SizedBox(width: _safeHorizontal * 2),
-            ],
-          )
+          Padding(
+            padding: const EdgeInsets.only(left: 15, right: 15),
+            child: Column(
+              children: [
+                motionLayout(),
+                SizedBox(height: _safeVertical * 2), //just empty space
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 15),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          (isTemperatureMeasurement)
+                              ? cancelButton()
+                              : measureButton(),
+                          SizedBox(
+                              height: _safeVertical * 2), //just empty space
+                          stopButton(),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 15),
+                      child: movementsLayout(),
+                    )
+                  ],
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -286,7 +303,6 @@ class RemotePageState extends State<RemotePage> {
   Container motionLayout() {
     return Container(
       height: _safeVertical * 51,
-      width: _safeHorizontal * 84,
       decoration: BoxDecoration(
         color: const Color.fromARGB(255, 33, 33, 33),
         borderRadius: BorderRadius.circular(30),
@@ -637,7 +653,6 @@ class RemotePageState extends State<RemotePage> {
   Container movementsLayout() {
     return Container(
       height: _safeVertical * 34,
-      width: _safeHorizontal * 40,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(30),
@@ -660,7 +675,10 @@ class RemotePageState extends State<RemotePage> {
             ],
           ),
           SizedBox(height: _safeVertical), //just empty space
-          controlPad(),
+          Padding(
+            padding: const EdgeInsets.only(left: 15, right: 15),
+            child: controlPad(),
+          ),
         ],
       ),
     );

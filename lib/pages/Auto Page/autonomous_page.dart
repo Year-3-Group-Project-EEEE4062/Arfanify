@@ -143,6 +143,10 @@ class _AutoPageState extends State<AutoPage> {
         // Message contains the boat alerting user that all waypoints have been received
         // And the boat will start autonomous operation
         showSnackBar("Boat will start auto operation", context);
+      } else if (notifybLEAuto[0] == 3) {
+        // Message contains the boat alerting user that all waypoints have been received
+        // And the boat will start autonomous operation
+        showSnackBar("Boat failed to received all waypoints", context);
       }
     }
   }
@@ -248,29 +252,41 @@ class _AutoPageState extends State<AutoPage> {
 
           //for positioning the home button onto the map
           Positioned(
-            top: _safeVertical * 5,
-            right: _safeHorizontal * 1,
-            child: SizedBox(
-              height: _safeVertical * 7,
-              width: _safeHorizontal * 48,
-              child: SizedBox(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    bleStatus(),
-                    SizedBox(width: _safeHorizontal * 3), //just empty space
-                    homeButton(context),
-                    SizedBox(width: _safeHorizontal * 1),
-                  ],
-                ),
+            // top: _safeVertical * 5,
+            // right: _safeHorizontal * 5,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 20, right: 20),
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: _safeVertical * 5,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      autoPageTitle(),
+                      SizedBox(
+                        height: _safeVertical * 7,
+                        width: _safeHorizontal * 48,
+                        child: SizedBox(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              bleStatus(),
+                              SizedBox(
+                                  width:
+                                      _safeHorizontal * 3), //just empty space
+                              homeButton(context),
+                              SizedBox(width: _safeHorizontal * 1),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ),
-          //For positioning the title of the page
-          Positioned(
-            top: _safeVertical * 5,
-            left: _safeHorizontal * 1,
-            child: autoPageTitle(),
           ),
 
           //For positioning the map button

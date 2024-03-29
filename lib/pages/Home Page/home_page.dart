@@ -71,24 +71,33 @@ class HomePageState extends State<HomePage> {
           SizedBox(
             height: _safeVertical * 5,
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              mainPageTitle(),
-            ],
+          Padding(
+            padding: const EdgeInsets.only(left: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                mainPageTitle(),
+              ],
+            ),
           ),
           SizedBox(
             height: _safeVertical * 0.1,
           ),
-          Center(
-            child: modeSection(),
+          Padding(
+            padding: const EdgeInsets.only(right: 20, left: 20),
+            child: Center(
+              child: modeSection(),
+            ),
           ),
           SizedBox(
             height: _safeVertical * 2,
           ),
-          Center(
-            child: bleSection(),
-          )
+          Padding(
+            padding: const EdgeInsets.only(right: 20, left: 20),
+            child: Center(
+              child: bleSection(),
+            ),
+          ),
         ],
       ),
     );
@@ -122,43 +131,48 @@ class HomePageState extends State<HomePage> {
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Container modeSection() {
     return Container(
-      height: _safeVertical * 23,
-      width: _safeHorizontal * 100,
       decoration: BoxDecoration(
         color: const Color(0xffC8D0C8),
         borderRadius: BorderRadius.circular(30),
       ),
-      child: Column(
-        children: [
-          SizedBox(
-            height: _safeVertical,
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: _safeVertical * 4,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 10, bottom: 20),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 30),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  const Icon(Icons.developer_mode),
+                  SizedBox(
+                    width: _safeHorizontal,
+                  ),
+                  Text(
+                    "Modes",
+                    style: TextStyle(
+                        fontSize: _safeHorizontal * 6,
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
-              Text(
-                "Modes",
-                style: TextStyle(
-                    fontSize: _safeHorizontal * 5,
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold),
+            ),
+            SizedBox(
+              height: _safeVertical,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 20, left: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  remotePageButton(),
+                  autoPageButton(),
+                ],
               ),
-            ],
-          ),
-          SizedBox(
-            height: _safeVertical,
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              remotePageButton(),
-              autoPageButton(),
-            ],
-          )
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -166,7 +180,6 @@ class HomePageState extends State<HomePage> {
   SizedBox remotePageButton() {
     return SizedBox(
       height: _safeVertical * 15,
-      width: _safeHorizontal * 40,
       child: ElevatedButton.icon(
         onPressed: () {
           // In indexed stack, remote page is index 1
@@ -179,7 +192,7 @@ class HomePageState extends State<HomePage> {
         ),
         label: Text(
           'Remote',
-          style: TextStyle(fontSize: _safeHorizontal * 3, color: Colors.white),
+          style: TextStyle(fontSize: _safeHorizontal * 4, color: Colors.white),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xff768a76),
@@ -194,7 +207,6 @@ class HomePageState extends State<HomePage> {
   SizedBox autoPageButton() {
     return SizedBox(
       height: _safeVertical * 15,
-      width: _safeHorizontal * 40,
       child: ElevatedButton.icon(
         onPressed: () {
           // In indexed stack, remote page is index 2
@@ -207,7 +219,7 @@ class HomePageState extends State<HomePage> {
         ),
         label: Text(
           'Auto',
-          style: TextStyle(fontSize: _safeHorizontal * 3, color: Colors.white),
+          style: TextStyle(fontSize: _safeHorizontal * 4, color: Colors.white),
         ),
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xff768a76),
@@ -223,45 +235,53 @@ class HomePageState extends State<HomePage> {
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Container bleSection() {
     return Container(
-      height: _safeVertical * 63,
-      width: _safeHorizontal * 100,
       decoration: BoxDecoration(
         color: const Color(0xffC8D0C8),
         borderRadius: BorderRadius.circular(30),
       ),
-      child: Column(
-        children: [
-          SizedBox(
-            height: _safeVertical,
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: _safeVertical * 4,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 10, bottom: 10),
+        child: Column(
+          children: [
+            SizedBox(
+              height: _safeVertical,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 30),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  const Icon(Icons.settings_bluetooth),
+                  SizedBox(
+                    width: _safeHorizontal,
+                  ),
+                  Text(
+                    "Bluetooth",
+                    style: TextStyle(
+                        fontSize: _safeHorizontal * 6,
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
-              Text(
-                "Bluetooth",
-                style: TextStyle(
-                    fontSize: _safeHorizontal * 5,
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold),
+            ),
+            SizedBox(
+              height: _safeVertical,
+            ),
+            // Defined in another class
+            Padding(
+              padding: const EdgeInsets.only(right: 20, left: 20, bottom: 15),
+              child: AppBarBLE(
+                bleController: myBLEController,
+                safeScreenHeight: _safeVertical,
+                safeScreenWidth: _safeHorizontal,
+                bleStat: widget.updateTreeBLEStat,
+                notifyRemoteCB: widget.notifyRemoteNewBLE,
+                notifyAutoCB: widget.notifyAutoNewBLE,
               ),
-            ],
-          ),
-          SizedBox(
-            height: _safeVertical,
-          ),
-          // Defined in another class
-          AppBarBLE(
-            bleController: myBLEController,
-            safeScreenHeight: _safeVertical,
-            safeScreenWidth: _safeHorizontal,
-            bleStat: widget.updateTreeBLEStat,
-            notifyRemoteCB: widget.notifyRemoteNewBLE,
-            notifyAutoCB: widget.notifyAutoNewBLE,
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
