@@ -208,20 +208,19 @@ class AppBarBLEState extends State<AppBarBLE> {
     return Column(
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            SizedBox(
-              width: _safeVertical * 4,
-            ),
             //show connection status to Medium
             Container(
-              height: _safeVertical * 5,
-              width: _safeHorizontal * 40,
               decoration: BoxDecoration(
                 color: Colors.black,
-                borderRadius: BorderRadius.circular(30),
+                borderRadius: BorderRadius.circular(20),
               ),
-              child: bleStatusRow(context),
+              child: Padding(
+                padding: const EdgeInsets.only(
+                    top: 15, bottom: 15, left: 20, right: 20),
+                child: Center(child: bleStatusRow(context)),
+              ),
             ),
             SizedBox(
               width: _safeVertical * 10,
@@ -230,39 +229,40 @@ class AppBarBLEState extends State<AppBarBLE> {
           ],
         ),
         SizedBox(
-          height: _safeVertical * 0.9,
+          height: _safeVertical * 2,
         ),
-        contextBox(context), //show user what is currently happening in BLE
+        Center(
+          child: contextBox(context),
+        ),
         SizedBox(
-          height: _safeVertical * 0.9,
+          height: _safeVertical * 2,
         ),
-        Container(
-          height: _safeVertical * 9,
-          width: _safeHorizontal * 83,
-          decoration: BoxDecoration(
-            color: Colors.black,
-            borderRadius: BorderRadius.circular(30),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              bleConnectButton(context),
-              bleDisconnectButton(context),
-            ],
+        Center(
+          child: Container(
+            height: _safeVertical * 9,
+            decoration: BoxDecoration(
+              color: Colors.black,
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                bleConnectButton(context),
+                bleDisconnectButton(context),
+              ],
+            ),
           ),
         ),
         (deviceConnected)
             ? Column(
                 children: [
                   SizedBox(
-                    height: _safeVertical * 0.9,
+                    height: _safeVertical * 2,
                   ),
                   bleTestButton(context)
                 ],
               )
-            : SizedBox(
-                height: _safeVertical * 0.9,
-              ),
+            : const SizedBox(),
       ],
     );
   }
@@ -299,14 +299,18 @@ class AppBarBLEState extends State<AppBarBLE> {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         ValueListenableBuilder(
-            valueListenable: connectionColor,
-            builder: (context, value, _) {
-              return Icon(
-                Icons.circle_sharp,
-                size: _safeVertical * 3,
-                color: connectionColor.value,
-              );
-            }),
+          valueListenable: connectionColor,
+          builder: (context, value, _) {
+            return Icon(
+              Icons.circle_sharp,
+              size: _safeVertical * 3,
+              color: connectionColor.value,
+            );
+          },
+        ),
+        SizedBox(
+          width: _safeVertical * 2,
+        ),
         Text(
           'Connection',
           style: TextStyle(color: Colors.white, fontSize: _safeHorizontal * 4),
@@ -356,67 +360,59 @@ class AppBarBLEState extends State<AppBarBLE> {
     timeActionMssg();
   }
 
-  Row contextBox(BuildContext context) {
-    return Row(
-      textBaseline: TextBaseline.alphabetic,
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        SizedBox(
-          width: _safeVertical * 4,
-        ),
-        Container(
-          height: _safeVertical * 31,
-          width: _safeHorizontal * 83,
-          decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 33, 33, 33),
-              borderRadius: BorderRadius.circular(30)),
-          child: Column(
+  Container contextBox(BuildContext context) {
+    return Container(
+      height: _safeVertical * 27,
+      decoration: BoxDecoration(
+          color: const Color.fromARGB(255, 33, 33, 33),
+          borderRadius: BorderRadius.circular(30)),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Container(
-                  width: _safeHorizontal * 20,
-                  height: _safeVertical * 7,
-                  decoration: BoxDecoration(
-                    color: Colors.black,
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  child: Center(
-                    child: ValueListenableBuilder(
-                        valueListenable: timeMssg,
-                        builder: (context, value, _) {
-                          return Text(timeMssg.value,
-                              softWrap: true,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: _safeHorizontal * 6));
-                        }),
-                  ),
+              Container(
+                width: _safeHorizontal * 20,
+                height: _safeVertical * 7,
+                decoration: BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.circular(30),
                 ),
-              ),
-              SizedBox(
-                height: _safeVertical * 4,
-              ),
-              Center(
-                child: ValueListenableBuilder(
-                    valueListenable: actionMssg,
+                child: Center(
+                  child: ValueListenableBuilder(
+                    valueListenable: timeMssg,
                     builder: (context, value, _) {
-                      return Text(actionMssg.value,
+                      return Text(timeMssg.value,
                           softWrap: true,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               color: Colors.white,
-                              fontSize: _safeHorizontal * 7));
-                    }),
-              )
+                              fontSize: _safeHorizontal * 6));
+                    },
+                  ),
+                ),
+              ),
             ],
           ),
-        ),
-        SizedBox(
-          width: _safeVertical * 4,
-        ),
-      ],
+          SizedBox(
+            height: _safeVertical * 4,
+          ),
+          Center(
+            child: ValueListenableBuilder(
+              valueListenable: actionMssg,
+              builder: (context, value, _) {
+                return Text(
+                  actionMssg.value,
+                  softWrap: true,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: Colors.white, fontSize: _safeHorizontal * 7),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 
