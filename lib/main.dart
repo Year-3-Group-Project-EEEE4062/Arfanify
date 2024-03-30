@@ -149,9 +149,12 @@ class _MainAppState extends State<MainApp> {
 
   @override
   Widget build(BuildContext context) {
-    return IndexedStack(
-      index: _selectedIndex,
-      children: _pages,
+    return PopScope(
+      canPop: false,
+      child: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      ),
     );
   }
 }

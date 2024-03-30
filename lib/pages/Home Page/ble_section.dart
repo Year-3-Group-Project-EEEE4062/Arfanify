@@ -222,9 +222,6 @@ class AppBarBLEState extends State<AppBarBLE> {
                 child: Center(child: bleStatusRow(context)),
               ),
             ),
-            SizedBox(
-              width: _safeVertical * 10,
-            ),
             bleScanButton(context)
           ],
         ),

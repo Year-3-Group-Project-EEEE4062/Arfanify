@@ -6,6 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:interactive_bottom_sheet/interactive_bottom_sheet.dart';
 import 'package:flutter/services.dart' show ByteData, Uint8List, rootBundle;
 import 'package:remote_control_ui/converter/data_converter.dart';
+import 'package:remote_control_ui/pages/Auto%20Page/send_pop_up.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 import 'package:floating_snackbar/floating_snackbar.dart';
 import 'dart:ui' as ui;
@@ -53,7 +54,7 @@ class _AutoPageState extends State<AutoPage> {
   bool isWaypointsReady = false;
   int waypointsReadyIndex = 1;
 
-  Position? currentUserLatLng;
+  LatLng? currentUserLoc;
   final Completer<GoogleMapController> _mapsController = Completer();
   late String _darkMapStyle;
 
@@ -61,14 +62,13 @@ class _AutoPageState extends State<AutoPage> {
   int maxMarkerToUserDistance = 1000; //1km
   Set<Marker> pathWaypoints = {};
   int markerCounter = 0;
-  late int userMarkerIndex;
   late Uint8List userIcon;
   late Uint8List markerIcon;
   late Uint8List boatIcon;
-  late int boatMarkerIndex;
 
   List<LatLng> markersLatLng = [];
 
+  LatLng? currentBoatLoc;
   List<LatLng> boatpathLatLng = [];
 
   Set<Polyline> pathPolylines = {};
@@ -76,6 +76,8 @@ class _AutoPageState extends State<AutoPage> {
   bool isPolylinesON = false;
 
   Timer? sendTimer;
+  SendAlertDialogController mySendDialog = SendAlertDialogController();
+  bool autonomousStart = false;
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //function to change page back to home page
@@ -129,24 +131,27 @@ class _AutoPageState extends State<AutoPage> {
       if (notifybLEAuto[0] == 0) {
         // Message contains boat's location
         List<double> boatCoordinates = notifybLEAuto[1];
-        LatLng boatLatLng = LatLng(boatCoordinates[0], boatCoordinates[1]);
-        boatpathLatLng.add(boatLatLng);
+        currentBoatLoc = LatLng(boatCoordinates[0], boatCoordinates[1]);
+        boatpathLatLng.add(currentBoatLoc!);
 
         //means it is the location of the boat
-        await _addBoatMarker(boatLatLng);
-        await _newCameraPosition(boatLatLng);
+        await _addBoatMarker(currentBoatLoc!);
+        await _newCameraPosition(currentBoatLoc!);
       } else if (notifybLEAuto[0] == 1) {
         // Message contains how many waypoints boat has gotten so far
         List<int> current = notifybLEAuto[1];
-        showSnackBar("Succesfuly sent waypoint No.${current[0]}", context);
+        mySendDialog.updateCounter(current[0]);
       } else if (notifybLEAuto[0] == 2) {
         // Message contains the boat alerting user that all waypoints have been received
         // And the boat will start autonomous operation
+        autonomousStart = true;
         showSnackBar("Boat will start auto operation", context);
       } else if (notifybLEAuto[0] == 3) {
-        // Message contains the boat alerting user that all waypoints have been received
-        // And the boat will start autonomous operation
+        // Message indicates boat failed to receive all waypoints
         showSnackBar("Boat failed to received all waypoints", context);
+      } else if (notifybLEAuto[0] == 4) {
+        // Message indicates cancel operation succesful
+        autonomousStart = false;
       }
     }
   }
@@ -214,8 +219,8 @@ class _AutoPageState extends State<AutoPage> {
 
     //set the map to user current location
     _getUserCurrentLocation().then((value) async {
-      currentUserLatLng = value;
-      _addUserMarker(LatLng(value.latitude, value.longitude));
+      currentUserLoc = LatLng(value.latitude, value.longitude);
+      _addUserMarker(currentUserLoc!);
       setState(() {}); //refresh the map with user location
     });
   }
@@ -240,7 +245,7 @@ class _AutoPageState extends State<AutoPage> {
           SizedBox(
             width: double.infinity,
             height: double.infinity,
-            child: currentUserLatLng == null
+            child: currentUserLoc == null
                 ? const Center(
                     child: CircularProgressIndicator(
                       color: Colors.white,
@@ -252,8 +257,6 @@ class _AutoPageState extends State<AutoPage> {
 
           //for positioning the home button onto the map
           Positioned(
-            // top: _safeVertical * 5,
-            // right: _safeHorizontal * 5,
             child: Padding(
               padding: const EdgeInsets.only(left: 20, right: 20),
               child: Column(
@@ -325,8 +328,8 @@ class _AutoPageState extends State<AutoPage> {
     return InteractiveBottomSheet(
       options: InteractiveBottomSheetOptions(
         backgroundColor: Colors.white,
-        maxSize: _safeVertical * 0.09,
-        snapList: [0.25, _safeVertical * 0.09],
+        maxSize: _safeVertical * 0.08,
+        snapList: [0.25, _safeVertical * 0.08],
       ),
       draggableAreaOptions: const DraggableAreaOptions(topBorderRadius: 30),
       child: Padding(
@@ -362,8 +365,9 @@ class _AutoPageState extends State<AutoPage> {
       child: OutlinedButton(
         onPressed: () async {
           _getUserCurrentLocation().then((value) async {
-            currentUserLatLng = value; //update user current location
-            _addUserMarker(LatLng(value.latitude, value.longitude));
+            currentUserLoc = LatLng(
+                value.latitude, value.longitude); //update user current location
+            _addUserMarker(currentUserLoc!);
             _newCameraPosition(LatLng(value.latitude, value.longitude));
           });
         },
@@ -383,7 +387,6 @@ class _AutoPageState extends State<AutoPage> {
   void _addUserMarker(LatLng point) {
     setState(
       () {
-        userMarkerIndex = pathWaypoints.length;
         // Create a new marker with a unique id and the given position
         Marker marker = Marker(
           markerId: const MarkerId("User"),
@@ -413,7 +416,6 @@ class _AutoPageState extends State<AutoPage> {
       child: OutlinedButton(
         onPressed: () async {
           List<int> mssg = [0];
-          //do something in here
           autoModeSendBLE(mssg, 0);
           showSnackBar("Fetching boat location...", context);
         },
@@ -431,8 +433,6 @@ class _AutoPageState extends State<AutoPage> {
   }
 
   Future<void> _addBoatMarker(LatLng point) async {
-    boatMarkerIndex = pathWaypoints.length;
-
     // Create a new marker with a unique id and the given position
     Marker marker = Marker(
       markerId: const MarkerId("Boatboat"),
@@ -502,8 +502,8 @@ class _AutoPageState extends State<AutoPage> {
     //this is based on Medium's max comms range (1.1km)
     //get the distance between user and the supposed first marker
     double distance = Geolocator.distanceBetween(
-      currentUserLatLng!.latitude,
-      currentUserLatLng!.longitude,
+      currentUserLoc!.latitude,
+      currentUserLoc!.longitude,
       point.latitude,
       point.longitude,
     );
@@ -528,7 +528,7 @@ class _AutoPageState extends State<AutoPage> {
       initialCameraPosition: CameraPosition(
           target:
               //add a nullcheck for each lattitude and longitude
-              LatLng(currentUserLatLng!.latitude, currentUserLatLng!.longitude),
+              LatLng(currentUserLoc!.latitude, currentUserLoc!.longitude),
           zoom: 18),
       markers: pathWaypoints,
       polylines: pathPolylines,
@@ -927,21 +927,6 @@ class _AutoPageState extends State<AutoPage> {
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  double _calculateDistance() {
-    double totalDistance = 0;
-    for (int i = 0; i < markersLatLng.length; i++) {
-      if (i < markersLatLng.length - 1) {
-        // skip the last index
-        totalDistance += _getStraightLineDistance(
-            markersLatLng[i + 1].latitude,
-            markersLatLng[i + 1].longitude,
-            markersLatLng[i].latitude,
-            markersLatLng[i].longitude);
-      }
-    }
-    return totalDistance;
-  }
-
   //straight line distance calculation based on HaverSine formula
   double _getStraightLineDistance(lat1, lon1, lat2, lon2) {
     var R = 6371; // Radius of the earth in km
@@ -961,9 +946,24 @@ class _AutoPageState extends State<AutoPage> {
     return deg * (pi / 180);
   }
 
+  double _calculateMarkerDistance() {
+    double totalDistance = 0;
+    for (int i = 0; i < markersLatLng.length; i++) {
+      if (i < markersLatLng.length - 1) {
+        // skip the last index
+        totalDistance += _getStraightLineDistance(
+            markersLatLng[i + 1].latitude,
+            markersLatLng[i + 1].longitude,
+            markersLatLng[i].latitude,
+            markersLatLng[i].longitude);
+      }
+    }
+    return totalDistance;
+  }
+
   Container _totalDistance() {
     //get the estimated total distance travel
-    double totalEstimatedDistance = _calculateDistance();
+    double totalEstimatedDistance = _calculateMarkerDistance();
 
     return Container(
       decoration: BoxDecoration(
@@ -994,7 +994,7 @@ class _AutoPageState extends State<AutoPage> {
 
   Container _waypointFrequency() {
     //get the estimated total distance travel
-    double frequency = _calculateDistance() / markerCounter;
+    double frequency = _calculateMarkerDistance() / markerCounter;
 
     return Container(
       decoration: BoxDecoration(
@@ -1023,6 +1023,65 @@ class _AutoPageState extends State<AutoPage> {
     );
   }
 
+  bool isMarkerIdInList(MarkerId targetId) {
+    for (var marker in pathWaypoints) {
+      if (marker.markerId == targetId) {
+        return true; // Found the marker ID in the list
+      }
+    }
+    return false; // Marker ID not found
+  }
+
+  Container _userToBoatDistance() {
+    //Check if both user and boat marker in list of markers
+    bool userMarkerExists = isMarkerIdInList(const MarkerId("User"));
+    bool boatMarkerExists = isMarkerIdInList(const MarkerId("Boatboat"));
+    double? distance;
+
+    if (userMarkerExists && boatMarkerExists) {
+      //Get distance between user and boat
+      distance = _getStraightLineDistance(
+          currentUserLoc!.latitude,
+          currentUserLoc!.longitude,
+          currentBoatLoc!.latitude,
+          currentBoatLoc!.longitude);
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: const Color(0xff171717),
+      ),
+      padding: const EdgeInsets.all(10),
+      child: Row(
+        children: [
+          const Text(
+            "User to Boat distance: ",
+            style: TextStyle(
+              fontSize: 15,
+              color: Colors.white,
+            ),
+          ),
+          (distance != null)
+              ? Text(
+                  "${distance.toStringAsFixed(2)} m",
+                  style: const TextStyle(
+                    fontSize: 15,
+                    color: Colors.red,
+                  ),
+                )
+              : const Text(
+                  "-",
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.red,
+                  ),
+                ),
+        ],
+      ),
+    );
+  }
+
   Padding _summaryContent() {
     return Padding(
       padding: const EdgeInsets.all(10),
@@ -1031,7 +1090,14 @@ class _AutoPageState extends State<AutoPage> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           _totalDistance(),
+          SizedBox(
+            height: _safeVertical * 1,
+          ),
           _waypointFrequency(),
+          SizedBox(
+            height: _safeVertical * 1,
+          ),
+          _userToBoatDistance(),
         ],
       ),
     );
@@ -1039,7 +1105,6 @@ class _AutoPageState extends State<AutoPage> {
 
   Container _summaryViewerPopUp(BuildContext context) {
     return Container(
-      height: _safeVertical * 33,
       width: _safeHorizontal * 90,
       decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
@@ -1068,17 +1133,19 @@ class _AutoPageState extends State<AutoPage> {
                     height: _safeVertical * 1,
                   ),
                   Container(
-                    height: _safeVertical * 17,
                     decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
                         color: Colors.black),
                     child: (markersLatLng.length >= 2)
                         ? _summaryContent()
-                        : Center(
-                            child: Text("Place at least 2 waypoints!",
-                                style: TextStyle(
-                                    fontSize: _safeHorizontal * 5,
-                                    color: Colors.white)),
+                        : Padding(
+                            padding: const EdgeInsets.all(30),
+                            child: Center(
+                              child: Text("Place at least 2 waypoints!",
+                                  style: TextStyle(
+                                      fontSize: _safeHorizontal * 5,
+                                      color: Colors.white)),
+                            ),
                           ),
                   ),
                 ],
@@ -1113,6 +1180,9 @@ class _AutoPageState extends State<AutoPage> {
 
               // Send out cancel instruction to boat
               autoModeSendBLE([1], 0);
+
+              //testing only
+              // autonomousStart = false;
             },
           );
         },
@@ -1172,15 +1242,57 @@ class _AutoPageState extends State<AutoPage> {
       child: OutlinedButton(
         onPressed: () async {
           if (isWaypointsReady) {
-            showSnackBar("Attempting to send to Medium...", context);
+            // show dialog and then expected to get a return value
+            // Have to wrap dialog with PopScope because dialog built on new context
+            showDialog(
+              barrierDismissible: false,
+              context: context,
+              builder: (BuildContext context) => PopScope(
+                  canPop: false,
+                  child: SendAlertDialog(
+                    waypointLength: markersLatLng.length,
+                    autoStart: autonomousStart,
+                    updateCounterController: mySendDialog,
+                  )),
+            ).then(
+              (result) {
+                if (result != null && result is bool) {
+                  if (!result) {
+                    showSnackBar(
+                        "Attempting to cancel ongoing operations!", context);
 
-            //pack the waypoints from LatLng to type of 2D double list
-            List<List<double>> doubleTypeWaypoint = await packWaypoints();
+                    // Cancel timer for sending waypoints
+                    sendTimer!.cancel();
 
-            //function to send BLE data with 1 second delay in between
-            await sendWaypoints(doubleTypeWaypoint);
-          } else {
-            showSnackBar("Please confirm waypoints first", context);
+                    // Send out cancel instruction to boat
+                    autoModeSendBLE([1], 0);
+                  }
+                }
+              },
+            );
+
+            // if autonomous already started, dont send waypoints again
+            if (!autonomousStart) {
+              //pack the waypoints from LatLng to type of 2D double list
+              List<List<double>> doubleTypeWaypoint = await packWaypoints();
+
+              //function to send BLE data with 1 second delay in between
+              await sendWaypoints(doubleTypeWaypoint);
+
+              //testing only
+              // Timer.periodic(
+              //   const Duration(seconds: 2),
+              //   (timer) {
+              //     if (timer.tick <= markersLatLng.length) {
+              //       mySendDialog.updateCounter(timer.tick);
+              //     } else {
+              //       timer.cancel();
+              //       //Send BLE to let boat know how many waypoints it should have gotten
+              //       debugPrint("Auto Start!");
+              //     }
+              //   },
+              // );
+            }
           }
         },
         style: OutlinedButton.styleFrom(
