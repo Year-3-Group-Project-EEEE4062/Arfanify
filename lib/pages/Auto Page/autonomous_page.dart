@@ -148,7 +148,8 @@ class _AutoPageState extends State<AutoPage> {
         showSnackBar("Boat will start auto operation", context);
       } else if (notifybLEAuto[0] == 3) {
         // Message indicates boat failed to receive all waypoints
-        showSnackBar("Boat failed to received all waypoints", context);
+        showSnackBar(
+            "Boat failed to received all waypoints, send again..", context);
       } else if (notifybLEAuto[0] == 4) {
         // Message indicates cancel operation succesful
         autonomousStart = false;
