@@ -136,7 +136,6 @@ class _AutoPageState extends State<AutoPage> {
 
         //means it is the location of the boat
         await _addBoatMarker(currentBoatLoc!);
-        await _newCameraPosition(currentBoatLoc!);
       } else if (notifybLEAuto[0] == 1) {
         // Message contains how many waypoints boat has gotten so far
         List<int> current = notifybLEAuto[1];
