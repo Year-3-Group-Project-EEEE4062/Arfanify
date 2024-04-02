@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:remote_control_ui/pages/Home%20Page/ble_section.dart';
 
 //controller for the BLE
-class HomePagecontroller {
+class HomePageController {
   late void Function(List<int>) sendDataBLE;
 }
 
@@ -13,7 +13,7 @@ class HomePage extends StatefulWidget {
   final Function(bool) updateTreeBLEStat;
   final Function(List<dynamic>) notifyRemoteNewBLE;
   final Function(List<dynamic>) notifyAutoNewBLE;
-  final HomePagecontroller homeController;
+  final HomePageController homeController;
   const HomePage({
     super.key,
     required this.safeScreenHeight,
@@ -30,7 +30,7 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> {
-  HomePageState(HomePagecontroller homeController) {
+  HomePageState(HomePageController homeController) {
     homeController.sendDataBLE = sendBLEwidget;
   }
 

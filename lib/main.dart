@@ -67,7 +67,7 @@ class MainApp extends StatefulWidget {
 }
 
 class _MainAppState extends State<MainApp> {
-  final HomePagecontroller myHomeController = HomePagecontroller();
+  final HomePageController myHomeController = HomePageController();
 
   final RemoteModeController myRemoteController = RemoteModeController();
 
