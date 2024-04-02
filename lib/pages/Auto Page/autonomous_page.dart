@@ -58,8 +58,6 @@ class _AutoPageState extends State<AutoPage> {
   final Completer<GoogleMapController> _mapsController = Completer();
   late String _darkMapStyle;
 
-  int maxMarkerToMarkerDistance = 100; //max 100 meters
-  int maxMarkerToUserDistance = 1000; //1km
   Set<Marker> pathWaypoints = {};
   int markerCounter = 0;
   late Uint8List userIcon;
@@ -358,6 +356,21 @@ class _AutoPageState extends State<AutoPage> {
   ///Map related features
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // created method for getting user current location
+  Future<void> _newCameraPosition(LatLng value) async {
+    // create a new camera position with respect to the user's location
+    CameraPosition cameraPosition = CameraPosition(
+      target: value,
+      zoom: 18,
+    );
+
+    //use future to get the object of the _mapsController to change its properties
+    final GoogleMapController controller = await _mapsController.future;
+
+    //animate the map panning to the user's current location
+    controller.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+    setState(() {});
+  }
+
   SizedBox _getUserLocationButton() {
     return SizedBox(
       height: _safeVertical * 7,
@@ -452,21 +465,6 @@ class _AutoPageState extends State<AutoPage> {
     );
   }
 
-  Future<void> _newCameraPosition(LatLng value) async {
-    // create a new camera position with respect to the user's location
-    CameraPosition cameraPosition = CameraPosition(
-      target: value,
-      zoom: 18,
-    );
-
-    //use future to get the object of the _mapsController to change its properties
-    final GoogleMapController controller = await _mapsController.future;
-
-    //animate the map panning to the user's current location
-    controller.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
-    setState(() {});
-  }
-
   void _addMarkerToMap(LatLng point) {
     if (!isWaypointsReady) {
       setState(
@@ -497,7 +495,32 @@ class _AutoPageState extends State<AutoPage> {
     }
   }
 
-  void _checkMarkerToUser(LatLng point) {
+  bool _checkMarkerToMarker(LatLng point) {
+    int maxDistance = 20; //max 20 meters
+    int minDistance = 3; //min 3 meters
+
+    //get the latest marker or the last marker
+    LatLng lastMarker = markersLatLng.last;
+
+    double distance = Geolocator.distanceBetween(
+      lastMarker.latitude,
+      lastMarker.longitude,
+      point.latitude,
+      point.longitude,
+    );
+
+    //check the distance between the user and that supposed marker
+    //make sure the distance is less than or equals to 1 km
+    if (distance >= minDistance && distance <= maxDistance) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  bool _checkMarkerToUser(LatLng point) {
+    int maxMarkerToUserDistance = 1000; //1km
+
     //first marker can only be dropped about 1 km from user current location
     //this is based on Medium's max comms range (1.1km)
     //get the distance between user and the supposed first marker
@@ -511,10 +534,40 @@ class _AutoPageState extends State<AutoPage> {
     //check the distance between the user and that supposed marker
     //make sure the distance is less than or equals to 1 km
     if (distance <= maxMarkerToUserDistance) {
-      //add that user marker to map
-      _addMarkerToMap(point);
+      return true;
     } else {
-      showSnackBar("Marker dropped further than 1 km of user", context);
+      return false;
+    }
+  }
+
+  void _checkMarkerDistance(LatLng point) {
+    // Have to make sure user dropping markers based on below conditions
+    // each marker is less than 10 m and more than 3 m in distance between each other
+    // each marker is less than 1 km from user's last known location
+
+    // Check marker distance to user
+    bool distanceToUser = _checkMarkerToUser(point);
+
+    if (distanceToUser) {
+      // Now check if first marker or not
+      // Check if this is the first waypoint
+      if (markersLatLng.isEmpty) {
+        // This means it is the first waypoint
+        _addMarkerToMap(point);
+      } else {
+        // Means this is not the first waypoint
+        // Now check marker to previous marker distance
+        bool distanceToPreviousMarker = _checkMarkerToMarker(point);
+
+        if (distanceToPreviousMarker) {
+          _addMarkerToMap(point);
+        } else {
+          showSnackBar(
+              "Marker not between 3-20 m from previous marker", context);
+        }
+      }
+    } else {
+      showSnackBar("Marker further than 1 km from user last location", context);
     }
   }
 
@@ -532,7 +585,7 @@ class _AutoPageState extends State<AutoPage> {
           zoom: 18),
       markers: pathWaypoints,
       polylines: pathPolylines,
-      onLongPress: _checkMarkerToUser,
+      onLongPress: _checkMarkerDistance,
       onMapCreated: (GoogleMapController controller) async {
         //assigning the controller
         _mapsController.complete(controller);
