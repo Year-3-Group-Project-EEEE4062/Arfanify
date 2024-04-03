@@ -1,3 +1,4 @@
+import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math';
@@ -68,6 +69,8 @@ class _AutoPageState extends State<AutoPage> {
 
   LatLng? currentBoatLoc;
   List<LatLng> boatpathLatLng = [];
+
+  Polyline? lakeBoundary;
 
   Set<Polyline> pathPolylines = {};
   ValueNotifier<Color> polylineButtonColor = ValueNotifier<Color>(Colors.black);
@@ -195,6 +198,36 @@ class _AutoPageState extends State<AutoPage> {
     userIcon = await getBytesFromAsset('assets/icons/user.png', 150);
   }
 
+  // Extract lat and lng from excel file
+  Future<void> getLakeBoundary() async {
+    List<LatLng> lakeBoundaryLatLng = [];
+    ByteData data = await rootBundle.load('assets/Lake Boundary.xlsx');
+    var bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+    var excel = Excel.decodeBytes(bytes);
+
+    for (var table in excel.tables.keys) {
+      for (var row in excel.tables[table]!.rows) {
+        final value1 = row[1]!.value;
+        final value2 = row[2]!.value;
+        final double lakeLat =
+            value1 != null ? double.tryParse(value1.toString()) ?? 0.0 : 0.0;
+        final double lakeLng =
+            value2 != null ? double.tryParse(value2.toString()) ?? 0.0 : 0.0;
+        // debugPrint('$lakeLat, $lakeLng');
+        lakeBoundaryLatLng.add(LatLng(lakeLat, lakeLng));
+      }
+    }
+
+    lakeBoundaryLatLng.removeAt(0);
+
+    lakeBoundary = Polyline(
+      polylineId: const PolylineId('lake'),
+      points: lakeBoundaryLatLng,
+      width: 2,
+      color: const Color.fromARGB(255, 255, 13, 13),
+    );
+  }
+
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   @override
@@ -210,6 +243,8 @@ class _AutoPageState extends State<AutoPage> {
     } else {
       bleStatLogo = Icons.bluetooth_disabled;
     }
+
+    getLakeBoundary();
 
     _loadMapStyles(); //load the dark mode map json file design
 
@@ -243,7 +278,7 @@ class _AutoPageState extends State<AutoPage> {
           SizedBox(
             width: double.infinity,
             height: double.infinity,
-            child: currentUserLoc == null
+            child: (currentUserLoc == null && lakeBoundary == null)
                 ? const Center(
                     child: CircularProgressIndicator(
                       color: Colors.white,
@@ -645,7 +680,7 @@ class _AutoPageState extends State<AutoPage> {
         side: const BorderSide(
           width: 3,
           color: Colors.white,
-          style: BorderStyle.solid,
+          // style: BorderStyle.solid,
         ),
         backgroundColor: const Color(0xff768a76), // Outline color
         shape: RoundedRectangleBorder(
@@ -690,6 +725,7 @@ class _AutoPageState extends State<AutoPage> {
                   color: const Color.fromARGB(255, 84, 246, 255),
                 ),
               );
+              pathPolylines.add(lakeBoundary!);
               _changePolylineButtonColor();
             } else {
               pathPolylines.clear();

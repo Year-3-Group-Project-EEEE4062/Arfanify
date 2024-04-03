@@ -21,6 +21,7 @@ dependencies:
   convert: ^3.1.1
   floating_snackbar: ^1.0.3+1
   loading_animation_widget: ^1.2.1
+  excel: ^4.0.3
 
 dev_dependencies:
   flutter_test:
@@ -46,3 +47,4 @@ flutter:
     - assets/icons/pin.png
     - assets/icons/boatboat.png
     - assets/icons/temperature.png
+    - assets/Lake Boundary.xlsx
