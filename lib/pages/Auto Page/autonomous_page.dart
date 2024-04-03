@@ -201,7 +201,8 @@ class _AutoPageState extends State<AutoPage> {
   // Extract lat and lng from excel file
   Future<void> getLakeBoundary() async {
     List<LatLng> lakeBoundaryLatLng = [];
-    ByteData data = await rootBundle.load('assets/Lake Boundary.xlsx');
+    // ByteData data = await rootBundle.load('assets/Lake Boundary.xlsx');
+    ByteData data = await rootBundle.load('assets/Half lake boundary.xlsx');
     var bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
     var excel = Excel.decodeBytes(bytes);
 
@@ -213,7 +214,7 @@ class _AutoPageState extends State<AutoPage> {
             value1 != null ? double.tryParse(value1.toString()) ?? 0.0 : 0.0;
         final double lakeLng =
             value2 != null ? double.tryParse(value2.toString()) ?? 0.0 : 0.0;
-        // debugPrint('$lakeLat, $lakeLng');
+        debugPrint('$lakeLat, $lakeLng');
         lakeBoundaryLatLng.add(LatLng(lakeLat, lakeLng));
       }
     }
