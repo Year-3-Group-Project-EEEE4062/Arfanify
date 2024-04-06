@@ -35,7 +35,7 @@ class HomePageState extends State<HomePage> {
   }
 
   //initialize controller for BLE widget
-  final BLEcontroller myBLEController = BLEcontroller();
+  final BLEwidgetController myBLEController = BLEwidgetController();
 
   // for better scaling of widgets with different screen sizes
   late double _safeVertical;
@@ -271,7 +271,7 @@ class HomePageState extends State<HomePage> {
             // Defined in another class
             Padding(
               padding: const EdgeInsets.only(right: 20, left: 20, bottom: 15),
-              child: AppBarBLE(
+              child: BLEwidget(
                 bleController: myBLEController,
                 safeScreenHeight: _safeVertical,
                 safeScreenWidth: _safeHorizontal,

@@ -7,19 +7,19 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:remote_control_ui/converter/data_converter.dart';
 
 //controller for the BLE
-class BLEcontroller {
+class BLEwidgetController {
   late void Function(List<int>) sendDataBLE;
 }
 
 //Widget for BLE
-class AppBarBLE extends StatefulWidget {
-  final BLEcontroller bleController;
+class BLEwidget extends StatefulWidget {
+  final BLEwidgetController bleController;
   final double safeScreenHeight;
   final double safeScreenWidth;
   final Function(bool) bleStat;
   final Function(List<dynamic>) notifyRemoteCB;
   final Function(List<dynamic>) notifyAutoCB;
-  const AppBarBLE({
+  const BLEwidget({
     super.key,
     required this.bleController,
     required this.safeScreenHeight,
@@ -30,12 +30,12 @@ class AppBarBLE extends StatefulWidget {
   });
 
   @override
-  State<AppBarBLE> createState() => AppBarBLEState(bleController);
+  State<BLEwidget> createState() => BLEwidgetState(bleController);
 }
 
 //a public class so that main_page.dart can call the sendDataBLE function only
-class AppBarBLEState extends State<AppBarBLE> {
-  AppBarBLEState(BLEcontroller blEcontroller) {
+class BLEwidgetState extends State<BLEwidget> {
+  BLEwidgetState(BLEwidgetController blEcontroller) {
     blEcontroller.sendDataBLE = sendDataBLE;
   }
 
