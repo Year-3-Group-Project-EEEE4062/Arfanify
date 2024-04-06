@@ -12,7 +12,7 @@ import 'package:floating_snackbar/floating_snackbar.dart';
 import 'dart:ui' as ui;
 
 //controller for the BLE
-class AutoModeController {
+class AutoPageController {
   late void Function(List<dynamic>) notifyBLE;
   void Function(bool)? bleStat;
 }
@@ -23,7 +23,7 @@ class AutoPage extends StatefulWidget {
   final Function(int) updatePageIndex;
   final bool bleStat;
   final Function(List<int>) sendbLE;
-  final AutoModeController notifyController;
+  final AutoPageController notifyController;
   const AutoPage({
     super.key,
     required this.safeScreenHeight,
@@ -39,7 +39,7 @@ class AutoPage extends StatefulWidget {
 }
 
 class _AutoPageState extends State<AutoPage> {
-  _AutoPageState(AutoModeController notifyController) {
+  _AutoPageState(AutoPageController notifyController) {
     notifyController.notifyBLE = autoModeNotifyBLE;
     notifyController.bleStat = updateBLEStat;
   }

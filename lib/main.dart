@@ -69,9 +69,9 @@ class MainApp extends StatefulWidget {
 class _MainAppState extends State<MainApp> {
   final HomePageController myHomeController = HomePageController();
 
-  final RemoteModeController myRemoteController = RemoteModeController();
+  final RemotePageController myRemoteController = RemotePageController();
 
-  final AutoModeController myAutoController = AutoModeController();
+  final AutoPageController myAutoController = AutoPageController();
 
   int _selectedIndex = 0;
   late List<Widget> _pages;

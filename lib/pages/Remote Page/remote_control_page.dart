@@ -5,7 +5,7 @@ import 'package:remote_control_ui/converter/data_converter.dart';
 import 'package:floating_snackbar/floating_snackbar.dart';
 
 //controller for the BLE
-class RemoteModeController {
+class RemotePageController {
   late void Function(List<dynamic>) notifyBLE;
   void Function(bool)? bleStat;
 }
@@ -16,7 +16,7 @@ class RemotePage extends StatefulWidget {
   final Function(int) updatePageIndex;
   final bool bleStat;
   final Function(List<int>) sendbLE;
-  final RemoteModeController notifyController;
+  final RemotePageController notifyController;
   const RemotePage({
     super.key,
     required this.safeScreenHeight,
@@ -32,7 +32,7 @@ class RemotePage extends StatefulWidget {
 }
 
 class RemotePageState extends State<RemotePage> {
-  RemotePageState(RemoteModeController notifyController) {
+  RemotePageState(RemotePageController notifyController) {
     notifyController.notifyBLE = remoteModeNotifyBLE;
     notifyController.bleStat = updateBLEStat;
   }
