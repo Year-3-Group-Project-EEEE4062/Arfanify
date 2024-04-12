@@ -1,9 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:interactive_bottom_sheet/interactive_bottom_sheet.dart';
 import 'package:flutter/services.dart' show ByteData, Uint8List, rootBundle;
 import 'package:remote_control_ui/converter/data_converter.dart';
 import 'package:remote_control_ui/pages/Auto%20Page/send_pop_up.dart';
@@ -58,7 +58,7 @@ class _AutoPageState extends State<AutoPage> {
   final Completer<GoogleMapController> _mapsController = Completer();
   late String _darkMapStyle;
 
-  Set<Marker> pathWaypoints = {};
+  Set<Marker> mapMarkers = {};
   int markerCounter = 0;
   late Uint8List userIcon;
   late Uint8List markerIcon;
@@ -142,11 +142,10 @@ class _AutoPageState extends State<AutoPage> {
         // Message contains the boat alerting user that all waypoints have been received
         // And the boat will start autonomous operation
         autonomousStart = true;
-        showSnackBar("Boat will start auto operation", context);
+        showSnackBar("Boat will start auto operation");
       } else if (notifybLEAuto[0] == 3) {
         // Message indicates boat failed to receive all waypoints
-        showSnackBar(
-            "Boat failed to received all waypoints, send again..", context);
+        showSnackBar("Boat failed to received all waypoints, send again..");
       } else if (notifybLEAuto[0] == 4) {
         // Message indicates cancel operation succesful
         autonomousStart = false;
@@ -154,7 +153,7 @@ class _AutoPageState extends State<AutoPage> {
     }
   }
 
-  void showSnackBar(String snackMssg, BuildContext context) {
+  void showSnackBar(String snackMssg) {
     FloatingSnackBar(
       message: snackMssg,
       context: context,
@@ -236,7 +235,6 @@ class _AutoPageState extends State<AutoPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      bottomSheet: autoBottomSheet(context),
       body: Stack(
         children: [
           //for showing the map
@@ -292,28 +290,13 @@ class _AutoPageState extends State<AutoPage> {
 
           //For positioning the map button
           Positioned(
-            top: _safeVertical * 45,
-            right: _safeHorizontal * 2,
-            child: _getUserLocationButton(),
+            bottom: 0,
+            right: 0,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: showSheet(),
+            ),
           ),
-
-          Positioned(
-            top: _safeVertical * 53,
-            right: _safeHorizontal * 2,
-            child: _getBoatLocationButton(),
-          ),
-
-          Positioned(
-            top: _safeVertical * 61,
-            right: _safeHorizontal * 2,
-            child: _generatePolylineButton(),
-          ),
-
-          Positioned(
-            top: _safeVertical * 69,
-            right: _safeHorizontal * 2,
-            child: _removeAllMarkers(),
-          )
         ],
       ),
     );
@@ -322,32 +305,86 @@ class _AutoPageState extends State<AutoPage> {
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///Bottom sheet widget
-  InteractiveBottomSheet autoBottomSheet(BuildContext context) {
-    return InteractiveBottomSheet(
-      options: InteractiveBottomSheetOptions(
-        backgroundColor: Colors.white,
-        maxSize: _safeVertical * 0.08,
-        snapList: [0.25, _safeVertical * 0.08],
-      ),
-      draggableAreaOptions: const DraggableAreaOptions(topBorderRadius: 30),
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [_waypointsListViewerSection(context)],
-            ),
-            SizedBox(
-              height: _safeVertical * 1,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [_summaryViewerPopUp(context)],
-            ),
-          ],
+  SizedBox showSheet() {
+    return SizedBox(
+      child: OutlinedButton(
+        onPressed: () async {
+          autoModeBottomSheet();
+        },
+        style: OutlinedButton.styleFrom(
+          backgroundColor: Colors.black,
+          shape: const CircleBorder(),
+          side: const BorderSide(color: Colors.black),
+        ),
+        child: const Padding(
+          padding: EdgeInsets.all(20),
+          child: Icon(
+            Icons.list_alt,
+            color: Colors.blue,
+            size: 40,
+          ),
         ),
       ),
+    );
+  }
+
+  Future<dynamic> autoModeBottomSheet() {
+    return showModalBottomSheet(
+      backgroundColor: Colors.black,
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setInnerState) => Padding(
+            padding: const EdgeInsets.all(10),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Container(
+                          width: _safeHorizontal * 90,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              color: Colors.white),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                _getUserLocationButton(),
+                                _getBoatLocationButton(),
+                                _generatePolylineButton(setInnerState),
+                                _removeAllMarkers(),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(
+                      height: _safeVertical * 1,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [_waypointsListViewerSection(setInnerState)],
+                    ),
+                    SizedBox(
+                      height: _safeVertical * 1,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [_summaryViewerPopUp()],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -377,6 +414,7 @@ class _AutoPageState extends State<AutoPage> {
       width: _safeHorizontal * 20,
       child: OutlinedButton(
         onPressed: () async {
+          Navigator.pop(context);
           _getUserCurrentLocation().then((value) async {
             currentUserLoc = LatLng(
                 value.latitude, value.longitude); //update user current location
@@ -387,7 +425,7 @@ class _AutoPageState extends State<AutoPage> {
         style: OutlinedButton.styleFrom(
           backgroundColor: Colors.black,
           shape: const CircleBorder(),
-          side: const BorderSide(color: Colors.white),
+          side: const BorderSide(color: Colors.black),
         ),
         child: const Icon(
           Icons.my_location,
@@ -414,7 +452,7 @@ class _AutoPageState extends State<AutoPage> {
         // Add the marker to the set and update the state
         setState(
           () {
-            pathWaypoints.add(marker);
+            mapMarkers.add(marker);
           },
         );
       },
@@ -430,12 +468,12 @@ class _AutoPageState extends State<AutoPage> {
         onPressed: () async {
           List<int> mssg = [0];
           autoModeSendBLE(mssg, 0);
-          showSnackBar("Fetching boat location...", context);
+          showSnackBar("Fetching boat location...");
         },
         style: OutlinedButton.styleFrom(
           backgroundColor: Colors.black,
           shape: const CircleBorder(),
-          side: const BorderSide(color: Colors.white),
+          side: const BorderSide(color: Colors.black),
         ),
         child: const Icon(
           Icons.directions_boat_filled,
@@ -460,7 +498,7 @@ class _AutoPageState extends State<AutoPage> {
     // Add the marker to the set and update the state
     setState(
       () {
-        pathWaypoints.add(marker);
+        mapMarkers.add(marker);
       },
     );
   }
@@ -476,7 +514,7 @@ class _AutoPageState extends State<AutoPage> {
             position: point,
             //icon: BitmapDescriptor.fromBytes(iconDataToBytes(Icon(Icons.directions_boat_filled,))),
             infoWindow: InfoWindow(
-                title: "Waypoint No.$markerCounter",
+                title: "Waypoint",
                 snippet:
                     "Lat: ${point.latitude.toStringAsFixed(6)}, Lng: ${point.longitude.toStringAsFixed(6)}"),
             icon: BitmapDescriptor.fromBytes(markerIcon),
@@ -484,14 +522,14 @@ class _AutoPageState extends State<AutoPage> {
           // Add the marker to the set and update the state
           setState(
             () {
-              pathWaypoints.add(marker);
+              mapMarkers.add(marker);
               markersLatLng.add(point);
             },
           );
         },
       );
     } else {
-      showSnackBar("Cannot add as waypoints confirmed!", context);
+      showSnackBar("Cannot add as waypoints confirmed!");
     }
   }
 
@@ -562,12 +600,11 @@ class _AutoPageState extends State<AutoPage> {
         if (distanceToPreviousMarker) {
           _addMarkerToMap(point);
         } else {
-          showSnackBar(
-              "Marker not between 3-20 m from previous marker", context);
+          showSnackBar("Marker not between 3-20 m from previous marker");
         }
       }
     } else {
-      showSnackBar("Marker further than 1 km from user last location", context);
+      showSnackBar("Marker further than 1 km from user last location");
     }
   }
 
@@ -583,7 +620,7 @@ class _AutoPageState extends State<AutoPage> {
               //add a nullcheck for each lattitude and longitude
               LatLng(currentUserLoc!.latitude, currentUserLoc!.longitude),
           zoom: 18),
-      markers: pathWaypoints,
+      markers: mapMarkers,
       polylines: pathPolylines,
       onLongPress: _checkMarkerDistance,
       onMapCreated: (GoogleMapController controller) async {
@@ -665,42 +702,45 @@ class _AutoPageState extends State<AutoPage> {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  SizedBox _generatePolylineButton() {
+  SizedBox _generatePolylineButton(StateSetter setInnerState) {
     return SizedBox(
       height: _safeVertical * 7,
       width: _safeHorizontal * 20,
       child: OutlinedButton(
         onPressed: () {
-          setState(() {
-            if (!isPolylinesON) {
-              pathPolylines.clear();
-              pathPolylines.add(
-                Polyline(
-                  polylineId: const PolylineId('user'),
-                  points: markersLatLng,
-                  width: 2,
-                  color: const Color.fromARGB(255, 96, 214, 99),
-                ),
-              );
-              pathPolylines.add(
-                Polyline(
-                  polylineId: const PolylineId('boat'),
-                  points: boatpathLatLng,
-                  width: 2,
-                  color: const Color.fromARGB(255, 84, 246, 255),
-                ),
-              );
-              _changePolylineButtonColor();
-            } else {
-              pathPolylines.clear();
-              _changePolylineButtonColor();
-            }
+          setInnerState(() {
+            Navigator.pop(context);
+            setState(() {
+              if (!isPolylinesON) {
+                pathPolylines.clear();
+                pathPolylines.add(
+                  Polyline(
+                    polylineId: const PolylineId('user'),
+                    points: markersLatLng,
+                    width: 2,
+                    color: const Color.fromARGB(255, 96, 214, 99),
+                  ),
+                );
+                pathPolylines.add(
+                  Polyline(
+                    polylineId: const PolylineId('boat'),
+                    points: boatpathLatLng,
+                    width: 2,
+                    color: const Color.fromARGB(255, 84, 246, 255),
+                  ),
+                );
+                _changePolylineButtonColor();
+              } else {
+                pathPolylines.clear();
+                _changePolylineButtonColor();
+              }
+            });
           });
         },
         style: OutlinedButton.styleFrom(
           backgroundColor: polylineButtonColor.value,
           shape: const CircleBorder(),
-          side: const BorderSide(color: Colors.white),
+          side: const BorderSide(color: Colors.black),
         ),
         child: const Icon(
           Icons.polyline,
@@ -729,9 +769,10 @@ class _AutoPageState extends State<AutoPage> {
       width: _safeHorizontal * 20,
       child: OutlinedButton(
         onPressed: () {
+          Navigator.pop(context);
           setState(() {
             if (!isWaypointsReady) {
-              pathWaypoints.clear();
+              mapMarkers.clear();
               markerCounter = 0;
               markersLatLng.clear();
               boatpathLatLng.clear();
@@ -745,14 +786,14 @@ class _AutoPageState extends State<AutoPage> {
                 _changePolylineButtonColor();
               }
             } else {
-              showSnackBar("Cannot remove as waypoints confirmed!", context);
+              showSnackBar("Cannot remove as waypoints confirmed!");
             }
           });
         },
         style: OutlinedButton.styleFrom(
           backgroundColor: Colors.black,
           shape: const CircleBorder(),
-          side: const BorderSide(color: Colors.white),
+          side: const BorderSide(color: Colors.black),
         ),
         child: const Icon(
           Icons.location_off,
@@ -780,89 +821,146 @@ class _AutoPageState extends State<AutoPage> {
     setState(() {});
   }
 
-  Expanded _waypointListBuilder(BuildContext context) {
+  void _removeMarker(int index) {
+    int waypointCount = 0;
+    Marker? markerToRemove;
+
+    for (Marker marker in mapMarkers) {
+      if (marker.markerId.value.startsWith("Waypoint")) {
+        waypointCount++;
+        if (waypointCount == index + 1) {
+          markerToRemove = marker;
+          break;
+        }
+      }
+    }
+
+    mapMarkers.remove(markerToRemove);
+  }
+
+  Expanded _waypointListBuilder() {
     return Expanded(
       child: ListView.builder(
         itemCount: markersLatLng.length,
         itemBuilder: (BuildContext context, int index) {
           LatLng marker = markersLatLng[index];
-          return Container(
-            margin: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
-            padding: const EdgeInsets.all(10.0),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20.0),
-              color: const Color(0xff171717),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black,
-                  blurRadius: 10.0,
-                  offset: Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          return Padding(
+            padding:
+                const EdgeInsets.only(top: 5, bottom: 5, right: 10, left: 10),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20.0),
+                color: const Color(0xff171717),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.only(
+                    top: 10, bottom: 10, right: 20, left: 20),
+                child: Column(
                   children: [
-                    Text(
-                      "Waypoint No.${index + 1}",
-                      style: TextStyle(
-                          fontSize: _safeVertical * 2,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.red),
-                    ),
-                    SizedBox(
-                      child: OutlinedButton(
-                        onPressed: () async {
-                          Navigator.pop(context);
-                          await _locateMarker(marker);
-                        }, //do something here
-                        style: OutlinedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                          side: const BorderSide(
-                              color: Color.fromARGB(255, 255, 255, 255)),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
                           children: [
                             Text(
-                              'Locate',
+                              "Waypoint No.${index + 1}",
                               style: TextStyle(
-                                fontSize: _safeVertical * 1.5,
-                                color: Colors.white,
-                              ),
+                                  fontSize: _safeVertical * 2,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.red),
+                            ),
+                            SizedBox(
+                              height: _safeVertical,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.all(5),
+                                      child: Text(
+                                        "Lat: ${marker.latitude.toStringAsFixed(6)}",
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(5),
+                                      child: Text(
+                                        "Lng: ${marker.longitude.toStringAsFixed(6)}",
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             )
                           ],
                         ),
-                      ),
+                        Column(
+                          children: [
+                            IconButton(
+                                onPressed: () async {
+                                  Navigator.pop(context);
+                                  await _locateMarker(marker);
+                                },
+                                icon: const Icon(
+                                  Icons.push_pin,
+                                  color: Colors.deepOrange,
+                                )),
+                            IconButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  if (!isWaypointsReady) {
+                                    setState(() {
+                                      _removeMarker(index);
+                                      markersLatLng.removeAt(index);
+                                    });
+                                  } else {
+                                    showSnackBar(
+                                        "Cannot remove as waypoints confirmed!");
+                                  }
+                                },
+                                icon: const Icon(
+                                  Icons.playlist_remove,
+                                  color: Colors.purple,
+                                )),
+                          ],
+                        ),
+                      ],
                     ),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10.0),
+                        color: Colors.white,
+                      ),
+                      child: const Padding(
+                        padding: EdgeInsets.all(4),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Boat progress: ",
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black),
+                            ),
+                            Icon(
+                              Icons.check,
+                              color: Colors.green,
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
                   ],
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Latitude:\n${marker.latitude.toStringAsFixed(6)}",
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, color: Colors.white),
-                      ),
-                      SizedBox(
-                        width: _safeHorizontal * 15,
-                      ),
-                      Text(
-                        "Longitude:\n${marker.longitude.toStringAsFixed(6)}",
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, color: Colors.white),
-                      ),
-                    ],
-                  ),
-                )
-              ],
+              ),
             ),
           );
         },
@@ -870,13 +968,11 @@ class _AutoPageState extends State<AutoPage> {
     );
   }
 
-  Container _waypointsListViewerSection(BuildContext context) {
+  Container _waypointsListViewerSection(StateSetter setInnerState) {
     return Container(
-        height: _safeVertical * 33,
         width: _safeHorizontal * 90,
         decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            color: const Color(0xffC8D0C8)),
+            borderRadius: BorderRadius.circular(10), color: Colors.white),
         child: Padding(
           padding: const EdgeInsets.all(13),
           child: Column(
@@ -911,13 +1007,13 @@ class _AutoPageState extends State<AutoPage> {
                       totalSwitches: 2,
                       icons: const [Icons.check, Icons.cancel],
                       onToggle: (index) {
-                        setState(() {
+                        setInnerState(() {
                           //int 1 indicates not ready
                           //int 0 indicates ready
                           //this is due to how the toggle switch index is placed
                           //where ready button on index 0 and NOT ready button on index 1
                           if (index == 0) {
-                            if (pathWaypoints.length >= 2) {
+                            if (mapMarkers.length >= 2) {
                               waypointsReadyIndex = 0;
                               isWaypointsReady = true;
                             } else {
@@ -948,24 +1044,17 @@ class _AutoPageState extends State<AutoPage> {
                 height: _safeVertical * 0.5,
               ),
               Container(
-                height: _safeVertical * 20,
+                height: _safeVertical * 40,
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                     color: Colors.black),
                 child: (markersLatLng.isNotEmpty)
-                    ? (!isWaypointsReady)
-                        ? Flex(
-                            direction: Axis.vertical,
-                            children: [
-                              _waypointListBuilder(context),
-                            ],
-                          )
-                        : Center(
-                            child: Text("Confirmed Waypoints",
-                                style: TextStyle(
-                                    fontSize: _safeHorizontal * 5,
-                                    color: Colors.white)),
-                          )
+                    ? Flex(
+                        direction: Axis.vertical,
+                        children: [
+                          _waypointListBuilder(),
+                        ],
+                      )
                     : Center(
                         child: Text("No waypoints set!",
                             style: TextStyle(
@@ -1077,7 +1166,7 @@ class _AutoPageState extends State<AutoPage> {
   }
 
   bool isMarkerIdInList(MarkerId targetId) {
-    for (var marker in pathWaypoints) {
+    for (var marker in mapMarkers) {
       if (marker.markerId == targetId) {
         return true; // Found the marker ID in the list
       }
@@ -1156,12 +1245,11 @@ class _AutoPageState extends State<AutoPage> {
     );
   }
 
-  Container _summaryViewerPopUp(BuildContext context) {
+  Container _summaryViewerPopUp() {
     return Container(
       width: _safeHorizontal * 90,
       decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          color: const Color(0xffC8D0C8)),
+          borderRadius: BorderRadius.circular(10), color: Colors.white),
       child: Padding(
         padding: const EdgeInsets.all(13),
         child: Column(
@@ -1211,8 +1299,8 @@ class _AutoPageState extends State<AutoPage> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                sendButton(context),
-                cancelButton(context),
+                sendButton(),
+                cancelButton(),
               ],
             ),
           ],
@@ -1221,7 +1309,7 @@ class _AutoPageState extends State<AutoPage> {
     );
   }
 
-  SizedBox cancelButton(BuildContext context) {
+  SizedBox cancelButton() {
     return SizedBox(
       height: _safeVertical * 5,
       width: _safeHorizontal * 35,
@@ -1229,7 +1317,7 @@ class _AutoPageState extends State<AutoPage> {
         onPressed: () {
           setState(
             () {
-              showSnackBar("Attempting to cancel ongoing operations!", context);
+              showSnackBar("Attempting to cancel ongoing operations!");
 
               // Send out cancel instruction to boat
               autoModeSendBLE([1], 0);
@@ -1288,12 +1376,13 @@ class _AutoPageState extends State<AutoPage> {
     return latLngList;
   }
 
-  SizedBox sendButton(BuildContext context) {
+  SizedBox sendButton() {
     return SizedBox(
       height: _safeVertical * 5,
       width: _safeHorizontal * 35,
       child: OutlinedButton(
         onPressed: () async {
+          Navigator.pop(context);
           if (isWaypointsReady) {
             // show dialog and then expected to get a return value
             // Have to wrap dialog with PopScope because dialog built on new context
@@ -1311,8 +1400,7 @@ class _AutoPageState extends State<AutoPage> {
               (result) {
                 if (result != null && result is bool) {
                   if (!result) {
-                    showSnackBar(
-                        "Attempting to cancel ongoing operations!", context);
+                    showSnackBar("Attempting to cancel ongoing operations!");
 
                     // Cancel timer for sending waypoints
                     sendTimer!.cancel();
@@ -1331,22 +1419,8 @@ class _AutoPageState extends State<AutoPage> {
 
               //function to send BLE data with 1 second delay in between
               await sendWaypoints(doubleTypeWaypoint);
-
-              //testing only
-              // Timer.periodic(
-              //   const Duration(seconds: 2),
-              //   (timer) {
-              //     if (timer.tick <= markersLatLng.length) {
-              //       mySendDialog.updateCounter(timer.tick);
-              //     } else {
-              //       timer.cancel();
-              //       //Send BLE to let boat know how many waypoints it should have gotten
-              //       debugPrint("Auto Start!");
-              //     }
-              //   },
-              // );
             }
-          }
+          } else {}
         },
         style: OutlinedButton.styleFrom(
           backgroundColor: sendButtonColor(),
@@ -1364,7 +1438,7 @@ class _AutoPageState extends State<AutoPage> {
   }
 
   Color sendButtonColor() {
-    if (isWaypointsReady && (pathWaypoints.length >= 2)) {
+    if (isWaypointsReady && (mapMarkers.length >= 2)) {
       return Colors.green;
     } else {
       return const Color.fromARGB(255, 33, 33, 33);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:remote_control_ui/pages/Home%20Page/ble_section.dart';
+import 'package:remote_control_ui/pages/Home%20Page/lora_section.dart';
 
 //controller for the BLE
 class HomePageController {
@@ -66,39 +67,47 @@ class HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Column(
-        children: [
-          SizedBox(
-            height: _safeVertical * 5,
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                mainPageTitle(),
-              ],
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            SizedBox(
+              height: _safeVertical * 5,
             ),
-          ),
-          SizedBox(
-            height: _safeVertical * 0.1,
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 20, left: 20),
-            child: Center(
-              child: modeSection(),
+            Padding(
+              padding: const EdgeInsets.only(left: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  mainPageTitle(),
+                ],
+              ),
             ),
-          ),
-          SizedBox(
-            height: _safeVertical * 2,
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 20, left: 20),
-            child: Center(
-              child: bleSection(),
+            Padding(
+              padding: const EdgeInsets.only(right: 20, left: 20),
+              child: Center(
+                child: modeSection(),
+              ),
             ),
-          ),
-        ],
+            SizedBox(
+              height: _safeVertical * 2,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 20, left: 20),
+              child: Center(
+                child: LoRaSection(),
+              ),
+            ),
+            SizedBox(
+              height: _safeVertical * 2,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 20, left: 20),
+              child: Center(
+                child: bleSection(),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -213,7 +222,7 @@ class HomePageState extends State<HomePage> {
           changePage(2);
         },
         icon: Icon(
-          Icons.map_outlined,
+          Icons.auto_mode,
           size: _safeVertical * 7,
           color: Colors.white,
         ),
@@ -278,6 +287,55 @@ class HomePageState extends State<HomePage> {
                 bleStat: widget.updateTreeBLEStat,
                 notifyRemoteCB: widget.notifyRemoteNewBLE,
                 notifyAutoCB: widget.notifyAutoNewBLE,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Container LoRaSection() {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xffC8D0C8),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(top: 10, bottom: 10),
+        child: Column(
+          children: [
+            SizedBox(
+              height: _safeVertical,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 30),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  const Icon(Icons.podcasts),
+                  SizedBox(
+                    width: _safeHorizontal,
+                  ),
+                  Text(
+                    "LoRa",
+                    style: TextStyle(
+                        fontSize: _safeHorizontal * 6,
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              height: _safeVertical,
+            ),
+            // Defined in another class
+            Padding(
+              padding: const EdgeInsets.only(right: 20, left: 20, bottom: 15),
+              child: LoRaWidget(
+                safeScreenHeight: _safeVertical,
+                safeScreenWidth: _safeHorizontal,
               ),
             ),
           ],

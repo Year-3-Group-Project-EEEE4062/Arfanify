@@ -106,10 +106,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_blue_plus
-      sha256: "1e53ba4b60c1097396fbeafdd31eac5c20b0876b56a0c1ab6f3dec5ee06d44d7"
+      sha256: "5851041708b21601bfff50ebf4b05f8bd7b4f1dd7a2a69b82bdf7e5c2c2efb53"
       url: "https://pub.dev"
     source: hosted
-    version: "1.32.0"
+    version: "1.32.1"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -264,14 +264,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.2"
-  interactive_bottom_sheet:
-    dependency: "direct main"
-    description:
-      name: interactive_bottom_sheet
-      sha256: "683f4a4eff7f24d9006ec3f2aceed8b4646ce9face19af3b525b0e319160879a"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.0"
   intl:
     dependency: transitive
     description:
@@ -553,10 +545,10 @@ packages:
     dependency: transitive
     description:
       name: uuid
-      sha256: cd210a09f7c18cbe5a02511718e0334de6559871052c90a90c0cca46a4aa81c8
+      sha256: "814e9e88f21a176ae1359149021870e87f7cddaf633ab678a5d2b0bff7fd1ba8"
       url: "https://pub.dev"
     source: hosted
-    version: "4.3.3"
+    version: "4.4.0"
   vector_math:
     dependency: transitive
     description:
