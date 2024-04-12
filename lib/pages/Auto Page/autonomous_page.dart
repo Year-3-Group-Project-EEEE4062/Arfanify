@@ -38,7 +38,7 @@ class AutoPage extends StatefulWidget {
   State<AutoPage> createState() => _AutoPageState(notifyController);
 }
 
-class _AutoPageState extends State<AutoPage> {
+class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver{
   _AutoPageState(AutoPageController notifyController) {
     notifyController.notifyBLE = autoModeNotifyBLE;
     notifyController.bleStat = updateBLEStat;
@@ -197,6 +197,15 @@ class _AutoPageState extends State<AutoPage> {
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   @override
+  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (state == AppLifecycleState.resumed) {
+      //retrieve controller
+      final GoogleMapController controller = await _mapsController.future;
+      controller.setMapStyle(_darkMapStyle);
+    }
+  }
+
+  @override
   void initState() {
     super.initState();
     // initialize the variables
@@ -312,17 +321,17 @@ class _AutoPageState extends State<AutoPage> {
           autoModeBottomSheet();
         },
         style: OutlinedButton.styleFrom(
-          backgroundColor: Colors.black,
-          shape: const CircleBorder(),
-          side: const BorderSide(color: Colors.black),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+          borderRadius:
+              BorderRadius.circular(30), // Adjust the border radius as needed
         ),
-        child: const Padding(
-          padding: EdgeInsets.all(20),
-          child: Icon(
-            Icons.list_alt,
-            color: Colors.blue,
-            size: 40,
-          ),
+          side: const BorderSide(color: Colors.white),
+        ),
+        child:  Icon(
+          Icons.list_alt,
+          color: Colors.blue,
+          size: _safeVertical * 6,
         ),
       ),
     );
@@ -420,6 +429,7 @@ class _AutoPageState extends State<AutoPage> {
                 value.latitude, value.longitude); //update user current location
             _addUserMarker(currentUserLoc!);
             _newCameraPosition(LatLng(value.latitude, value.longitude));
+            showSnackBar("Getting user location.....");
           });
         },
         style: OutlinedButton.styleFrom(
@@ -518,6 +528,7 @@ class _AutoPageState extends State<AutoPage> {
                 snippet:
                     "Lat: ${point.latitude.toStringAsFixed(6)}, Lng: ${point.longitude.toStringAsFixed(6)}"),
             icon: BitmapDescriptor.fromBytes(markerIcon),
+            // draggable: true,
           );
           // Add the marker to the set and update the state
           setState(
@@ -850,7 +861,7 @@ class _AutoPageState extends State<AutoPage> {
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20.0),
-                color: const Color(0xff171717),
+                color: const Color.fromARGB(255, 55, 55, 55),
               ),
               child: Padding(
                 padding: const EdgeInsets.only(
@@ -934,30 +945,6 @@ class _AutoPageState extends State<AutoPage> {
                         ),
                       ],
                     ),
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10.0),
-                        color: Colors.white,
-                      ),
-                      child: const Padding(
-                        padding: EdgeInsets.all(4),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "Boat progress: ",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black),
-                            ),
-                            Icon(
-                              Icons.check,
-                              color: Colors.green,
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
                   ],
                 ),
               ),
@@ -1043,24 +1030,27 @@ class _AutoPageState extends State<AutoPage> {
               SizedBox(
                 height: _safeVertical * 0.5,
               ),
-              Container(
-                height: _safeVertical * 40,
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: Colors.black),
-                child: (markersLatLng.isNotEmpty)
-                    ? Flex(
-                        direction: Axis.vertical,
-                        children: [
-                          _waypointListBuilder(),
-                        ],
-                      )
-                    : Center(
-                        child: Text("No waypoints set!",
-                            style: TextStyle(
-                                fontSize: _safeHorizontal * 5,
-                                color: Colors.white)),
-                      ),
+              Padding(
+                padding: const EdgeInsets.only(right: 30, left: 30),
+                child: Container(
+                  height: _safeVertical * 30,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.black),
+                  child: (markersLatLng.isNotEmpty)
+                      ? Flex(
+                          direction: Axis.vertical,
+                          children: [
+                            _waypointListBuilder(),
+                          ],
+                        )
+                      : Center(
+                          child: Text("No waypoints set!",
+                              style: TextStyle(
+                                  fontSize: _safeHorizontal * 5,
+                                  color: Colors.white)),
+                        ),
+                ),
               ),
             ],
           ),

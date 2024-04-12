@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:remote_control_ui/pages/Home%20Page/ble_section.dart';
-import 'package:remote_control_ui/pages/Home%20Page/lora_section.dart';
 
 //controller for the BLE
 class HomePageController {
@@ -67,47 +66,39 @@ class HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            SizedBox(
-              height: _safeVertical * 5,
+      body: Column(
+        children: [
+          SizedBox(
+            height: _safeVertical * 5,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                mainPageTitle(),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.only(left: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  mainPageTitle(),
-                ],
-              ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 20, left: 20),
+            child: Center(
+              child: modeSection(),
             ),
-            Padding(
-              padding: const EdgeInsets.only(right: 20, left: 20),
-              child: Center(
-                child: modeSection(),
-              ),
+          ),
+          SizedBox(
+            height: _safeVertical * 2,
+          ),
+          SizedBox(
+            height: _safeVertical * 2,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 20, left: 20),
+            child: Center(
+              child: bleSection(),
             ),
-            SizedBox(
-              height: _safeVertical * 2,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(right: 20, left: 20),
-              child: Center(
-                child: LoRaSection(),
-              ),
-            ),
-            SizedBox(
-              height: _safeVertical * 2,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(right: 20, left: 20),
-              child: Center(
-                child: bleSection(),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

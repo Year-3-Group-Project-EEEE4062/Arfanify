@@ -175,7 +175,6 @@ class RemotePageState extends State<RemotePage> {
                 remotePageTitle(),
                 SizedBox(
                   height: _safeVertical * 7,
-                  width: _safeHorizontal * 48,
                   child: SizedBox(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
