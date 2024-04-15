@@ -38,7 +38,7 @@ class AutoPage extends StatefulWidget {
   State<AutoPage> createState() => _AutoPageState(notifyController);
 }
 
-class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver{
+class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
   _AutoPageState(AutoPageController notifyController) {
     notifyController.notifyBLE = autoModeNotifyBLE;
     notifyController.bleStat = updateBLEStat;
@@ -76,6 +76,7 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver{
   Timer? sendTimer;
   SendAlertDialogController mySendDialog = SendAlertDialogController();
   bool autonomousStart = false;
+  int boatCompleted = 0;
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //function to change page back to home page
@@ -147,8 +148,19 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver{
         // Message indicates boat failed to receive all waypoints
         showSnackBar("Boat failed to received all waypoints, send again..");
       } else if (notifybLEAuto[0] == 4) {
-        // Message indicates cancel operation succesful
+        // Message indicates cancel operation successful
         autonomousStart = false;
+        showSnackBar("Operation cancelled");
+      } else if (notifybLEAuto[0] == 5) {
+        // Message indicates that auto mode finished already
+        autonomousStart = false;
+        showSnackBar("Autonomous operation finished");
+      } else if (notifybLEAuto[0] == 6) {
+        // Message indicates how many waypoints boat has finished
+        // Message contains how many waypoints boat has gotten so far
+        List<int> current = notifybLEAuto[1];
+        boatCompleted = current[0] + 1;
+        showSnackBar("Autonomous operation finished");
       }
     }
   }
@@ -160,7 +172,7 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver{
       textColor: Colors.black,
       // textStyle: const TextStyle(color: Colors.green),
       duration: const Duration(milliseconds: 2000),
-      backgroundColor: const Color.fromARGB(255, 0, 221, 255),
+      backgroundColor: Colors.grey,
     );
   }
 
@@ -296,17 +308,79 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver{
               ),
             ),
           ),
-
-          //For positioning the map button
-          Positioned(
-            bottom: 0,
-            right: 0,
+          Align(
+            alignment: Alignment.bottomRight,
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.only(bottom: 30, left: 20, right: 20),
               child: showSheet(),
             ),
           ),
+          Align(
+            alignment: Alignment.bottomLeft,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 30, left: 20, right: 20),
+              child: (autonomousStart)
+                  ? (boatCompleted == markersLatLng.length)
+                      ? autofinished()
+                      : inProgress()
+                  : notStarted(),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /// Container to show user current progress in autonomous mode
+  Container notStarted() {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+        color: Colors.white,
+      ),
+      child: const Padding(
+        padding: EdgeInsets.all(8.0),
+        child: Text(
+          "Not started",
+          style: TextStyle(fontSize: 23),
+        ),
+      ),
+    );
+  }
+
+  Container inProgress() {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+        color: Colors.cyan,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Text(
+          "In progress: $boatCompleted/${markersLatLng.length}",
+          style: const TextStyle(fontSize: 23),
+        ),
+      ),
+    );
+  }
+
+  Container autofinished() {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+        color: const Color.fromARGB(255, 103, 234, 107),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Text(
+          "Completed $boatCompleted/${markersLatLng.length}",
+          style: const TextStyle(fontSize: 23),
+        ),
       ),
     );
   }
@@ -323,15 +397,18 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver{
         style: OutlinedButton.styleFrom(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-          borderRadius:
-              BorderRadius.circular(30), // Adjust the border radius as needed
-        ),
+            borderRadius:
+                BorderRadius.circular(30), // Adjust the border radius as needed
+          ),
           side: const BorderSide(color: Colors.white),
         ),
-        child:  Icon(
-          Icons.list_alt,
-          color: Colors.blue,
-          size: _safeVertical * 6,
+        child: Padding(
+          padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+          child: Icon(
+            Icons.list_alt,
+            color: Colors.blue,
+            size: _safeVertical * 6,
+          ),
         ),
       ),
     );
@@ -347,7 +424,7 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver{
             padding: const EdgeInsets.all(10),
             child: SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(5),
                 child: Column(
                   children: [
                     Row(
@@ -821,7 +898,7 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver{
     // create a new camera position with respect to the user's location
     CameraPosition cameraPosition = CameraPosition(
       target: LatLng(markerLocation.latitude, markerLocation.longitude),
-      zoom: 20,
+      zoom: 30,
     );
 
     //use future to get the object of the _mapsController to change its properties
@@ -995,21 +1072,27 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver{
                       icons: const [Icons.check, Icons.cancel],
                       onToggle: (index) {
                         setInnerState(() {
-                          //int 1 indicates not ready
-                          //int 0 indicates ready
-                          //this is due to how the toggle switch index is placed
-                          //where ready button on index 0 and NOT ready button on index 1
-                          if (index == 0) {
-                            if (mapMarkers.length >= 2) {
-                              waypointsReadyIndex = 0;
-                              isWaypointsReady = true;
-                            } else {
-                              //this means no waypoints but user still confirm
+                          if (!autonomousStart) {
+                            //int 1 indicates not ready
+                            //int 0 indicates ready
+                            //this is due to how the toggle switch index is placed
+                            //where ready button on index 0 and NOT ready button on index 1
+                            if (index == 0) {
+                              if (mapMarkers.length >= 2) {
+                                waypointsReadyIndex = 0;
+                                isWaypointsReady = true;
+                              } else {
+                                //this means no waypoints but user still confirm
+                                waypointsReadyIndex = 1;
+                              }
+                            } else if (index == 1) {
                               waypointsReadyIndex = 1;
+                              isWaypointsReady = false;
                             }
-                          } else if (index == 1) {
-                            waypointsReadyIndex = 1;
-                            isWaypointsReady = false;
+                          } else {
+                            Navigator.pop(context);
+                            showSnackBar(
+                                "Please cancel ongoing operation first..");
                           }
                         });
                       },
@@ -1305,15 +1388,13 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver{
       width: _safeHorizontal * 35,
       child: OutlinedButton(
         onPressed: () {
+          Navigator.pop(context);
           setState(
             () {
               showSnackBar("Attempting to cancel ongoing operations!");
 
               // Send out cancel instruction to boat
               autoModeSendBLE([1], 0);
-
-              //testing only
-              // autonomousStart = false;
             },
           );
         },
@@ -1338,7 +1419,7 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver{
     // Add 2 second delay asynchronously before setting a periodic timer to send
     // waypoints every 2 seconds
     sendTimer = Timer.periodic(
-      const Duration(seconds: 2),
+      const Duration(seconds: 3),
       (timer) {
         if (timer.tick <= doubleTypeWaypoint.length) {
           debugPrint("Sending: ${doubleTypeWaypoint[timer.tick - 1]}");
@@ -1410,7 +1491,7 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver{
               //function to send BLE data with 1 second delay in between
               await sendWaypoints(doubleTypeWaypoint);
             }
-          } else {}
+          }
         },
         style: OutlinedButton.styleFrom(
           backgroundColor: sendButtonColor(),

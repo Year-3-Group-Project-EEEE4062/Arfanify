@@ -254,7 +254,7 @@ class BLEwidgetState extends State<BLEwidget> {
             ? Column(
                 children: [
                   SizedBox(
-                    height: _safeVertical * 2,
+                    height: _safeVertical * 1,
                   ),
                   bleTestButton(context)
                 ],

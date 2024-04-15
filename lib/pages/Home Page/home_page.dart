@@ -89,9 +89,6 @@ class HomePageState extends State<HomePage> {
           SizedBox(
             height: _safeVertical * 2,
           ),
-          SizedBox(
-            height: _safeVertical * 2,
-          ),
           Padding(
             padding: const EdgeInsets.only(right: 20, left: 20),
             child: Center(
@@ -270,7 +267,7 @@ class HomePageState extends State<HomePage> {
             ),
             // Defined in another class
             Padding(
-              padding: const EdgeInsets.only(right: 20, left: 20, bottom: 15),
+              padding: const EdgeInsets.only(right: 20, left: 20, bottom: 5),
               child: BLEwidget(
                 bleController: myBLEController,
                 safeScreenHeight: _safeVertical,
