@@ -75,6 +75,7 @@ class BLEwidgetState extends State<BLEwidget> {
   late double _safeVertical;
   late double _safeHorizontal;
 
+  Timer? rssiTimer;
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   void resetVariables() {
@@ -169,7 +170,7 @@ class BLEwidgetState extends State<BLEwidget> {
           //check if detected device has already been detected before
           if (_scanResults.contains(r) == false) {
             //check if it is a valid device ID (Medium or Boat)
-            if (deviceName == r.advertisementData.advName) {
+            if (deviceName == r.fadvertisementData.advName) {
               //medium detected and add to list
               _scanResults.add(r);
 
@@ -545,6 +546,14 @@ class BLEwidgetState extends State<BLEwidget> {
             byteCommand = integerToByteArray(0x03, getDateTime(6));
             writeCharacteristics(byteCommand);
 
+            // Set up periodic RSSI timer to record RSSI
+            rssiTimer = Timer.periodic(
+              const Duration(seconds: 1),
+              (timer) {
+                debugPrint("Medium RSSI: ${deviceStats.readRssi()}");
+              },
+            );
+
             setState(() {
               //connected change the icon color to green
               connectionColor.value = const Color.fromARGB(255, 128, 232, 80);
@@ -557,6 +566,7 @@ class BLEwidgetState extends State<BLEwidget> {
           }
           // listen for disconnection
           else if (state == BluetoothConnectionState.disconnected) {
+            rssiTimer!.cancel; //cancel timer
             editActionMssg("Disconnected from Device...");
             resetVariables();
             setState(() {});
