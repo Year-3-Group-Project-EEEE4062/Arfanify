@@ -15,6 +15,7 @@ import 'dart:ui' as ui;
 class AutoPageController {
   late void Function(List<dynamic>) notifyBLE;
   void Function(bool)? bleStat;
+  late Future<List<double>> Function() userLoc;
 }
 
 class AutoPage extends StatefulWidget {
@@ -42,6 +43,7 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
   _AutoPageState(AutoPageController notifyController) {
     notifyController.notifyBLE = autoModeNotifyBLE;
     notifyController.bleStat = updateBLEStat;
+    notifyController.userLoc = returnUserLocTest;
   }
 
   // for better scaling of widgets with different screen sizes
@@ -73,6 +75,7 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
   ValueNotifier<Color> polylineButtonColor = ValueNotifier<Color>(Colors.black);
   bool isPolylinesON = false;
 
+  late StreamSubscription<Position> positionStream;
   Timer? sendTimer;
   SendAlertDialogController mySendDialog = SendAlertDialogController();
   bool autonomousStart = false;
@@ -187,7 +190,9 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
       await Geolocator.requestPermission();
       debugPrint("ERROR: $error");
     });
-    return await Geolocator.getCurrentPosition();
+    return await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.bestForNavigation,
+        forceAndroidLocationManager: true);
   }
 
   Future<Uint8List> getBytesFromAsset(String path, int width) async {
@@ -204,6 +209,10 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
     markerIcon = await getBytesFromAsset('assets/icons/pin.png', 200);
     boatIcon = await getBytesFromAsset('assets/icons/boatboat.png', 150);
     userIcon = await getBytesFromAsset('assets/icons/user.png', 150);
+  }
+
+  Future<List<double>> returnUserLocTest() async {
+    return [currentUserLoc!.latitude, currentUserLoc!.longitude];
   }
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -240,6 +249,10 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
       currentUserLoc = LatLng(value.latitude, value.longitude);
       _addUserMarker(currentUserLoc!);
       setState(() {}); //refresh the map with user location
+    });
+
+    positionStream = Geolocator.getPositionStream().listen((Position position) {
+      currentUserLoc = LatLng(position.latitude, position.longitude);
     });
   }
 
@@ -501,13 +514,8 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
       child: OutlinedButton(
         onPressed: () async {
           Navigator.pop(context);
-          _getUserCurrentLocation().then((value) async {
-            currentUserLoc = LatLng(
-                value.latitude, value.longitude); //update user current location
-            _addUserMarker(currentUserLoc!);
-            _newCameraPosition(LatLng(value.latitude, value.longitude));
-            showSnackBar("Getting user location.....");
-          });
+          _newCameraPosition(currentUserLoc!);
+          _addUserMarker(currentUserLoc!);
         },
         style: OutlinedButton.styleFrom(
           backgroundColor: Colors.black,

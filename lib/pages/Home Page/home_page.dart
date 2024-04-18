@@ -4,6 +4,7 @@ import 'package:remote_control_ui/pages/Home%20Page/ble_section.dart';
 //controller for the BLE
 class HomePageController {
   late void Function(List<int>) sendDataBLE;
+  late Future<int> Function() getRSSI;
 }
 
 class HomePage extends StatefulWidget {
@@ -32,6 +33,7 @@ class HomePage extends StatefulWidget {
 class HomePageState extends State<HomePage> {
   HomePageState(HomePageController homeController) {
     homeController.sendDataBLE = sendBLEwidget;
+    homeController.getRSSI = readRSSIble;
   }
 
   //initialize controller for BLE widget
@@ -51,6 +53,11 @@ class HomePageState extends State<HomePage> {
   void sendBLEwidget(List<int> message) {
     //Send message to BLE widget
     myBLEController.sendDataBLE(message);
+  }
+
+  Future<int> readRSSIble() async {
+    int rssi = await myBLEController.getRSSI();
+    return rssi;
   }
 
   @override

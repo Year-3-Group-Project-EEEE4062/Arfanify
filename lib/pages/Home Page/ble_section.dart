@@ -9,6 +9,7 @@ import 'package:remote_control_ui/converter/data_converter.dart';
 //controller for the BLE
 class BLEwidgetController {
   late void Function(List<int>) sendDataBLE;
+  late Future<int> Function() getRSSI;
 }
 
 //Widget for BLE
@@ -37,6 +38,7 @@ class BLEwidget extends StatefulWidget {
 class BLEwidgetState extends State<BLEwidget> {
   BLEwidgetState(BLEwidgetController blEcontroller) {
     blEcontroller.sendDataBLE = sendDataBLE;
+    blEcontroller.getRSSI = readRSSI;
   }
 
   //variable used to let user visually see the BLE connection status
@@ -74,8 +76,6 @@ class BLEwidgetState extends State<BLEwidget> {
   //for better scaling of widgets with different screen sizes
   late double _safeVertical;
   late double _safeHorizontal;
-
-  Timer? rssiTimer;
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   void resetVariables() {
@@ -118,6 +118,11 @@ class BLEwidgetState extends State<BLEwidget> {
     } else {
       debugPrint("Invalid mode from boat");
     }
+  }
+
+  Future<int> readRSSI() async {
+    int rssi = await deviceStats.readRssi();
+    return rssi;
   }
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -170,7 +175,7 @@ class BLEwidgetState extends State<BLEwidget> {
           //check if detected device has already been detected before
           if (_scanResults.contains(r) == false) {
             //check if it is a valid device ID (Medium or Boat)
-            if (deviceName == r.fadvertisementData.advName) {
+            if (deviceName == r.advertisementData.advName) {
               //medium detected and add to list
               _scanResults.add(r);
 
@@ -546,14 +551,6 @@ class BLEwidgetState extends State<BLEwidget> {
             byteCommand = integerToByteArray(0x03, getDateTime(6));
             writeCharacteristics(byteCommand);
 
-            // Set up periodic RSSI timer to record RSSI
-            rssiTimer = Timer.periodic(
-              const Duration(seconds: 1),
-              (timer) {
-                debugPrint("Medium RSSI: ${deviceStats.readRssi()}");
-              },
-            );
-
             setState(() {
               //connected change the icon color to green
               connectionColor.value = const Color.fromARGB(255, 128, 232, 80);
@@ -566,7 +563,6 @@ class BLEwidgetState extends State<BLEwidget> {
           }
           // listen for disconnection
           else if (state == BluetoothConnectionState.disconnected) {
-            rssiTimer!.cancel; //cancel timer
             editActionMssg("Disconnected from Device...");
             resetVariables();
             setState(() {});

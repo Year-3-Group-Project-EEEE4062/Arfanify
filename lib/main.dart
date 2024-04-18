@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:remote_control_ui/converter/data_converter.dart';
 import 'package:remote_control_ui/pages/Home%20Page/home_page.dart';
 import 'package:remote_control_ui/pages/Remote%20Page/remote_control_page.dart';
 import 'package:remote_control_ui/pages/Auto%20Page/autonomous_page.dart';
@@ -22,7 +24,8 @@ void main() {
       Permission.storage,
       Permission.bluetooth,
       Permission.bluetoothConnect,
-      Permission.bluetoothScan
+      Permission.bluetoothScan,
+      Permission.manageExternalStorage,
     ].request().then((status) {
       runApp(const InitApp());
     });
@@ -74,6 +77,9 @@ class _MainAppState extends State<MainApp> {
   final AutoPageController myAutoController = AutoPageController();
 
   int _selectedIndex = 0;
+
+  Timer? bletestResults;
+
   late List<Widget> _pages;
 
   void updatePageIndex(int index) {
@@ -88,7 +94,7 @@ class _MainAppState extends State<MainApp> {
 
   //for updating page
   //To update bleStat in homepage
-  void updateTreeBLEStat(bool stat) {
+  Future<void> updateTreeBLEStat(bool stat) async {
     bleStat = stat;
 
     if (myRemoteController.bleStat != null) {
@@ -97,6 +103,28 @@ class _MainAppState extends State<MainApp> {
 
     if (myAutoController.bleStat != null) {
       myAutoController.bleStat!(bleStat);
+    }
+
+    if (bleStat) {
+      //start the timer
+      bletestResults = Timer.periodic(
+        const Duration(seconds: 1),
+        (timer) async {
+          int rssi = await myHomeController.getRSSI();
+          List<double> userLoc = await myAutoController.userLoc();
+          debugPrint("RSSI :$rssi");
+          debugPrint("User Loc: $userLoc");
+          List<int> send =
+              floatToByteArray(0x04, [rssi.toDouble(), userLoc[0], userLoc[1]]);
+          myHomeController.sendDataBLE(send);
+        },
+      );
+    } else {
+      try {
+        bletestResults!.cancel();
+      } catch (e) {
+        debugPrint("$e");
+      }
     }
   }
 
