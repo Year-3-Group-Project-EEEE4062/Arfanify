@@ -78,8 +78,19 @@ class _SendAlertDialogState extends State<SendAlertDialog> {
   }
 
   Text sendingContent() {
+    String estimateUnit;
+    dynamic estimatedTime;
+
+    if (widget.waypointLength >= 20) {
+      estimateUnit = "mins";
+      estimatedTime = (widget.waypointLength * 3) / 60;
+    } else {
+      estimateUnit = "secs";
+      estimatedTime = widget.waypointLength * 3;
+    }
+
     return Text(
-      "Boat received: $boatReceivedCounter / ${widget.waypointLength}",
+      "Estimated sending time: $estimatedTime $estimateUnit\n\nBoat received: $boatReceivedCounter / ${widget.waypointLength}",
       style: const TextStyle(
         fontSize: 15,
         color: Colors.black,

@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/services.dart' show ByteData, Uint8List, rootBundle;
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:remote_control_ui/converter/data_converter.dart';
 import 'package:remote_control_ui/pages/Auto%20Page/send_pop_up.dart';
 import 'package:toggle_switch/toggle_switch.dart';
@@ -54,6 +55,7 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
   bool isWaypointsReady = false;
   int waypointsReadyIndex = 1;
 
+  late StreamSubscription<Position> positionStream;
   LatLng? currentUserLoc;
   final Completer<GoogleMapController> _mapsController = Completer();
   late String _darkMapStyle;
@@ -131,10 +133,10 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
         // Message contains boat's location
         List<double> boatCoordinates = notifybLEAuto[1];
         currentBoatLoc = LatLng(boatCoordinates[0], boatCoordinates[1]);
-        boatpathLatLng.add(currentBoatLoc!);
 
-        //means it is the location of the boat
+        if (autonomousStart) boatpathLatLng.add(currentBoatLoc!);
         await _addBoatMarker(currentBoatLoc!);
+        await _newCameraPosition(currentBoatLoc!);
       } else if (notifybLEAuto[0] == 1) {
         // Message contains how many waypoints boat has gotten so far
         List<int> current = notifybLEAuto[1];
@@ -151,6 +153,7 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
         // Message indicates cancel operation successful
         autonomousStart = false;
         showSnackBar("Operation cancelled");
+        setState(() {});
       } else if (notifybLEAuto[0] == 5) {
         // Message indicates that auto mode finished already
         autonomousStart = false;
@@ -241,6 +244,10 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
       _addUserMarker(currentUserLoc!);
       setState(() {}); //refresh the map with user location
     });
+
+    positionStream = Geolocator.getPositionStream().listen((Position position) {
+      currentUserLoc = LatLng(position.latitude, position.longitude);
+    });
   }
 
   @override
@@ -263,10 +270,10 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
             width: double.infinity,
             height: double.infinity,
             child: currentUserLoc == null
-                ? const Center(
-                    child: CircularProgressIndicator(
+                ? Center(
+                    child: LoadingAnimationWidget.stretchedDots(
                       color: Colors.white,
-                      strokeWidth: 5,
+                      size: 60,
                     ),
                   )
                 : theMap(),
@@ -309,6 +316,13 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
             ),
           ),
           Align(
+            alignment: Alignment.bottomLeft,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 100, left: 20, right: 20),
+              child: liveMarkerCounter(),
+            ),
+          ),
+          Align(
             alignment: Alignment.bottomRight,
             child: Padding(
               padding: const EdgeInsets.only(bottom: 30, left: 20, right: 20),
@@ -327,6 +341,35 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Container liveMarkerCounter() {
+    return Container(
+      width: 100,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(30),
+        color: Colors.white,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Wrap(
+          children: [
+            const ImageIcon(
+              AssetImage('assets/icons/pin.png'),
+              size: 24,
+            ),
+            SizedBox(
+              height: _safeHorizontal * 5,
+            ),
+            Text(
+              ": ${markersLatLng.length}",
+              style: const TextStyle(fontSize: 24),
+            )
+          ],
+        ),
       ),
     );
   }
@@ -395,18 +438,22 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
           autoModeBottomSheet();
         },
         style: OutlinedButton.styleFrom(
-          backgroundColor: Colors.white,
+          side: const BorderSide(
+            width: 3,
+            color: Colors.white,
+            style: BorderStyle.solid,
+          ),
+          backgroundColor: const Color(0xff768a76), // Outline color
           shape: RoundedRectangleBorder(
             borderRadius:
                 BorderRadius.circular(30), // Adjust the border radius as needed
           ),
-          side: const BorderSide(color: Colors.white),
         ),
         child: Padding(
           padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
           child: Icon(
             Icons.list_alt,
-            color: Colors.blue,
+            color: Colors.white,
             size: _safeVertical * 6,
           ),
         ),
@@ -483,7 +530,7 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
     // create a new camera position with respect to the user's location
     CameraPosition cameraPosition = CameraPosition(
       target: value,
-      zoom: 18,
+      zoom: 25,
     );
 
     //use future to get the object of the _mapsController to change its properties
@@ -501,13 +548,8 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
       child: OutlinedButton(
         onPressed: () async {
           Navigator.pop(context);
-          _getUserCurrentLocation().then((value) async {
-            currentUserLoc = LatLng(
-                value.latitude, value.longitude); //update user current location
-            _addUserMarker(currentUserLoc!);
-            _newCameraPosition(LatLng(value.latitude, value.longitude));
-            showSnackBar("Getting user location.....");
-          });
+          _newCameraPosition(currentUserLoc!);
+          _addUserMarker(currentUserLoc!);
         },
         style: OutlinedButton.styleFrom(
           backgroundColor: Colors.black,
@@ -707,7 +749,7 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
           target:
               //add a nullcheck for each lattitude and longitude
               LatLng(currentUserLoc!.latitude, currentUserLoc!.longitude),
-          zoom: 18),
+          zoom: 25),
       markers: mapMarkers,
       polylines: pathPolylines,
       onLongPress: _checkMarkerDistance,
@@ -1099,16 +1141,6 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
                     ),
                   ),
                 ],
-              ),
-              SizedBox(
-                height: _safeVertical * 0.5,
-              ),
-              SizedBox(
-                child: Text(
-                  "Number of waypoints: ${markersLatLng.length}",
-                  style: TextStyle(
-                      fontSize: _safeHorizontal * 4, color: Colors.red),
-                ),
               ),
               SizedBox(
                 height: _safeVertical * 0.5,
