@@ -105,7 +105,7 @@ class BLEwidgetState extends State<BLEwidget> {
   void notifyDataBLE(List<int> notifyMessage) {
     //convert to uint
     final Uint8List data = Uint8List.fromList(notifyMessage);
-    List<dynamic> decodedData = decodeData(data);
+    List<dynamic> decodedData = decodeData_preRelease(data);
 
     //give decoded data back to home page to send to revelant pages
     if (data[0] == 0x01) {
