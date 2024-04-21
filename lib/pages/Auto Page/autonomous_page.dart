@@ -123,24 +123,21 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
   }
 
   void autoModeNotifyBLE(List<dynamic> notifybLEAuto) async {
+    debugPrint("Some: $notifybLEAuto");
     // First check if auto page mounted or not
     if (mounted) {
       debugPrint("New data for auto page");
-      debugPrint("${notifybLEAuto[0]}");
-
       //Check what type of message is it
       if (notifybLEAuto[0] == 0) {
         // Message contains boat's location
-        List<double> boatCoordinates = notifybLEAuto[1];
-        currentBoatLoc = LatLng(boatCoordinates[0], boatCoordinates[1]);
+        currentBoatLoc = LatLng(notifybLEAuto[1], notifybLEAuto[2]);
 
         if (autonomousStart) boatpathLatLng.add(currentBoatLoc!);
         await _addBoatMarker(currentBoatLoc!);
         await _newCameraPosition(currentBoatLoc!);
       } else if (notifybLEAuto[0] == 1) {
         // Message contains how many waypoints boat has gotten so far
-        List<int> current = notifybLEAuto[1];
-        mySendDialog.updateCounter(current[0]);
+        mySendDialog.updateCounter(notifybLEAuto[1]);
       } else if (notifybLEAuto[0] == 2) {
         // Message contains the boat alerting user that all waypoints have been received
         // And the boat will start autonomous operation
@@ -160,9 +157,7 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
         showSnackBar("Autonomous operation finished");
       } else if (notifybLEAuto[0] == 6) {
         // Message indicates how many waypoints boat has finished
-        // Message contains how many waypoints boat has gotten so far
-        List<int> current = notifybLEAuto[1];
-        boatCompleted = current[0] + 1;
+        boatCompleted = notifybLEAuto[1];
         showSnackBar("Autonomous operation finished");
       }
     }
@@ -595,6 +590,7 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
       width: _safeHorizontal * 20,
       child: OutlinedButton(
         onPressed: () async {
+          Navigator.pop(context);
           List<int> mssg = [0];
           autoModeSendBLE(mssg, 0);
           showSnackBar("Fetching boat location...");

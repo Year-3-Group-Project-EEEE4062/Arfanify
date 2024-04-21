@@ -11,7 +11,6 @@ dependencies:
     sdk: flutter
   syncfusion_flutter_gauges: ^24.2.6
   provider: ^6.1.1
-  flutter_blue_plus: ^1.20.4
   permission_handler: ^11.0.1
   flutter_polyline_points: ^2.0.0
   google_maps_flutter: ^2.5.0
@@ -20,6 +19,7 @@ dependencies:
   convert: ^3.1.1
   floating_snackbar: ^1.0.3+1
   loading_animation_widget: ^1.2.1
+  flutter_blue_plus: ^1.32.4
 
 dev_dependencies:
   flutter_test:
