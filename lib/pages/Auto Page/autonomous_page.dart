@@ -155,10 +155,12 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
         // Message indicates that auto mode finished already
         autonomousStart = false;
         showSnackBar("Autonomous operation finished");
+        setState(() {});
       } else if (notifybLEAuto[0] == 6) {
         // Message indicates how many waypoints boat has finished
         boatCompleted = notifybLEAuto[1];
         showSnackBar("Autonomous operation finished");
+        setState(() {});
       }
     }
   }
