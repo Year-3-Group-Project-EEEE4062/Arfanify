@@ -83,10 +83,12 @@ class _SendAlertDialogState extends State<SendAlertDialog> {
 
     if (widget.waypointLength >= 20) {
       estimateUnit = "mins";
-      estimatedTime = (widget.waypointLength * 3) / 60;
+      estimatedTime = ((widget.waypointLength * 5) + 5) / 60;
+      estimatedTime =
+          Duration(seconds: ((widget.waypointLength * 5) + 5)).inMinutes;
     } else {
       estimateUnit = "secs";
-      estimatedTime = widget.waypointLength * 3;
+      estimatedTime = (widget.waypointLength * 5) + 5;
     }
 
     return Text(
