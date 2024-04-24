@@ -9,7 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  syncfusion_flutter_gauges: ^24.2.6
+  syncfusion_flutter_gauges: ^25.1.41
   provider: ^6.1.1
   permission_handler: ^11.0.1
   flutter_polyline_points: ^2.0.0
@@ -20,6 +20,7 @@ dependencies:
   floating_snackbar: ^1.0.3+1
   loading_animation_widget: ^1.2.1
   flutter_blue_plus: ^1.32.4
+  excel: ^4.0.3
 
 dev_dependencies:
   flutter_test:
@@ -45,3 +46,4 @@ flutter:
     - assets/icons/pin.png
     - assets/icons/boatboat.png
     - assets/icons/temperature.png
+    - assets/Lake Boundary.xlsx

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui' as ui;
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/services.dart' show ByteData, Uint8List, rootBundle;
@@ -10,7 +11,7 @@ import 'package:remote_control_ui/converter/data_converter.dart';
 import 'package:remote_control_ui/pages/Auto%20Page/send_pop_up.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 import 'package:floating_snackbar/floating_snackbar.dart';
-import 'dart:ui' as ui;
+import 'package:excel/excel.dart' as xcel;
 
 //controller for the BLE
 class AutoPageController {
@@ -39,7 +40,7 @@ class AutoPage extends StatefulWidget {
   State<AutoPage> createState() => _AutoPageState(notifyController);
 }
 
-class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
+class _AutoPageState extends State<AutoPage> {
   _AutoPageState(AutoPageController notifyController) {
     notifyController.notifyBLE = autoModeNotifyBLE;
     notifyController.bleStat = updateBLEStat;
@@ -70,6 +71,8 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
 
   LatLng? currentBoatLoc;
   List<LatLng> boatpathLatLng = [];
+
+  Polyline? lakeBoundary;
 
   Set<Polyline> pathPolylines = {};
   ValueNotifier<Color> polylineButtonColor = ValueNotifier<Color>(Colors.black);
@@ -206,17 +209,38 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
     userIcon = await getBytesFromAsset('assets/icons/user.png', 150);
   }
 
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  @override
-  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
-    if (state == AppLifecycleState.resumed) {
-      //retrieve controller
-      final GoogleMapController controller = await _mapsController.future;
-      controller.setMapStyle(_darkMapStyle);
+  // Extract lat and lng from excel file
+  Future<void> getLakeBoundary() async {
+    List<LatLng> lakeBoundaryLatLng = [];
+    ByteData data = await rootBundle.load('assets/Lake Boundary.xlsx');
+    var bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+    var excel = xcel.Excel.decodeBytes(bytes);
+
+    for (var table in excel.tables.keys) {
+      for (var row in excel.tables[table]!.rows) {
+        final value1 = row[1]!.value;
+        final value2 = row[2]!.value;
+        final double lakeLat =
+            value1 != null ? double.tryParse(value1.toString()) ?? 0.0 : 0.0;
+        final double lakeLng =
+            value2 != null ? double.tryParse(value2.toString()) ?? 0.0 : 0.0;
+        debugPrint('$lakeLat, $lakeLng');
+        lakeBoundaryLatLng.add(LatLng(lakeLat, lakeLng));
+      }
     }
+
+    lakeBoundaryLatLng.removeAt(0);
+
+    lakeBoundary = Polyline(
+      polylineId: const PolylineId('lake'),
+      points: lakeBoundaryLatLng,
+      width: 2,
+      color: const Color.fromARGB(255, 255, 13, 13),
+    );
   }
 
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   @override
   void initState() {
     super.initState();
@@ -231,9 +255,14 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
       bleStatLogo = Icons.bluetooth_disabled;
     }
 
-    _loadMapStyles(); //load the dark mode map json file design
+    //load the dark mode map json file design
+    _loadMapStyles();
 
-    setCustomMarkerIcon(); //get the custom markers
+    //get the custom markers
+    setCustomMarkerIcon();
+
+    // Draw Nottingham lake boundary onto map
+    getLakeBoundary();
 
     //set the map to user current location
     _getUserCurrentLocation().then((value) async {
@@ -857,6 +886,7 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
                     color: const Color.fromARGB(255, 84, 246, 255),
                   ),
                 );
+                pathPolylines.add(lakeBoundary!);
                 _changePolylineButtonColor();
               } else {
                 pathPolylines.clear();
@@ -1449,7 +1479,7 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
     // Add 2 second delay asynchronously before setting a periodic timer to send
     // waypoints every 2 seconds
     sendTimer = Timer.periodic(
-      const Duration(seconds: 3),
+      const Duration(seconds: 5),
       (timer) {
         if (timer.tick <= doubleTypeWaypoint.length) {
           debugPrint("Sending: ${doubleTypeWaypoint[timer.tick - 1]}");
