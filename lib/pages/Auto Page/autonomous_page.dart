@@ -162,7 +162,6 @@ class _AutoPageState extends State<AutoPage> {
       } else if (notifybLEAuto[0] == 6) {
         // Message indicates how many waypoints boat has finished
         boatCompleted = notifybLEAuto[1];
-        showSnackBar("Autonomous operation finished");
         setState(() {});
       }
     }

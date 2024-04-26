@@ -125,7 +125,7 @@ class RemotePageState extends State<RemotePage> {
       textColor: Colors.black,
       // textStyle: const TextStyle(color: Colors.green),
       duration: const Duration(milliseconds: 2000),
-      backgroundColor: const Color.fromARGB(255, 0, 221, 255),
+      backgroundColor: Colors.grey,
     );
   }
 
