@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:remote_control_ui/pages/ble_PopUp.dart';
 import 'package:remote_control_ui/pages/autonomous_page.dart';
-import 'package:remote_control_ui/pages/cloud_backup_page.dart';
 import 'package:remote_control_ui/pages/home_page.dart';
 import 'package:remote_control_ui/pages/remote_control_page.dart';
 
@@ -38,7 +37,6 @@ class _MainPageState extends State<MainPage> {
       HomePage(updateScaffoldBody: _onItemTapped),
       RemoteControlPage(bLE: _updateMediumBLE),
       const AutonomousPagee(),
-      const CloudBackupPage(),
     ];
   }
 
@@ -72,8 +70,6 @@ class _MainPageState extends State<MainPage> {
           remoteControlDrawer(context),
           const SizedBox(height: 5),
           autonomousDrawer(context),
-          const SizedBox(height: 5),
-          cloudBackupDrawer(context),
         ],
       ),
     );
@@ -147,26 +143,6 @@ class _MainPageState extends State<MainPage> {
       ),
       onTap: () {
         _onItemTapped(2);
-        Navigator.pop(context);
-      },
-    );
-  }
-
-  ListTile cloudBackupDrawer(BuildContext context) {
-    return ListTile(
-      selected: _selectedIndex == 3,
-      selectedColor: const Color(0xff29A8AB),
-      leading: const Icon(
-        Icons.cloud_done,
-      ),
-      title: const Text(
-        'Cloud Backup',
-        style: TextStyle(
-          fontSize: 20,
-        ),
-      ),
-      onTap: () {
-        _onItemTapped(3);
         Navigator.pop(context);
       },
     );

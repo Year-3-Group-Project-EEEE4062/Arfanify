@@ -26,7 +26,6 @@ class HomePageState extends State<HomePage> {
           arfanifyIcon(),
           remoteControlButton(),
           autonomousButton(),
-          cloudBackupButton(),
         ],
       ),
     );
