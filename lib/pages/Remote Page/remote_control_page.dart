@@ -102,6 +102,12 @@ class RemotePageState extends State<RemotePage> {
     // Check if remote page mounted or not
     if (mounted) {
       debugPrint("Notified: $notifybLERemote");
+      if (notifybLERemote[0] == 3) {
+        showSnackBar("Temperature collected, check boat..", context);
+        setState(() {
+          isTemperatureMeasurement = false;
+        });
+      }
     }
   }
 
@@ -536,17 +542,21 @@ class RemotePageState extends State<RemotePage> {
             //Have to add a 1 second delay before sending another instruction
             Future.delayed(const Duration(microseconds: 1000), () {
               remoteModeSendBLE(bleMeasure);
-              showSnackBar("Initiating temperature measurement!", context);
-              isTemperatureMeasurement = true;
+              setState(() {
+                isTemperatureMeasurement = true;
+              });
+              setState(() {
+                isTemperatureMeasurement = true;
+              });
             });
           } else {
             //Otherwise, boat already stopped so initiate temperature measurement
             remoteModeSendBLE(bleMeasure);
             showSnackBar("Initiating temperature measurement!", context);
-            isTemperatureMeasurement = true;
+            setState(() {
+              isTemperatureMeasurement = true;
+            });
           }
-
-          setState(() {});
         },
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
