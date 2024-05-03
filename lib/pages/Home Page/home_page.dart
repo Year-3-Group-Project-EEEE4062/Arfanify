@@ -64,38 +64,40 @@ class HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Column(
-        children: [
-          SizedBox(
-            height: _safeVertical * 5,
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                mainPageTitle(),
-              ],
+    return SingleChildScrollView(
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: Column(
+          children: [
+            SizedBox(
+              height: _safeVertical * 5,
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 20, left: 20),
-            child: Center(
-              child: modeSection(),
+            Padding(
+              padding: const EdgeInsets.only(left: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  mainPageTitle(),
+                ],
+              ),
             ),
-          ),
-          SizedBox(
-            height: _safeVertical * 2,
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 20, left: 20),
-            child: Center(
-              child: bleSection(),
+            Padding(
+              padding: const EdgeInsets.only(right: 20, left: 20),
+              child: Center(
+                child: modeSection(),
+              ),
             ),
-          ),
-        ],
+            SizedBox(
+              height: _safeVertical * 2,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 20, left: 20),
+              child: Center(
+                child: bleSection(),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

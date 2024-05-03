@@ -166,72 +166,75 @@ class RemotePageState extends State<RemotePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Column(
-        children: [
-          SizedBox(
-            height: _safeVertical * 5,
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 20, right: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                remotePageTitle(),
-                SizedBox(
-                  height: _safeVertical * 7,
-                  child: SizedBox(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        bleStatus(),
-                        SizedBox(width: _safeHorizontal * 3), //just empty space
-                        homeButton(context),
-                        SizedBox(width: _safeHorizontal * 1),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+    return SingleChildScrollView(
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: Column(
+          children: [
+            SizedBox(
+              height: _safeVertical * 5,
             ),
-          ),
-          SizedBox(
-            height: _safeVertical * 1,
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 15, right: 15),
-            child: Column(
-              children: [
-                motionLayout(),
-                SizedBox(height: _safeVertical * 2), //just empty space
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: 15),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
+            Padding(
+              padding: const EdgeInsets.only(left: 20, right: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  remotePageTitle(),
+                  SizedBox(
+                    height: _safeVertical * 7,
+                    child: SizedBox(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          (isTemperatureMeasurement)
-                              ? cancelButton()
-                              : measureButton(),
+                          bleStatus(),
                           SizedBox(
-                              height: _safeVertical * 2), //just empty space
-                          stopButton(),
+                              width: _safeHorizontal * 3), //just empty space
+                          homeButton(context),
+                          SizedBox(width: _safeHorizontal * 1),
                         ],
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 15),
-                      child: movementsLayout(),
-                    )
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            SizedBox(
+              height: _safeVertical * 1,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 15, right: 15),
+              child: Column(
+                children: [
+                  motionLayout(),
+                  SizedBox(height: _safeVertical * 2), //just empty space
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 15),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            (isTemperatureMeasurement)
+                                ? cancelButton()
+                                : measureButton(),
+                            SizedBox(
+                                height: _safeVertical * 2), //just empty space
+                            stopButton(),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 15),
+                        child: movementsLayout(),
+                      )
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

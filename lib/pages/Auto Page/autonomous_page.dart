@@ -40,7 +40,7 @@ class AutoPage extends StatefulWidget {
   State<AutoPage> createState() => _AutoPageState(notifyController);
 }
 
-class _AutoPageState extends State<AutoPage> {
+class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
   _AutoPageState(AutoPageController notifyController) {
     notifyController.notifyBLE = autoModeNotifyBLE;
     notifyController.bleStat = updateBLEStat;
@@ -58,7 +58,8 @@ class _AutoPageState extends State<AutoPage> {
 
   late StreamSubscription<Position> positionStream;
   LatLng? currentUserLoc;
-  final Completer<GoogleMapController> _mapsController = Completer();
+  late GlobalKey _googleMapWidgetKey;
+  late Completer<GoogleMapController> _mapsController;
   late String _darkMapStyle;
 
   Set<Marker> mapMarkers = {};
@@ -247,6 +248,10 @@ class _AutoPageState extends State<AutoPage> {
     _safeVertical = widget.safeScreenHeight;
     _safeHorizontal = widget.safeScreenWidth;
 
+    WidgetsBinding.instance.addObserver(this);
+    _googleMapWidgetKey = GlobalKey();
+    _mapsController = Completer<GoogleMapController>();
+
     //Set ble icon status
     if (widget.bleStat) {
       bleStatLogo = Icons.bluetooth_connected;
@@ -273,6 +278,21 @@ class _AutoPageState extends State<AutoPage> {
     positionStream = Geolocator.getPositionStream().listen((Position position) {
       currentUserLoc = LatLng(position.latitude, position.longitude);
     });
+  }
+
+  // Add:
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (state == AppLifecycleState.resumed) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _googleMapWidgetKey = GlobalKey();
+            _mapsController = Completer<GoogleMapController>();
+          });
+        }
+      });
+    }
   }
 
   @override
@@ -766,24 +786,21 @@ class _AutoPageState extends State<AutoPage> {
 
   GoogleMap theMap() {
     return GoogleMap(
-      style: _darkMapStyle,
-      buildingsEnabled: false,
-      mapType: MapType.normal,
-      zoomControlsEnabled: false,
-      compassEnabled: true,
-      initialCameraPosition: CameraPosition(
-          target:
-              //add a nullcheck for each lattitude and longitude
-              LatLng(currentUserLoc!.latitude, currentUserLoc!.longitude),
-          zoom: 25),
-      markers: mapMarkers,
-      polylines: pathPolylines,
-      onLongPress: _checkMarkerDistance,
-      onMapCreated: (GoogleMapController controller) async {
-        //assigning the controller
-        _mapsController.complete(controller);
-      },
-    );
+        key: _googleMapWidgetKey,
+        style: _darkMapStyle,
+        buildingsEnabled: false,
+        mapType: MapType.normal,
+        zoomControlsEnabled: false,
+        compassEnabled: true,
+        initialCameraPosition: CameraPosition(
+            target:
+                //add a nullcheck for each lattitude and longitude
+                LatLng(currentUserLoc!.latitude, currentUserLoc!.longitude),
+            zoom: 25),
+        markers: mapMarkers,
+        polylines: pathPolylines,
+        onLongPress: _checkMarkerDistance,
+        onMapCreated: _mapsController.complete);
   }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
