@@ -153,11 +153,13 @@ class _AutoPageState extends State<AutoPage> with WidgetsBindingObserver {
       } else if (notifybLEAuto[0] == 4) {
         // Message indicates cancel operation successful
         autonomousStart = false;
+        boatCompleted = 0;
         showSnackBar("Operation cancelled");
         setState(() {});
       } else if (notifybLEAuto[0] == 5) {
         // Message indicates that auto mode finished already
         autonomousStart = false;
+        boatCompleted = 0;
         showSnackBar("Autonomous operation finished");
         setState(() {});
       } else if (notifybLEAuto[0] == 6) {
