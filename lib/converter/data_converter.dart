@@ -102,7 +102,7 @@ List<dynamic> decodeData(Uint8List mssg) {
   final int dataLength =
       ByteData.sublistView(mssg, 2, mssgStartingIndex).getInt8(0);
 
-  // Get the length of the information
+  // Get the message type of the information
   final int mssgType =
       ByteData.sublistView(mssg, mssgTypeIndex, mssgStartingIndex - 1)
           .getInt8(0);
@@ -131,6 +131,58 @@ List<dynamic> decodeData(Uint8List mssg) {
         integerValues.add(integerValue);
       }
       decoded = [mssgType, integerValues];
+    }
+
+    // Return decoded data
+    return decoded;
+  } else {
+    throw ArgumentError("Unknown identifier");
+  }
+}
+
+List<dynamic> decodeData_preRelease(Uint8List mssg) {
+  // To store decoded data later
+  List<dynamic> decoded = [];
+
+  // data type identifier
+  const int integerIdentifier = 0x01;
+  const int floatIdentifier = 0x02;
+
+  // Essentials for decoding message
+  const int mssgStartingIndex = 6;
+  const int intBufferSize = 4;
+  const int floatBufferSize = 4;
+
+  final int dataTypeIdentifier = mssg[1];
+
+  // Get the length of the information
+  final int dataLength =
+      ByteData.sublistView(mssg, 2, mssgStartingIndex).getInt8(0);
+
+  if (dataTypeIdentifier == floatIdentifier ||
+      dataTypeIdentifier == integerIdentifier) {
+    if (dataTypeIdentifier == floatIdentifier) {
+      final List<double> doubleValues = [];
+      for (int i = 0; i < dataLength; i++) {
+        final double doubleValue = ByteData.sublistView(
+                mssg,
+                mssgStartingIndex + (i * floatBufferSize),
+                mssgStartingIndex + (i * floatBufferSize) + floatBufferSize)
+            .getFloat32(0, Endian.little);
+        doubleValues.add(doubleValue);
+      }
+      decoded = doubleValues;
+    } else if (dataTypeIdentifier == integerIdentifier) {
+      final List<int> integerValues = [];
+      for (int i = 0; i < dataLength; i++) {
+        final int integerValue = ByteData.sublistView(
+                mssg,
+                mssgStartingIndex + (i * intBufferSize),
+                mssgStartingIndex + (i * intBufferSize) + intBufferSize)
+            .getInt32(0, Endian.little);
+        integerValues.add(integerValue);
+      }
+      decoded = integerValues;
     }
 
     // Return decoded data

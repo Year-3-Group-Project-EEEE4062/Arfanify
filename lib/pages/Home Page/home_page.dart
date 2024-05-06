@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:remote_control_ui/pages/Home%20Page/ble_section.dart';
 
 //controller for the BLE
-class HomePagecontroller {
+class HomePageController {
   late void Function(List<int>) sendDataBLE;
 }
 
@@ -13,7 +13,7 @@ class HomePage extends StatefulWidget {
   final Function(bool) updateTreeBLEStat;
   final Function(List<dynamic>) notifyRemoteNewBLE;
   final Function(List<dynamic>) notifyAutoNewBLE;
-  final HomePagecontroller homeController;
+  final HomePageController homeController;
   const HomePage({
     super.key,
     required this.safeScreenHeight,
@@ -30,12 +30,12 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> {
-  HomePageState(HomePagecontroller homeController) {
+  HomePageState(HomePageController homeController) {
     homeController.sendDataBLE = sendBLEwidget;
   }
 
   //initialize controller for BLE widget
-  final BLEcontroller myBLEController = BLEcontroller();
+  final BLEwidgetController myBLEController = BLEwidgetController();
 
   // for better scaling of widgets with different screen sizes
   late double _safeVertical;
@@ -79,9 +79,6 @@ class HomePageState extends State<HomePage> {
                 mainPageTitle(),
               ],
             ),
-          ),
-          SizedBox(
-            height: _safeVertical * 0.1,
           ),
           Padding(
             padding: const EdgeInsets.only(right: 20, left: 20),
@@ -213,7 +210,7 @@ class HomePageState extends State<HomePage> {
           changePage(2);
         },
         icon: Icon(
-          Icons.map_outlined,
+          Icons.auto_mode,
           size: _safeVertical * 7,
           color: Colors.white,
         ),
@@ -270,8 +267,8 @@ class HomePageState extends State<HomePage> {
             ),
             // Defined in another class
             Padding(
-              padding: const EdgeInsets.only(right: 20, left: 20, bottom: 15),
-              child: AppBarBLE(
+              padding: const EdgeInsets.only(right: 20, left: 20, bottom: 5),
+              child: BLEwidget(
                 bleController: myBLEController,
                 safeScreenHeight: _safeVertical,
                 safeScreenWidth: _safeHorizontal,

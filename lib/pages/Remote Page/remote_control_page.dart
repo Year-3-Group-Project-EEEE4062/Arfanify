@@ -5,7 +5,7 @@ import 'package:remote_control_ui/converter/data_converter.dart';
 import 'package:floating_snackbar/floating_snackbar.dart';
 
 //controller for the BLE
-class RemoteModeController {
+class RemotePageController {
   late void Function(List<dynamic>) notifyBLE;
   void Function(bool)? bleStat;
 }
@@ -16,7 +16,7 @@ class RemotePage extends StatefulWidget {
   final Function(int) updatePageIndex;
   final bool bleStat;
   final Function(List<int>) sendbLE;
-  final RemoteModeController notifyController;
+  final RemotePageController notifyController;
   const RemotePage({
     super.key,
     required this.safeScreenHeight,
@@ -32,7 +32,7 @@ class RemotePage extends StatefulWidget {
 }
 
 class RemotePageState extends State<RemotePage> {
-  RemotePageState(RemoteModeController notifyController) {
+  RemotePageState(RemotePageController notifyController) {
     notifyController.notifyBLE = remoteModeNotifyBLE;
     notifyController.bleStat = updateBLEStat;
   }
@@ -102,6 +102,12 @@ class RemotePageState extends State<RemotePage> {
     // Check if remote page mounted or not
     if (mounted) {
       debugPrint("Notified: $notifybLERemote");
+      if (notifybLERemote[0] == 3) {
+        showSnackBar("Temperature collected, check boat..", context);
+        setState(() {
+          isTemperatureMeasurement = false;
+        });
+      }
     }
   }
 
@@ -125,7 +131,7 @@ class RemotePageState extends State<RemotePage> {
       textColor: Colors.black,
       // textStyle: const TextStyle(color: Colors.green),
       duration: const Duration(milliseconds: 2000),
-      backgroundColor: const Color.fromARGB(255, 0, 221, 255),
+      backgroundColor: Colors.grey,
     );
   }
 
@@ -163,71 +169,71 @@ class RemotePageState extends State<RemotePage> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: Column(
-        children: [
-          SizedBox(
-            height: _safeVertical * 5,
+      children: [
+        SizedBox(
+          height: _safeVertical * 5,
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              remotePageTitle(),
+              SizedBox(
+                height: _safeVertical * 7,
+                child: SizedBox(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      bleStatus(),
+                      SizedBox(
+                          width: _safeHorizontal * 3), //just empty space
+                      homeButton(context),
+                      SizedBox(width: _safeHorizontal * 1),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.only(left: 20, right: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                remotePageTitle(),
-                SizedBox(
-                  height: _safeVertical * 7,
-                  width: _safeHorizontal * 48,
-                  child: SizedBox(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+        ),
+        SizedBox(
+          height: _safeVertical * 1,
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 15, right: 15),
+          child: Column(
+            children: [
+              motionLayout(),
+              SizedBox(height: _safeVertical * 2), //just empty space
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 15),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        bleStatus(),
-                        SizedBox(width: _safeHorizontal * 3), //just empty space
-                        homeButton(context),
-                        SizedBox(width: _safeHorizontal * 1),
+                        (isTemperatureMeasurement)
+                            ? cancelButton()
+                            : measureButton(),
+                        SizedBox(
+                            height: _safeVertical * 2), //just empty space
+                        stopButton(),
                       ],
                     ),
                   ),
-                ),
-              ],
+                  Padding(
+                    padding: const EdgeInsets.only(left: 15),
+                    child: movementsLayout(),
+                  )
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
             ),
-          ),
-          SizedBox(
-            height: _safeVertical * 1,
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 15, right: 15),
-            child: Column(
-              children: [
-                motionLayout(),
-                SizedBox(height: _safeVertical * 2), //just empty space
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: 15),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          (isTemperatureMeasurement)
-                              ? cancelButton()
-                              : measureButton(),
-                          SizedBox(
-                              height: _safeVertical * 2), //just empty space
-                          stopButton(),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(left: 15),
-                      child: movementsLayout(),
-                    )
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -537,17 +543,21 @@ class RemotePageState extends State<RemotePage> {
             //Have to add a 1 second delay before sending another instruction
             Future.delayed(const Duration(microseconds: 1000), () {
               remoteModeSendBLE(bleMeasure);
-              showSnackBar("Initiating temperature measurement!", context);
-              isTemperatureMeasurement = true;
+              setState(() {
+                isTemperatureMeasurement = true;
+              });
+              setState(() {
+                isTemperatureMeasurement = true;
+              });
             });
           } else {
             //Otherwise, boat already stopped so initiate temperature measurement
             remoteModeSendBLE(bleMeasure);
             showSnackBar("Initiating temperature measurement!", context);
-            isTemperatureMeasurement = true;
+            setState(() {
+              isTemperatureMeasurement = true;
+            });
           }
-
-          setState(() {});
         },
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

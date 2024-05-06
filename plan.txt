@@ -1,0 +1,373 @@
+@startuml
+set namespaceSeparator ::
+
+class "remote_control_ui::main.dart::InitApp" {
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "remote_control_ui::main.dart::InitApp"
+
+class "remote_control_ui::main.dart::MainApp" {
+  +double safeScreenHeight
+  +double safeScreenWidth
+  +State<MainApp> createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "remote_control_ui::main.dart::MainApp"
+
+class "remote_control_ui::main.dart::_MainAppState" {
+  +HomePagecontroller myHomeController
+  +RemoteModeController myRemoteController
+  +AutoModeController myAutoController
+  -int _selectedIndex
+  -List<Widget> _pages
+  +bool bleStat
+  +void updatePageIndex()
+  +void updateTreeBLEStat()
+  +void sendBLEwidget()
+  +void notifyRemoteNewBLE()
+  +void notifyAutoNewBLE()
+  +void initState()
+  +Widget build()
+}
+
+"remote_control_ui::main.dart::_MainAppState" o-- "remote_control_ui::pages::Home%20Page::home_page.dart::HomePagecontroller"
+"remote_control_ui::main.dart::_MainAppState" o-- "remote_control_ui::pages::Remote%20Page::remote_control_page.dart::RemoteModeController"
+"remote_control_ui::main.dart::_MainAppState" o-- "remote_control_ui::pages::Auto%20Page::autonomous_page.dart::AutoModeController"
+"flutter::src::widgets::framework.dart::State" <|-- "remote_control_ui::main.dart::_MainAppState"
+
+class "remote_control_ui::main.dart::SizeConfig" {
+  -MediaQueryData _mediaQueryData
+  +double screenWidth
+  +double screenHeight
+  +double blockSizeHorizontal
+  +double blockSizeVertical
+  -double _safeAreaHorizontal
+  -double _safeAreaVertical
+  +double safeBlockHorizontal
+  +double safeBlockVertical
+  +List<double> init()
+}
+
+"remote_control_ui::main.dart::SizeConfig" o-- "flutter::src::widgets::media_query.dart::MediaQueryData"
+
+class "remote_control_ui::pages::Auto%20Page::autonomous_page.dart::AutoModeController" {
+  +void Function(List<dynamic>) notifyBLE
+  +void Function(bool)? bleStat
+}
+
+"remote_control_ui::pages::Auto%20Page::autonomous_page.dart::AutoModeController" o-- "null::void Function(List<dynamic>)"
+"remote_control_ui::pages::Auto%20Page::autonomous_page.dart::AutoModeController" o-- "null::void Function(bool)"
+
+class "remote_control_ui::pages::Auto%20Page::autonomous_page.dart::AutoPage" {
+  +double safeScreenHeight
+  +double safeScreenWidth
+  +dynamic Function(int) updatePageIndex
+  +bool bleStat
+  +dynamic Function(List<int>) sendbLE
+  +AutoModeController notifyController
+  +State<AutoPage> createState()
+}
+
+"remote_control_ui::pages::Auto%20Page::autonomous_page.dart::AutoPage" o-- "null::dynamic Function(int)"
+"remote_control_ui::pages::Auto%20Page::autonomous_page.dart::AutoPage" o-- "null::dynamic Function(List<int>)"
+"remote_control_ui::pages::Auto%20Page::autonomous_page.dart::AutoPage" o-- "remote_control_ui::pages::Auto%20Page::autonomous_page.dart::AutoModeController"
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "remote_control_ui::pages::Auto%20Page::autonomous_page.dart::AutoPage"
+
+class "remote_control_ui::pages::Auto%20Page::autonomous_page.dart::_AutoPageState" {
+  -double _safeVertical
+  -double _safeHorizontal
+  +IconData bleStatLogo
+  +bool isWaypointsReady
+  +int waypointsReadyIndex
+  +LatLng? currentUserLoc
+  -Completer<GoogleMapController> _mapsController
+  -String _darkMapStyle
+  +int maxMarkerToMarkerDistance
+  +int maxMarkerToUserDistance
+  +Set<Marker> pathWaypoints
+  +int markerCounter
+  +Uint8List userIcon
+  +Uint8List markerIcon
+  +Uint8List boatIcon
+  +List<LatLng> markersLatLng
+  +LatLng? currentBoatLoc
+  +List<LatLng> boatpathLatLng
+  +Set<Polyline> pathPolylines
+  +ValueNotifier<Color> polylineButtonColor
+  +bool isPolylinesON
+  +Timer? sendTimer
+  +SendAlertDialogController mySendDialog
+  +bool autonomousStart
+  +void changeToHomePage()
+  +void updateBLEStat()
+  +void autoModeSendBLE()
+  +void autoModeNotifyBLE()
+  +void showSnackBar()
+  -dynamic _loadMapStyles()
+  -dynamic _getUserCurrentLocation()
+  +dynamic getBytesFromAsset()
+  +dynamic setCustomMarkerIcon()
+  +void initState()
+  +void dispose()
+  +Widget build()
+  +InteractiveBottomSheet autoBottomSheet()
+  -SizedBox _getUserLocationButton()
+  -void _addUserMarker()
+  -SizedBox _getBoatLocationButton()
+  -dynamic _addBoatMarker()
+  -dynamic _newCameraPosition()
+  -void _addMarkerToMap()
+  -void _checkMarkerToUser()
+  +GoogleMap theMap()
+  +SizedBox autoPageTitle()
+  +SizedBox bleStatus()
+  +OutlinedButton homeButton()
+  -SizedBox _generatePolylineButton()
+  -void _changePolylineButtonColor()
+  -SizedBox _removeAllMarkers()
+  -dynamic _locateMarker()
+  -Expanded _waypointListBuilder()
+  -Container _waypointsListViewerSection()
+  -double _getStraightLineDistance()
+  -dynamic _deg2rad()
+  -double _calculateMarkerDistance()
+  -Container _totalDistance()
+  -Container _waypointFrequency()
+  +bool isMarkerIdInList()
+  -Container _userToBoatDistance()
+  -Padding _summaryContent()
+  -Container _summaryViewerPopUp()
+  +SizedBox cancelButton()
+  +dynamic sendWaypoints()
+  +dynamic packWaypoints()
+  +SizedBox sendButton()
+  +Color sendButtonColor()
+}
+
+"remote_control_ui::pages::Auto%20Page::autonomous_page.dart::_AutoPageState" o-- "flutter::src::widgets::icon_data.dart::IconData"
+"remote_control_ui::pages::Auto%20Page::autonomous_page.dart::_AutoPageState" o-- "google_maps_flutter_platform_interface::src::types::location.dart::LatLng"
+"remote_control_ui::pages::Auto%20Page::autonomous_page.dart::_AutoPageState" o-- "dart::async::Completer<GoogleMapController>"
+"remote_control_ui::pages::Auto%20Page::autonomous_page.dart::_AutoPageState" o-- "dart::typed_data::Uint8List"
+"remote_control_ui::pages::Auto%20Page::autonomous_page.dart::_AutoPageState" o-- "flutter::src::foundation::change_notifier.dart::ValueNotifier<Color>"
+"remote_control_ui::pages::Auto%20Page::autonomous_page.dart::_AutoPageState" o-- "dart::async::Timer"
+"remote_control_ui::pages::Auto%20Page::autonomous_page.dart::_AutoPageState" o-- "remote_control_ui::pages::Auto%20Page::send_pop_up.dart::SendAlertDialogController"
+"flutter::src::widgets::framework.dart::State" <|-- "remote_control_ui::pages::Auto%20Page::autonomous_page.dart::_AutoPageState"
+
+class "remote_control_ui::pages::Auto%20Page::send_pop_up.dart::SendAlertDialogController" {
+  +void Function(int) updateCounter
+}
+
+"remote_control_ui::pages::Auto%20Page::send_pop_up.dart::SendAlertDialogController" o-- "null::void Function(int)"
+
+class "remote_control_ui::pages::Auto%20Page::send_pop_up.dart::SendAlertDialog" {
+  +int waypointLength
+  +bool autoStart
+  +SendAlertDialogController updateCounterController
+  +State<SendAlertDialog> createState()
+}
+
+"remote_control_ui::pages::Auto%20Page::send_pop_up.dart::SendAlertDialog" o-- "remote_control_ui::pages::Auto%20Page::send_pop_up.dart::SendAlertDialogController"
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "remote_control_ui::pages::Auto%20Page::send_pop_up.dart::SendAlertDialog"
+
+class "remote_control_ui::pages::Auto%20Page::send_pop_up.dart::_SendAlertDialogState" {
+  +int boatReceivedCounter
+  +void updateboatReceivedCounter()
+  +Widget build()
+  +Text sendingContent()
+  +Text sentContent()
+  +Row sendingTitle()
+  +Row sentTitle()
+  +Row alreadySentTitle()
+}
+
+"flutter::src::widgets::framework.dart::State" <|-- "remote_control_ui::pages::Auto%20Page::send_pop_up.dart::_SendAlertDialogState"
+
+class "remote_control_ui::pages::Home%20Page::ble_section.dart::BLEcontroller" {
+  +void Function(List<int>) sendDataBLE
+}
+
+"remote_control_ui::pages::Home%20Page::ble_section.dart::BLEcontroller" o-- "null::void Function(List<int>)"
+
+class "remote_control_ui::pages::Home%20Page::ble_section.dart::AppBarBLE" {
+  +BLEcontroller bleController
+  +double safeScreenHeight
+  +double safeScreenWidth
+  +dynamic Function(bool) bleStat
+  +dynamic Function(List<dynamic>) notifyRemoteCB
+  +dynamic Function(List<dynamic>) notifyAutoCB
+  +State<AppBarBLE> createState()
+}
+
+"remote_control_ui::pages::Home%20Page::ble_section.dart::AppBarBLE" o-- "remote_control_ui::pages::Home%20Page::ble_section.dart::BLEcontroller"
+"remote_control_ui::pages::Home%20Page::ble_section.dart::AppBarBLE" o-- "null::dynamic Function(bool)"
+"remote_control_ui::pages::Home%20Page::ble_section.dart::AppBarBLE" o-- "null::dynamic Function(List<dynamic>)"
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "remote_control_ui::pages::Home%20Page::ble_section.dart::AppBarBLE"
+
+class "remote_control_ui::pages::Home%20Page::ble_section.dart::AppBarBLEState" {
+  +ValueNotifier<Color> connectionColor
+  +ValueNotifier<String> actionMssg
+  +ValueNotifier<String> timeMssg
+  -BluetoothAdapterState _adapterState
+  -StreamSubscription<BluetoothAdapterState> _adapterStateStateSubscription
+  -List<ScanResult> _scanResults
+  -StreamSubscription<List<ScanResult>> _scanResultsSubscription
+  -List<BluetoothService> _services
+  +String deviceName
+  +BluetoothDevice deviceStats
+  +bool deviceFound
+  +bool deviceConnected
+  +dynamic connectionSubscription
+  +dynamic notifySubscription
+  -double _safeVertical
+  -double _safeHorizontal
+  +void resetVariables()
+  +void updateHomePageBLEStat()
+  +void sendDataBLE()
+  +void notifyDataBLE()
+  +bool checkAdapterState()
+  +void initState()
+  +void dispose()
+  +Widget build()
+  +Row bleTestButton()
+  +Row bleStatusRow()
+  +List<int> getDateTime()
+  +void timeActionMssg()
+  +void editActionMssg()
+  +Container contextBox()
+  +dynamic disconnectToDevice()
+  +Row bleDisconnectButton()
+  +dynamic notifyCharacteristics()
+  +dynamic writeCharacteristics()
+  +dynamic connectToMedium()
+  +Row bleConnectButton()
+  +dynamic scanningStopCallback()
+  +dynamic onScanPressed()
+  +Row bleScanButton()
+}
+
+"remote_control_ui::pages::Home%20Page::ble_section.dart::AppBarBLEState" o-- "flutter::src::foundation::change_notifier.dart::ValueNotifier<Color>"
+"remote_control_ui::pages::Home%20Page::ble_section.dart::AppBarBLEState" o-- "flutter::src::foundation::change_notifier.dart::ValueNotifier<String>"
+"remote_control_ui::pages::Home%20Page::ble_section.dart::AppBarBLEState" o-- "flutter_blue_plus::flutter_blue_plus.dart::BluetoothAdapterState"
+"remote_control_ui::pages::Home%20Page::ble_section.dart::AppBarBLEState" o-- "dart::async::StreamSubscription<BluetoothAdapterState>"
+"remote_control_ui::pages::Home%20Page::ble_section.dart::AppBarBLEState" o-- "dart::async::StreamSubscription<List<ScanResult>>"
+"remote_control_ui::pages::Home%20Page::ble_section.dart::AppBarBLEState" o-- "flutter_blue_plus::flutter_blue_plus.dart::BluetoothDevice"
+"flutter::src::widgets::framework.dart::State" <|-- "remote_control_ui::pages::Home%20Page::ble_section.dart::AppBarBLEState"
+
+class "remote_control_ui::pages::Home%20Page::home_page.dart::HomePagecontroller" {
+  +void Function(List<int>) sendDataBLE
+}
+
+"remote_control_ui::pages::Home%20Page::home_page.dart::HomePagecontroller" o-- "null::void Function(List<int>)"
+
+class "remote_control_ui::pages::Home%20Page::home_page.dart::HomePage" {
+  +double safeScreenHeight
+  +double safeScreenWidth
+  +dynamic Function(int) updatePageIndex
+  +dynamic Function(bool) updateTreeBLEStat
+  +dynamic Function(List<dynamic>) notifyRemoteNewBLE
+  +dynamic Function(List<dynamic>) notifyAutoNewBLE
+  +HomePagecontroller homeController
+  +HomePageState createState()
+}
+
+"remote_control_ui::pages::Home%20Page::home_page.dart::HomePage" o-- "null::dynamic Function(int)"
+"remote_control_ui::pages::Home%20Page::home_page.dart::HomePage" o-- "null::dynamic Function(bool)"
+"remote_control_ui::pages::Home%20Page::home_page.dart::HomePage" o-- "null::dynamic Function(List<dynamic>)"
+"remote_control_ui::pages::Home%20Page::home_page.dart::HomePage" o-- "remote_control_ui::pages::Home%20Page::home_page.dart::HomePagecontroller"
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "remote_control_ui::pages::Home%20Page::home_page.dart::HomePage"
+
+class "remote_control_ui::pages::Home%20Page::home_page.dart::HomePageState" {
+  +BLEcontroller myBLEController
+  -double _safeVertical
+  -double _safeHorizontal
+  +void changePage()
+  +void sendBLEwidget()
+  +void initState()
+  +Widget build()
+  +SizedBox mainPageTitle()
+  +Container modeSection()
+  +SizedBox remotePageButton()
+  +SizedBox autoPageButton()
+  +Container bleSection()
+}
+
+"remote_control_ui::pages::Home%20Page::home_page.dart::HomePageState" o-- "remote_control_ui::pages::Home%20Page::ble_section.dart::BLEcontroller"
+"flutter::src::widgets::framework.dart::State" <|-- "remote_control_ui::pages::Home%20Page::home_page.dart::HomePageState"
+
+class "remote_control_ui::pages::Remote%20Page::remote_control_page.dart::RemoteModeController" {
+  +void Function(List<dynamic>) notifyBLE
+  +void Function(bool)? bleStat
+}
+
+"remote_control_ui::pages::Remote%20Page::remote_control_page.dart::RemoteModeController" o-- "null::void Function(List<dynamic>)"
+"remote_control_ui::pages::Remote%20Page::remote_control_page.dart::RemoteModeController" o-- "null::void Function(bool)"
+
+class "remote_control_ui::pages::Remote%20Page::remote_control_page.dart::RemotePage" {
+  +double safeScreenHeight
+  +double safeScreenWidth
+  +dynamic Function(int) updatePageIndex
+  +bool bleStat
+  +dynamic Function(List<int>) sendbLE
+  +RemoteModeController notifyController
+  +RemotePageState createState()
+}
+
+"remote_control_ui::pages::Remote%20Page::remote_control_page.dart::RemotePage" o-- "null::dynamic Function(int)"
+"remote_control_ui::pages::Remote%20Page::remote_control_page.dart::RemotePage" o-- "null::dynamic Function(List<int>)"
+"remote_control_ui::pages::Remote%20Page::remote_control_page.dart::RemotePage" o-- "remote_control_ui::pages::Remote%20Page::remote_control_page.dart::RemoteModeController"
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "remote_control_ui::pages::Remote%20Page::remote_control_page.dart::RemotePage"
+
+class "remote_control_ui::pages::Remote%20Page::remote_control_page.dart::RemotePageState" {
+  -int _motion
+  +List<int> bleModeMovement
+  +List<int> bleStop
+  +List<int> bleMeasure
+  +List<int> bleCancel
+  -String _status
+  -Color _statusColor
+  -String _liveMotion
+  -Color __liveMotionColor
+  -String _liveMovement
+  -Color __liveMovementColor
+  +IconData bleStatLogo
+  -double _safeVertical
+  -double _safeHorizontal
+  +bool isTemperatureMeasurement
+  +void changeToHomePage()
+  +void remoteModeSendBLE()
+  +void remoteModeNotifyBLE()
+  +void updateBLEStat()
+  +void showSnackBar()
+  +void initState()
+  +void dispose()
+  +Widget build()
+  +SizedBox remotePageTitle()
+  +SizedBox bleStatus()
+  +OutlinedButton homeButton()
+  +Container motionLayout()
+  +SizedBox modeGauge()
+  +SliderTheme modeSetter()
+  -String _changeMode()
+  -Color _changeModeColor()
+  +Row modeBar()
+  +Column liveMotionBar()
+  +Column liveMovementBar()
+  +SizedBox measureButton()
+  +SizedBox cancelButton()
+  +SizedBox stopButton()
+  +Container movementsLayout()
+  +Column controlPad()
+  +void updateLiveSettings()
+  +SizedBox forwardMovement()
+  +SizedBox backwardsMovement()
+  +SizedBox rightMovement()
+  +SizedBox leftMovement()
+}
+
+"remote_control_ui::pages::Remote%20Page::remote_control_page.dart::RemotePageState" o-- "dart::ui::Color"
+"remote_control_ui::pages::Remote%20Page::remote_control_page.dart::RemotePageState" o-- "flutter::src::widgets::icon_data.dart::IconData"
+"flutter::src::widgets::framework.dart::State" <|-- "remote_control_ui::pages::Remote%20Page::remote_control_page.dart::RemotePageState"
+
+
+@enduml
